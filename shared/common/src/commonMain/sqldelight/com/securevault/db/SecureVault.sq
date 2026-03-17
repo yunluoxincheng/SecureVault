@@ -57,6 +57,9 @@ INSERT INTO password_entries (
     created_at, updated_at
 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
+lastInsertedId:
+SELECT last_insert_rowid();
+
 updateEntry:
 UPDATE password_entries SET
     encrypted_title = ?, encrypted_username = ?, encrypted_password = ?,

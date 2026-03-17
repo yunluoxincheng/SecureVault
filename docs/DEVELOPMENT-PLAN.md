@@ -86,11 +86,11 @@
 
 #### Week 5: 数据层
 
-- [ ] 实现 SQLDelight schema (password_entries, vault_config, generated_passwords)
-- [ ] 实现 `PasswordRepository` (CRUD, search, filter)
-- [ ] 实现 `ConfigRepository` (保险库配置读写)
-- [ ] 实现字段级加密/解密 (`PasswordRepository` 调用 `AesGcmCipher`)
-- [ ] 编写数据层测试
+- [x] 实现 SQLDelight schema (password_entries, vault_config, generated_passwords)
+- [x] 实现 `PasswordRepository` (CRUD, search, filter)
+- [x] 实现 `ConfigRepository` (保险库配置读写)
+- [x] 实现字段级加密/解密 (`PasswordRepository` 调用 `AesGcmCipher`)
+- [x] 编写数据层测试
 
 #### Week 6: UI 核心界面
 
