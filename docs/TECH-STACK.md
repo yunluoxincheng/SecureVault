@@ -9,15 +9,15 @@
 
 | 层级 | 技术 | 当前实现（As-Is） | 目标版本（To-Be） | 说明 |
 |------|------|------------------|-------------------|------|
-| 语言 | Kotlin | 2.1.20 | 2.3.20 | KMP 跨平台核心语言 |
-| UI 框架 | Compose Multiplatform | 1.8.0 | 1.10.x | 共享 UI 代码 |
-| 业务逻辑 | Kotlin Multiplatform | 2.1.20 | 2.3.20 | 共享核心逻辑 |
-| 数据存储 | SQLDelight | 2.0.2 | 2.2.x | 跨平台类型安全 SQLite |
-| 依赖注入 | Koin | 4.0.2 | 4.2.x | 跨平台 DI |
+| 语言 | Kotlin | 2.3.20 | 2.3.20 | KMP 跨平台核心语言 |
+| UI 框架 | Compose Multiplatform | 1.10.0 | 1.10.x | 共享 UI 代码 |
+| 业务逻辑 | Kotlin Multiplatform | 2.3.20 | 2.3.20 | 共享核心逻辑 |
+| 数据存储 | SQLDelight | 2.2.1 | 2.2.x | 跨平台类型安全 SQLite |
+| 依赖注入 | Koin | 4.2.0 | 4.2.x | 跨平台 DI |
 | 异步处理 | Coroutines + Flow | 1.10.1 | 1.10.x | 并发与响应式流 |
 | 序列化 | kotlinx-serialization | 1.8.0 | 1.8.x | JSON 序列化 |
-| 构建工具 | Gradle | 8.11.1 | 9.3.x | 由 Wrapper 控制 |
-| Android 插件 | AGP | 8.9.0 | 9.0.x | Android 构建插件 |
+| 构建工具 | Gradle | 9.3.0 | 9.3.x | 由 Wrapper 控制 |
+| Android 插件 | AGP | 9.0.0 | 9.0.x | Android 构建插件 |
 
 > 说明：当前实现版本以 `gradle/libs.versions.toml` 与 `gradle/wrapper/gradle-wrapper.properties` 为准。
 
@@ -32,6 +32,13 @@
 | Windows | Windows 10 | 已配置 Desktop 目标 |
 | macOS | macOS 12+ | 已配置 Desktop 目标 |
 | Linux | Ubuntu 20.04+ | 已配置 Desktop 目标 |
+
+### Android SDK 基线（当前实现）
+
+- `minSdk = 29`
+- `targetSdk = 36`（Android 16）
+- `compileSdk = 36`（Android 16）
+- 已启用 `enableOnBackInvokedCallback` 以适配 API 36 返回行为
 
 ---
 
@@ -89,11 +96,11 @@ SecureVault/
 
 ```toml
 [versions]
-kotlin = "2.1.20"
-agp = "8.9.0"
-compose-multiplatform = "1.8.0"
-sqldelight = "2.0.2"
-koin = "4.0.2"
+kotlin = "2.3.20"
+agp = "9.0.0"
+compose-multiplatform = "1.10.0"
+sqldelight = "2.2.1"
+koin = "4.2.0"
 coroutines = "1.10.1"
 serialization = "1.8.0"
 libsodium = "0.9.2"
@@ -118,8 +125,8 @@ argon2kt = "1.6.0"
 
 ### 7.3 依赖注入
 
-- 当前使用 Koin 4.0.2，满足 KMP 与 Compose 场景。
-- 4.2.x 升级放入后续版本升级任务统一处理。
+- 当前使用 Koin 4.2.0，满足 KMP 与 Compose 场景。
+- 继续保持与 KMP / Compose 生态版本兼容，按小版本节奏升级。
 
 ### 7.4 安全基线
 
@@ -130,6 +137,12 @@ argon2kt = "1.6.0"
 
 ## 八、升级策略建议
 
-- 近期策略：保持当前版本基线，优先功能稳定与测试覆盖。
+- 近期策略：保持当前已对齐基线（Kotlin/AGP/Compose/SQLDelight/Koin），优先功能稳定与测试覆盖。
 - 升级方式：按 Kotlin/AGP/Compose/SQLDelight/Koin 分批升级，每批单独回归。
 - 时机建议：在 Phase 2 或独立 `chore/upgrade-stack` 分支执行。
+
+### 8.1 AGP 9 兼容备注（当前）
+
+- 目前已升级到 AGP `9.0.0` + Gradle `9.3.0`，并通过编译回归。
+- 已移除临时兼容开关（`android.builtInKotlin` / `android.newDsl`），使用 AGP 9 默认模式。
+- KMP Android 库模块已迁移到 `com.android.kotlin.multiplatform.library` 插件与 `kotlin { android { ... } }` DSL。

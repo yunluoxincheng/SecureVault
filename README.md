@@ -23,6 +23,12 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 | macOS | macOS 13 | 全局快捷键 + 剪贴板 |
 | Linux | Ubuntu 20.04+ | 全局快捷键 + 剪贴板 |
 
+## Android 构建基线
+
+- minSdk: 29
+- targetSdk: 36（Android 16）
+- compileSdk: 36（Android 16）
+
 ## 技术栈
 
 | 组件 | 技术 |
@@ -82,6 +88,8 @@ SecureVault/
 ## 前身项目
 
 SecureVault 的设计经验和算法验证来自 [SafeVault](../SafeVault)（Android 原生密码管理器）。SecureVault 继承了其经过验证的：
+
+
 - 三层密钥体系
 - Argon2id 自适应密钥派生
 - XChaCha20-Poly1305 字段级加密

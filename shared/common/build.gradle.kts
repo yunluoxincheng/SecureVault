@@ -1,20 +1,23 @@
 plugins {
     alias(libs.plugins.kotlin.multiplatform)
     alias(libs.plugins.kotlin.serialization)
-    alias(libs.plugins.android.library)
+    alias(libs.plugins.android.kmp.library)
     alias(libs.plugins.sqldelight)
 }
 
 kotlin {
     jvm("desktop") {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 
-    androidTarget {
-        compilations.all {
-            kotlinOptions.jvmTarget = "17"
+    android {
+        namespace = "com.securevault.shared.common"
+        compileSdk = 36
+        minSdk = 29
+        compilerOptions {
+            jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17)
         }
     }
 
@@ -83,17 +86,5 @@ sqldelight {
             packageName.set("com.securevault.db")
             generateAsync.set(true)
         }
-    }
-}
-
-android {
-    namespace = "com.securevault.shared.common"
-    compileSdk = 35
-    defaultConfig {
-        minSdk = 29
-    }
-    compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_17
-        targetCompatibility = JavaVersion.VERSION_17
     }
 }

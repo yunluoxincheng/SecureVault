@@ -94,15 +94,16 @@
 
 #### Week 6: UI 核心界面
 
-- [ ] 实现 `UnlockScreen` (主密码输入 + 生物识别按钮)
+- [x] 实现 `UnlockScreen` (主密码输入 + 生物识别按钮)
 
-- [ ] 实现 `SetupScreen` (首次设置主密码)
-- [ ] 实现 `VaultScreen` (密码列表 + 搜索 + 分类)
-- [ ] 实现 `PasswordDetailScreen` (查看密码详情 + 复制)
-- [ ] 实现 `AddEditPasswordScreen` (添加/编辑 + 强度指示器)
-- [ ] 实现 `SettingsScreen` (基本设置)
-- [ ] 实现 Material Design 3 主题 (亮色/暗色/跟随系统)
-- [ ] 配置 Compose Navigation 导航图
+- [x] 实现 `SetupScreen` (首次设置主密码)
+- [x] 实现 `VaultScreen` (密码列表 + 搜索 + 分类)
+- [x] 实现 `PasswordDetailScreen` (查看密码详情 + 复制)
+- [x] 实现 `AddEditPasswordScreen` (添加/编辑 + 强度指示器)
+- [x] 实现 `SettingsScreen` (基本设置)
+- [x] 实现 Material Design 3 主题 (亮色/暗色/跟随系统)
+- [x] 配置 Compose Navigation 导航图
+- [x] 完成 Android 16 (API 36) 基线适配（`targetSdk`/`compileSdk` 升级、`enableOnBackInvokedCallback`、`resizeableActivity`）
 
 #### Week 7: ViewModel 与集成
 
