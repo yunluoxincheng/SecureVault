@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SetupScreen(
-    onSetupDone: () -> Unit,
+    onSetupDone: (String) -> Unit,
     onBack: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
@@ -62,7 +62,7 @@ fun SetupScreen(
             Spacer(modifier = Modifier.height(8.dp))
         }
 
-        Button(onClick = onSetupDone, modifier = Modifier.fillMaxWidth(), enabled = valid) {
+        Button(onClick = { onSetupDone(password) }, modifier = Modifier.fillMaxWidth(), enabled = valid) {
             Text("创建保险库")
         }
 

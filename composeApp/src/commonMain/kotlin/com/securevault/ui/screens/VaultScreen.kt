@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material3.Card
@@ -29,10 +30,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextOverflow
@@ -43,22 +40,21 @@ import com.securevault.data.PasswordEntry
 @Composable
 fun VaultScreen(
     entries: List<PasswordEntry>,
+    query: String,
+    onQueryChange: (String) -> Unit,
     onEntryClick: (PasswordEntry) -> Unit,
     onAddClick: () -> Unit,
+    onGeneratorClick: () -> Unit,
     onSettingsClick: () -> Unit
 ) {
-    var query by remember { mutableStateOf("") }
-    val filteredEntries = entries.filter {
-        if (query.isBlank()) return@filter true
-        val text = listOf(it.title, it.username, it.url.orEmpty(), it.category).joinToString(" ")
-        text.contains(query, ignoreCase = true)
-    }
-
     Scaffold(
         topBar = {
             TopAppBar(
                 title = { Text("密码库") },
                 actions = {
+                    IconButton(onClick = onGeneratorClick) {
+                        Icon(Icons.Default.Refresh, contentDescription = "生成器")
+                    }
                     IconButton(onClick = onSettingsClick) {
                         Icon(Icons.Default.Settings, contentDescription = "设置")
                     }
@@ -77,14 +73,14 @@ fun VaultScreen(
         ) {
             OutlinedTextField(
                 value = query,
-                onValueChange = { query = it },
+                onValueChange = onQueryChange,
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("搜索") },
                 leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) }
             )
 
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                items(filteredEntries, key = { it.id ?: it.hashCode().toLong() }) { entry ->
+                items(entries, key = { it.id ?: it.hashCode().toLong() }) { entry ->
                     PasswordCard(entry = entry, onClick = { onEntryClick(entry) })
                 }
             }

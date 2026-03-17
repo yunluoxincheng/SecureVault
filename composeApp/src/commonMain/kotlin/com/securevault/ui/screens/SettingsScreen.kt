@@ -19,10 +19,6 @@ import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -32,12 +28,12 @@ import com.securevault.ui.theme.ThemeMode
 @Composable
 fun SettingsScreen(
     currentTheme: ThemeMode,
+    biometricEnabled: Boolean,
     onThemeChange: (ThemeMode) -> Unit,
+    onBiometricChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onLock: () -> Unit
 ) {
-    var biometricEnabled by remember { mutableStateOf(true) }
-
     Scaffold(
         topBar = {
             TopAppBar(
@@ -77,7 +73,7 @@ fun SettingsScreen(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text("启用生物识别", modifier = Modifier.weight(1f))
-                Switch(checked = biometricEnabled, onCheckedChange = { biometricEnabled = it })
+                Switch(checked = biometricEnabled, onCheckedChange = onBiometricChange)
             }
 
             Button(onClick = onLock, modifier = Modifier.fillMaxWidth()) {

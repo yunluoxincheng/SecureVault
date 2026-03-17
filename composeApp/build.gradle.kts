@@ -49,6 +49,12 @@ kotlin {
             }
         }
 
+        val desktopTest by getting {
+            dependencies {
+                implementation(kotlin("test"))
+            }
+        }
+
         val androidMain by getting {
             dependencies {
                 api(libs.koin.android)

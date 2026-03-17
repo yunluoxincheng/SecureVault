@@ -35,7 +35,8 @@ import com.securevault.ui.components.PasswordStrengthBar
 fun AddEditPasswordScreen(
     entry: PasswordEntry?,
     onSave: (PasswordEntry) -> Unit,
-    onCancel: () -> Unit
+    onCancel: () -> Unit,
+    onGeneratePassword: () -> String
 ) {
     var title by remember { mutableStateOf(entry?.title.orEmpty()) }
     var username by remember { mutableStateOf(entry?.username.orEmpty()) }
@@ -67,6 +68,17 @@ fun AddEditPasswordScreen(
             OutlinedTextField(title, { title = it }, modifier = Modifier.fillMaxWidth(), label = { Text("标题") })
             OutlinedTextField(username, { username = it }, modifier = Modifier.fillMaxWidth(), label = { Text("用户名") })
             OutlinedTextField(password, { password = it }, modifier = Modifier.fillMaxWidth(), label = { Text("密码") })
+            Button(
+                onClick = {
+                    val generated = onGeneratePassword()
+                    if (generated.isNotBlank()) {
+                        password = generated
+                    }
+                },
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text("生成强密码")
+            }
             PasswordStrengthBar(password = password, modifier = Modifier.fillMaxWidth())
             OutlinedTextField(url, { url = it }, modifier = Modifier.fillMaxWidth(), label = { Text("URL") })
             OutlinedTextField(notes, { notes = it }, modifier = Modifier.fillMaxWidth(), label = { Text("备注") })

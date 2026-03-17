@@ -41,7 +41,9 @@ fun PasswordDetailScreen(
     entry: PasswordEntry,
     onBack: () -> Unit,
     onEdit: () -> Unit,
-    onDelete: () -> Unit
+    onDelete: () -> Unit,
+    onCopyUsername: () -> Unit,
+    onCopyPassword: () -> Unit
 ) {
     var showPassword by remember { mutableStateOf(false) }
 
@@ -80,7 +82,7 @@ fun PasswordDetailScreen(
             }
 
             DetailRow(title = "标题", value = entry.title)
-            DetailRow(title = "用户名", value = entry.username, showCopy = true)
+            DetailRow(title = "用户名", value = entry.username, showCopy = true, onCopy = onCopyUsername)
 
             Card(modifier = Modifier.fillMaxWidth()) {
                 Row(
@@ -101,7 +103,7 @@ fun PasswordDetailScreen(
                             )
                         }
                     }
-                    IconButton(onClick = {}) {
+                    IconButton(onClick = onCopyPassword) {
                         Icon(Icons.Default.ContentCopy, contentDescription = if (entry.securityMode) "使用" else "复制")
                     }
                 }
@@ -130,7 +132,8 @@ fun PasswordDetailScreen(
 private fun DetailRow(
     title: String,
     value: String,
-    showCopy: Boolean = false
+    showCopy: Boolean = false,
+    onCopy: () -> Unit = {}
 ) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Row(
@@ -142,7 +145,7 @@ private fun DetailRow(
                 Text(value, style = MaterialTheme.typography.bodyLarge, maxLines = 2, overflow = TextOverflow.Ellipsis)
             }
             if (showCopy) {
-                IconButton(onClick = {}) {
+                IconButton(onClick = onCopy) {
                     Icon(Icons.Default.ContentCopy, contentDescription = "复制")
                 }
             }

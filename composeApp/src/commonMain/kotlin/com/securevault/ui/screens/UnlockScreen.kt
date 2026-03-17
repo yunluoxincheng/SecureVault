@@ -33,7 +33,9 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun UnlockScreen(
-    onUnlock: () -> Unit,
+    biometricAvailable: Boolean,
+    onUnlock: (String) -> Unit,
+    onBiometricUnlock: () -> Unit,
     onSetupClick: () -> Unit
 ) {
     var password by remember { mutableStateOf("") }
@@ -69,7 +71,7 @@ fun UnlockScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         Button(
-            onClick = onUnlock,
+            onClick = { onUnlock(password) },
             modifier = Modifier.fillMaxWidth(),
             enabled = password.isNotBlank()
         ) {
@@ -79,7 +81,7 @@ fun UnlockScreen(
         Spacer(modifier = Modifier.height(16.dp))
         Text(text = "—— 或 ——", style = MaterialTheme.typography.bodySmall)
 
-        TextButton(onClick = onUnlock) {
+        TextButton(onClick = onBiometricUnlock, enabled = biometricAvailable) {
             Icon(Icons.Default.Fingerprint, contentDescription = null)
             Spacer(modifier = Modifier.width(8.dp))
             Text("使用生物识别")

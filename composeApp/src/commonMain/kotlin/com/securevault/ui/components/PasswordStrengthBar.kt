@@ -12,6 +12,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
+import com.securevault.util.PasswordStrengthCalculator
+import com.securevault.util.PasswordStrengthLevel
 
 enum class PasswordStrength(val label: String, val progress: Float, val color: Color) {
     VeryWeak("非常弱", 0.1f, Color(0xFFD32F2F)),
@@ -22,20 +24,12 @@ enum class PasswordStrength(val label: String, val progress: Float, val color: C
 }
 
 fun calculatePasswordStrength(password: String): PasswordStrength {
-    val score = buildList {
-        add(password.length >= 8)
-        add(password.any { it.isUpperCase() })
-        add(password.any { it.isLowerCase() })
-        add(password.any { it.isDigit() })
-        add(password.any { !it.isLetterOrDigit() })
-    }.count { it }
-
-    return when {
-        score <= 1 -> PasswordStrength.VeryWeak
-        score == 2 -> PasswordStrength.Weak
-        score == 3 -> PasswordStrength.Medium
-        score == 4 -> PasswordStrength.Strong
-        else -> PasswordStrength.VeryStrong
+    return when (PasswordStrengthCalculator.calculate(password)) {
+        PasswordStrengthLevel.VeryWeak -> PasswordStrength.VeryWeak
+        PasswordStrengthLevel.Weak -> PasswordStrength.Weak
+        PasswordStrengthLevel.Medium -> PasswordStrength.Medium
+        PasswordStrengthLevel.Strong -> PasswordStrength.Strong
+        PasswordStrengthLevel.VeryStrong -> PasswordStrength.VeryStrong
     }
 }
 

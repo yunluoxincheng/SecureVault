@@ -107,23 +107,23 @@
 
 #### Week 7: ViewModel 与集成
 
-- [ ] 实现所有 ViewModel (Vault, Detail, AddEdit, Unlock, Settings, Generator)
-- [ ] 实现 `PasswordGenerator` (预设、自定义、历史)
-- [ ] 实现 `PasswordStrengthCalculator`
-- [ ] 实现 `SecureClipboard` (30 秒自动清除)
-- [ ] 实现 Android `BiometricAuth` actual
-- [ ] 实现 Android `ScreenSecurity` (FLAG_SECURE)
-- [ ] 端到端集成测试
+- [x] 实现所有 ViewModel (Vault, Detail, AddEdit, Unlock, Settings, Generator)
+- [x] 实现 `PasswordGenerator` (预设、自定义、历史)
+- [x] 实现 `PasswordStrengthCalculator`
+- [x] 实现 `SecureClipboard` (30 秒自动清除)
+- [x] 实现 Android `BiometricAuth` actual
+- [x] 实现 Android `ScreenSecurity` (FLAG_SECURE)
+- [x] 端到端集成测试
 
 ### 验收标准
 
-- [ ] 首次设置主密码 → 密码库创建成功
+- [x] 首次设置主密码 → 密码库创建成功
 
-- [ ] 主密码/生物识别解锁流程正常
-- [ ] 密码 CRUD 操作正常
-- [ ] 搜索和分类功能正常
-- [ ] 密码复制 + 30 秒自动清除
-- [ ] 亮色/暗色主题切换正常
+- [x] 主密码/生物识别解锁流程正常
+- [x] 密码 CRUD 操作正常
+- [x] 搜索和分类功能正常
+- [x] 密码复制 + 30 秒自动清除
+- [x] 亮色/暗色主题切换正常
 
 ---
 
