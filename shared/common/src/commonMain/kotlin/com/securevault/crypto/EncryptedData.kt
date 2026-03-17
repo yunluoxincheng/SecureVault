@@ -64,14 +64,14 @@ data class EncryptedData(
         }
 
         fun fromCombined(data: ByteArray, version: String = CryptoConstants.CURRENT_STORAGE_FORMAT): EncryptedData {
-            require(data.size > IV_SIZE + TAG_SIZE) { "Data too short" }
+            require(data.size >= IV_SIZE + TAG_SIZE) { "Data too short" }
             val iv = data.sliceArray(0 until IV_SIZE)
             val ciphertext = data.sliceArray(IV_SIZE until data.size - TAG_SIZE)
             val tag = data.sliceArray(data.size - TAG_SIZE until data.size)
             return EncryptedData(version, iv, ciphertext, tag)
         }
 
-        private const val IV_SIZE = 24
-        private const val TAG_SIZE = 16
+        private const val IV_SIZE = CryptoConstants.XCHACHA_IV_SIZE
+        private const val TAG_SIZE = CryptoConstants.AEAD_TAG_SIZE
     }
 }

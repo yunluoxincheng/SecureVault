@@ -3,7 +3,8 @@ package com.securevault.crypto
 object CryptoConstants {
     const val AES_KEY_SIZE = 32
     const val XCHACHA_IV_SIZE = 24
-    const val GCM_TAG_SIZE = 16
+    const val AEAD_TAG_SIZE = 16
+    const val GCM_TAG_SIZE = AEAD_TAG_SIZE
     const val SALT_SIZE = 16
     const val BLOCK_SIZE = 256
     const val MIN_DATA_SIZE = 1

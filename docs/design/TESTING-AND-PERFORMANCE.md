@@ -271,7 +271,7 @@ class CrossPlatformCryptoTest {
 | 指标 | 目标 | 测量方法 | 优先级 |
 |------|------|---------|--------|
 | **Argon2 解锁耗时** | < 2s (高端) / < 4s (低端) | `measureTimeMillis { argon2.deriveKey() }` | P0 |
-| **AES-GCM 单字段加密** | < 1ms | Benchmark 工具 | P0 |
+| **XChaCha20-Poly1305 单字段加密** | < 1ms | Benchmark 工具 | P0 |
 | **密码列表加载 (100条)** | < 200ms | 从解锁到列表可见 | P0 |
 | **密码列表加载 (1000条)** | < 1s | 从解锁到列表可见 | P1 |
 | **列表滚动帧率** | ≥ 60fps | GPU profiler | P1 |
@@ -347,7 +347,7 @@ class CryptoPerformanceTest {
         val data = CryptoUtils.generateSecureRandom(1024)
         val cipher = AesGcmCipher()
 
-        benchmark("AES-GCM encrypt 1KB") {
+        benchmark("XChaCha20-Poly1305 encrypt 1KB") {
             cipher.encrypt(data, key)
         }
     }

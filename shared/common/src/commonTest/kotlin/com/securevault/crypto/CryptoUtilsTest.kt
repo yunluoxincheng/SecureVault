@@ -61,8 +61,8 @@ class CryptoUtilsTest {
 
     @Test
     fun toHexString_producesCorrectFormat() {
-        val data = byteArrayOf(0x00, 0x0f, 0xff, 0xab.toByte())
-        val hex = data.toHexString()
+        val data = byteArrayOf(0x00, 0x0f, 0xff.toByte(), 0xab.toByte())
+        val hex = CryptoUtils.run { data.toHexString() }
         assertEquals("000fffab", hex)
     }
 
@@ -70,7 +70,7 @@ class CryptoUtilsTest {
     fun hexStringToByteArray_roundtrip() {
         val hex = "deadbeef"
         val bytes = CryptoUtils.hexStringToByteArray(hex)
-        val result = bytes.toHexString()
+        val result = CryptoUtils.run { bytes.toHexString() }
         assertEquals(hex, result)
     }
 }

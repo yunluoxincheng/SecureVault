@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertContentEquals
+import kotlin.test.assertFailsWith
 
 class SecurePaddingTest {
 
@@ -42,6 +43,23 @@ class SecurePaddingTest {
         val data = ByteArray(300) { it.toByte() }
         val padded = SecurePadding.pad(data)
         assertContentEquals(data, padded.sliceArray(0 until data.size))
+    }
+
+    @Test
+    fun pad_unpad_roundtrip() {
+        val data = "padding-roundtrip".encodeToByteArray()
+        val padded = SecurePadding.pad(data)
+        val restored = SecurePadding.unpad(padded)
+
+        assertContentEquals(data, restored)
+    }
+
+    @Test
+    fun unpad_invalidLength_throws() {
+        val invalid = ByteArray(257) { 1 }
+        assertFailsWith<InvalidPaddingException> {
+            SecurePadding.unpad(invalid)
+        }
     }
 
     @Test

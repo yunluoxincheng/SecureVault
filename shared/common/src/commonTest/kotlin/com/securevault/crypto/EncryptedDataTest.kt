@@ -12,9 +12,9 @@ class EncryptedDataTest {
     fun toStorageFormat_and_fromStorageFormat_roundtrip() {
         val data = EncryptedData(
             version = "v2",
-            iv = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12),
+            iv = ByteArray(24) { (it + 1).toByte() },
             ciphertext = byteArrayOf(100, 101, 102, 103, 104, 105, 106, 107),
-            tag = byteArrayOf(200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215)
+            tag = byteArrayOf(200.toByte(), 201.toByte(), 202.toByte(), 203.toByte(), 204.toByte(), 205.toByte(), 206.toByte(), 207.toByte(), 208.toByte(), 209.toByte(), 210.toByte(), 211.toByte(), 212.toByte(), 213.toByte(), 214.toByte(), 215.toByte())
         )
 
         val storage = data.toStorageFormat()
@@ -28,23 +28,23 @@ class EncryptedDataTest {
 
     @Test
     fun combined_returnsCorrectByteArray() {
-        val iv = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        val iv = ByteArray(24) { (it + 1).toByte() }
         val ciphertext = byteArrayOf(100, 101, 102)
-        val tag = byteArrayOf(200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215)
+        val tag = byteArrayOf(200.toByte(), 201.toByte(), 202.toByte(), 203.toByte(), 204.toByte(), 205.toByte(), 206.toByte(), 207.toByte(), 208.toByte(), 209.toByte(), 210.toByte(), 211.toByte(), 212.toByte(), 213.toByte(), 214.toByte(), 215.toByte())
 
         val data = EncryptedData("v2", iv, ciphertext, tag)
         val combined = data.combined()
 
-        assertContentEquals(iv, combined.sliceArray(0 until 12))
-        assertContentEquals(ciphertext, combined.sliceArray(12 until 15))
-        assertContentEquals(tag, combined.sliceArray(15 until 31))
+        assertContentEquals(iv, combined.sliceArray(0 until 24))
+        assertContentEquals(ciphertext, combined.sliceArray(24 until 27))
+        assertContentEquals(tag, combined.sliceArray(27 until 43))
     }
 
     @Test
     fun fromCombined_restoresCorrectData() {
-        val iv = byteArrayOf(1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
+        val iv = ByteArray(24) { (it + 1).toByte() }
         val ciphertext = byteArrayOf(100, 101, 102, 103, 104)
-        val tag = byteArrayOf(200, 201, 202, 203, 204, 205, 206, 207, 208, 209, 210, 211, 212, 213, 214, 215)
+        val tag = byteArrayOf(200.toByte(), 201.toByte(), 202.toByte(), 203.toByte(), 204.toByte(), 205.toByte(), 206.toByte(), 207.toByte(), 208.toByte(), 209.toByte(), 210.toByte(), 211.toByte(), 212.toByte(), 213.toByte(), 214.toByte(), 215.toByte())
 
         val combined = iv + ciphertext + tag
         val restored = EncryptedData.fromCombined(combined)

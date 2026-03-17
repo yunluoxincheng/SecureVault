@@ -4,6 +4,7 @@ import kotlin.test.Test
 import kotlin.test.assertTrue
 import kotlin.test.assertFalse
 import kotlin.test.assertFailsWith
+import kotlin.test.assertContentEquals
 
 class SensitiveDataTest {
 
@@ -19,7 +20,10 @@ class SensitiveDataTest {
     fun close_wipesByteArray() {
         val data = byteArrayOf(1, 2, 3, 4, 5)
         val sensitive = SensitiveData.ofByteArray(data)
+        val leakedReference = sensitive.get()
         sensitive.close()
+
+        assertContentEquals(ByteArray(leakedReference.size), leakedReference)
         assertFalse(sensitive.isAvailable)
     }
 

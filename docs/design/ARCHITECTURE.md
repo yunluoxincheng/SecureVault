@@ -75,7 +75,7 @@
 shared/common/src/commonMain/kotlin/
 ├── crypto/                  # 加密引擎
 │   ├── Argon2Kdf.kt         # Argon2id 密钥派生接口
-│   ├── AesGcmCipher.kt      # AES-256-GCM 加密/解密
+│   ├── AesGcmCipher.kt      # XChaCha20-Poly1305 加密/解密
 │   ├── SecurePadding.kt     # 安全随机填充
 │   ├── CryptoConstants.kt  # 加密常量
 │   └── CryptoUtils.kt      # 加密工具函数
@@ -226,7 +226,7 @@ composeApp/src/commonMain/kotlin/
 │ UnlockVaultUseCase              │
 │ 1. Argon2id(password, salt)     │
 │    → PasswordKey                │
-│ 2. AES-GCM 解密 encrypted_data_key │
+│ 2. XChaCha20-Poly1305 解密 encrypted_data_key │
 │    → DataKey                    │
 │ 3. SessionManager.cacheDataKey() │
 │ 4. 标记 isUnlocked = true       │
@@ -246,8 +246,8 @@ composeApp/src/commonMain/kotlin/
 │ 2. 获取 DataKey                  │
 │ 3. 对每个字段:                   │
 │    a) SecurePadding.pad()       │
-│    b) 生成随机 IV (12 bytes)     │
-│    c) AES-256-GCM 加密           │
+│    b) 生成随机 nonce (24 bytes)  │
+│    c) XChaCha20-Poly1305 加密    │
 │ 4. PasswordRepository.insert()  │
 └─────────────────────────────────┘
 ```

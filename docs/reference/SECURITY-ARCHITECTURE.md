@@ -15,7 +15,7 @@ SecureVault 使用简化的三层密钥架构（移除了 SafeVault 的非对称
 │ Level 3: 用户数据层                               │
 │ ┌──────────────┐ ┌────────────┐ ┌─────────────┐ │
 │ │ 密码条目      │ │ 安全笔记   │ │ 导出文件     │ │
-│ │ (AES-GCM)    │ │ (AES-GCM)  │ │ (AES-GCM)   │ │
+│ │ (XChaCha20-Poly1305) │ │ (XChaCha20-Poly1305) │ │ (XChaCha20-Poly1305) │ │
 │ └──────┬───────┘ └─────┬──────┘ └──────┬──────┘ │
 │        └───────────────┼───────────────┘         │
 │                        │ DataKey                  │
@@ -57,7 +57,7 @@ SecureVault 使用简化的三层密钥架构（移除了 SafeVault 的非对称
 |------|-----------|-------------|------|
 | Level 1 | PasswordKey + DeviceKey | **相同** | 核心机制不变 |
 | Level 2 | DataKey（双重加密） | **相同** | 核心机制不变 |
-| Level 3（数据） | AES-GCM 加密 | **相同** | 核心机制不变 |
+| Level 3（数据） | XChaCha20-Poly1305 加密 | **相同** | 核心机制不变 |
 | Level 3（分享） | X25519/Ed25519/RSA | **移除** | 离线不需要密钥交换 |
 | 云端密钥 | 固定 Argon2 参数 (128MB) | **移除** | 无云端同步 |
 | HKDF | 分享密钥派生 | **移除** | 无分享功能 |
@@ -169,7 +169,7 @@ class SessionLockedException : Exception("Vault session is locked")
 1. 生成随机 salt (16 bytes)
 2. Argon2id(主密码, salt) → PasswordKey
 3. 生成随机 DataKey (32 bytes, AES-256)
-4. AES-GCM(DataKey, PasswordKey) → encrypted_data_key_password
+4. XChaCha20-Poly1305(DataKey, PasswordKey) → encrypted_data_key_password
 5. 存储: salt, encrypted_data_key_password → vault_config
 6. SessionManager.cacheDataKey(DataKey)
     ↓
@@ -184,7 +184,7 @@ class SessionLockedException : Exception("Vault session is locked")
 1. 读取 salt 从 vault_config
 2. Argon2id(主密码, salt) → PasswordKey
 3. 读取 encrypted_data_key_password 从 vault_config
-4. AES-GCM 解密 → DataKey
+4. XChaCha20-Poly1305 解密 → DataKey
 5. 验证 DataKey 有效性（尝试解密一个校验值）
 6. SessionManager.cacheDataKey(DataKey)
     ↓
@@ -201,7 +201,7 @@ class SessionLockedException : Exception("Vault session is locked")
    iOS: Keychain, Secure Enclave, LAContext
    Desktop: 系统密钥库
 2. 获取 DeviceKey
-3. AES-GCM(DataKey, DeviceKey) → encrypted_data_key_device
+3. XChaCha20-Poly1305(DataKey, DeviceKey) → encrypted_data_key_device
 4. 存储: encrypted_data_key_device → vault_config
     ↓
 生物识别已绑定
@@ -215,7 +215,7 @@ class SessionLockedException : Exception("Vault session is locked")
 1. BiometricAuth.authenticate() → 成功
 2. PlatformKeyStore.getDeviceKey() → DeviceKey
 3. 读取 encrypted_data_key_device 从 vault_config
-4. AES-GCM 解密 → DataKey
+4. XChaCha20-Poly1305 解密 → DataKey
 5. SessionManager.cacheDataKey(DataKey)
     ↓
 保险库已解锁
@@ -523,7 +523,7 @@ class SecurityModeManager(
 
 | 检查项 | 实现方式 | 所在模块 |
 |-------|---------|---------|
-| 密码不以明文存储 | AES-256-GCM 逐字段加密 | `PasswordRepository` |
+| 密码不以明文存储 | XChaCha20-Poly1305 逐字段加密 | `PasswordRepository` |
 | 主密码不存储 | 仅用于派生 PasswordKey | `KeyManager` |
 | DataKey 不持久化明文 | 仅在会话中缓存 | `SessionManager` |
 | 敏感数据自动清零 | `SensitiveData` + `MemorySanitizer` | `security/` |

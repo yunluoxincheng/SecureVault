@@ -139,15 +139,15 @@ actual class Argon2Kdf {
 
 ---
 
-## 二、AES-256-GCM 加密
+## 二、XChaCha20-Poly1305 加密
 
 ### 2.1 常量
 
 | 常量 | 值 | 说明 |
 |------|-----|------|
-| `ALGORITHM` | `AES/GCM/NoPadding` | 算法标识 |
+| `ALGORITHM` | `XChaCha20-Poly1305` | 算法标识 |
 | `KEY_SIZE` | 256 bits | 密钥长度 |
-| `IV_SIZE` | 12 bytes (96 bits) | 初始化向量 |
+| `IV_SIZE` | 24 bytes (192 bits) | 初始化向量（nonce） |
 | `TAG_SIZE` | 128 bits | 认证标签长度 |
 
 ### 2.2 加密数据格式

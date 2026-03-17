@@ -1,6 +1,11 @@
+@file:OptIn(ExperimentalEncodingApi::class)
+
 package com.securevault.crypto
 
 import kotlin.experimental.and
+import kotlin.experimental.xor
+import kotlin.io.encoding.ExperimentalEncodingApi
+import kotlin.io.encoding.Base64
 
 object CryptoUtils {
 
@@ -30,19 +35,19 @@ object CryptoUtils {
     }
 
     fun encodeBase64(data: ByteArray): String {
-        return kotlin.io.encoding.Base64.encode(data)
+        return Base64.encode(data)
     }
 
     fun decodeBase64(data: String): ByteArray {
-        return kotlin.io.encoding.Base64.decode(data)
+        return Base64.decode(data)
     }
 
     fun encodeBase64Url(data: ByteArray): String {
-        return kotlin.io.encoding.Base64.UrlSafe.encode(data)
+        return Base64.UrlSafe.encode(data)
     }
 
     fun decodeBase64Url(data: String): ByteArray {
-        return kotlin.io.encoding.Base64.UrlSafe.decode(data)
+        return Base64.UrlSafe.decode(data)
     }
 
     fun charArrayToUtf16BE(chars: CharArray): ByteArray {
@@ -77,16 +82,8 @@ object CryptoUtils {
         }
     }
 
-    fun ByteArray.xor(other: ByteArray): ByteArray {
-        require(size == other.size) { "Arrays must have same length" }
-        return ByteArray(size) { i -> (this[i] xor other[i]) }
-    }
-
-    fun ByteArray.copy(): ByteArray {
-        return copyOf()
-    }
-
-    fun CharArray.copy(): CharArray {
-        return copyOf()
+    fun xorArrays(a: ByteArray, b: ByteArray): ByteArray {
+        require(a.size == b.size) { "Arrays must have same length" }
+        return ByteArray(a.size) { i -> (a[i] xor b[i]) }
     }
 }

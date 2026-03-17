@@ -42,11 +42,11 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 ```
 Level 1: PasswordKey (Argon2id) + DeviceKey (平台 KeyStore)
 Level 2: DataKey (AES-256, 双重加密)
-Level 3: 用户数据 (AES-256-GCM, 逐字段加密)
+Level 3: 用户数据 (XChaCha20-Poly1305, 逐字段加密)
 ```
 
 - **Argon2id** 密钥派生（自适应参数）
-- **AES-256-GCM** 数据加密（12 字节 IV，128 位 Tag）
+- **XChaCha20-Poly1305** 数据加密（24 字节 nonce，128 位 Tag）
 - **安全随机填充** 防止长度泄露
 - **内存安全擦除** 3 轮覆写
 - **剪贴板自动清除** 30 秒超时
@@ -84,7 +84,7 @@ SecureVault/
 SecureVault 的设计经验和算法验证来自 [SafeVault](../SafeVault)（Android 原生密码管理器）。SecureVault 继承了其经过验证的：
 - 三层密钥体系
 - Argon2id 自适应密钥派生
-- AES-256-GCM 字段级加密
+- XChaCha20-Poly1305 字段级加密
 - 安全填充和内存擦除机制
 - AutofillService 设计模式
 

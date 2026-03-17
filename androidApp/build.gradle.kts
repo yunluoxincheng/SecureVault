@@ -54,18 +54,8 @@ dependencies {
     implementation(project(":shared:android"))
     implementation(project(":composeApp"))
 
-    implementation(platform(libs.compose.multiplatform))
-    implementation(compose.runtime)
-    implementation(compose.foundation)
-    implementation(compose.material3)
-    implementation(compose.materialIconsExtended)
-    implementation(compose.preview)
-    implementation(compose.uiTooling)
-
     implementation(libs.koin.android)
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.biometric)
     implementation(libs.preference)
-
-    debugImplementation(compose.uiTooling)
 }

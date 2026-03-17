@@ -51,7 +51,7 @@ class SensitiveData<T : Any> private constructor(
 }
 
 class SessionManager {
-    private var dataKey: ByteArray? = null
+    private var dataKey: SensitiveData<ByteArray>? = null
     private var isUnlocked = false
     private var lastActivityTime = System.currentTimeMillis()
     private var lockTimeoutMs = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS
@@ -60,14 +60,15 @@ class SessionManager {
     val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
 
     fun unlock(dataKey: ByteArray) {
-        this.dataKey = dataKey.copyOf()
+        this.dataKey?.close()
+        this.dataKey = SensitiveData.ofByteArray(dataKey)
         this.isUnlocked = true
         this.lastActivityTime = System.currentTimeMillis()
         _sessionState.value = SessionState.Unlocked
     }
 
     fun lock() {
-        dataKey?.let { MemorySanitizer.wipe(it) }
+        dataKey?.close()
         dataKey = null
         isUnlocked = false
         _sessionState.value = SessionState.Locked
@@ -76,7 +77,7 @@ class SessionManager {
     fun getDataKey(): ByteArray {
         requireUnlocked()
         lastActivityTime = System.currentTimeMillis()
-        return dataKey?.copy() ?: throw IllegalStateException("DataKey is null")
+        return dataKey?.get()?.copyOf() ?: throw IllegalStateException("DataKey is null")
     }
 
     fun requireUnlocked() {

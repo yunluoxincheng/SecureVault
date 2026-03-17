@@ -49,6 +49,8 @@ class KeyManager(
 
             val encryptedDataKey = AesGcmCipher.encrypt(dataKey, passwordKey)
 
+            sessionManager.unlock(dataKey)
+
             MemorySanitizer.wipe(passwordKey)
             MemorySanitizer.wipe(dataKey)
 
@@ -59,10 +61,12 @@ class KeyManager(
                 isSetup = true
             )
 
-            _state.value = KeyManagerState.Ready
+            _state.value = KeyManagerState.Unlocked
             KeyManagerResult.Success(Unit)
         } catch (e: Exception) {
             KeyManagerResult.Error(KeyManagerError.CryptoError(e.message ?: "Unknown error"))
+        } finally {
+            MemorySanitizer.wipe(password)
         }
     }
 
@@ -91,6 +95,42 @@ class KeyManager(
             KeyManagerResult.Success(Unit)
         } catch (e: Exception) {
             KeyManagerResult.Error(KeyManagerError.InvalidPassword)
+        } finally {
+            MemorySanitizer.wipe(password)
+        }
+    }
+
+    suspend fun changeMasterPassword(currentPassword: CharArray, newPassword: CharArray): KeyManagerResult<Unit> {
+        val config = vaultConfig ?: return KeyManagerResult.Error(KeyManagerError.VaultNotSetup)
+
+        return try {
+            val currentPasswordKey = argon2Kdf.deriveKey(currentPassword, config.salt, config.argon2Config)
+            val dataKey = AesGcmCipher.decrypt(config.encryptedDataKey, currentPasswordKey)
+
+            val newSalt = argon2Kdf.generateSalt()
+            val newConfig = AdaptiveArgon2Config.getStandardConfig()
+            val newPasswordKey = argon2Kdf.deriveKey(newPassword, newSalt, newConfig)
+            val newEncryptedDataKey = AesGcmCipher.encrypt(dataKey, newPasswordKey)
+
+            vaultConfig = config.copy(
+                salt = newSalt,
+                encryptedDataKey = newEncryptedDataKey,
+                argon2Config = newConfig
+            )
+
+            sessionManager.unlock(dataKey)
+
+            MemorySanitizer.wipe(currentPasswordKey)
+            MemorySanitizer.wipe(newPasswordKey)
+            MemorySanitizer.wipe(dataKey)
+
+            _state.value = KeyManagerState.Unlocked
+            KeyManagerResult.Success(Unit)
+        } catch (e: Exception) {
+            KeyManagerResult.Error(KeyManagerError.InvalidPassword)
+        } finally {
+            MemorySanitizer.wipe(currentPassword)
+            MemorySanitizer.wipe(newPassword)
         }
     }
 

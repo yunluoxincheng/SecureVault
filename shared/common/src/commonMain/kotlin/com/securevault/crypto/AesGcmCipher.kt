@@ -1,54 +1,50 @@
 package com.securevault.crypto
 
-import com.ionspin.kotlin.crypto.aead.XChaCha20Poly1305
+import com.ionspin.kotlin.crypto.secretbox.SecretBox
 
 object AesGcmCipher {
     private const val KEY_SIZE = 32
-    private const val IV_SIZE = 24
-    private const val TAG_SIZE = 16
+    private const val NONCE_SIZE = 24
+    private const val TAG_SIZE = CryptoConstants.AEAD_TAG_SIZE
 
     suspend fun encrypt(plaintext: ByteArray, key: ByteArray): EncryptedData {
+        LibsodiumManager.ensureInitialized()
         require(key.size == KEY_SIZE) { "Key must be $KEY_SIZE bytes" }
         require(plaintext.isNotEmpty()) { "Plaintext cannot be empty" }
 
-        val iv = CryptoUtils.generateSecureRandom(IV_SIZE)
-        val nonce = XChaCha20Poly1305.Nonce(iv)
-        val associatedData = byteArrayOf()
+        val nonce = CryptoUtils.generateSecureRandom(NONCE_SIZE)
+        
+        val cipherWithTag = SecretBox.easy(
+            plaintext.toUByteArray(),
+            nonce.toUByteArray(),
+            key.toUByteArray()
+        ).toByteArray()
 
-        val ciphertextWithTag = XChaCha20Poly1305.encrypt(
-            plaintext,
-            associatedData,
-            nonce,
-            key
-        )
-
-        val ciphertext = ciphertextWithTag.sliceArray(0 until ciphertextWithTag.size - TAG_SIZE)
-        val tag = ciphertextWithTag.sliceArray(ciphertextWithTag.size - TAG_SIZE until ciphertextWithTag.size)
+        val tag = cipherWithTag.sliceArray(0 until TAG_SIZE)
+        val ciphertext = cipherWithTag.sliceArray(TAG_SIZE until cipherWithTag.size)
 
         return EncryptedData(
             version = CryptoConstants.CURRENT_STORAGE_FORMAT,
-            iv = iv,
+            iv = nonce,
             ciphertext = ciphertext,
             tag = tag
         )
     }
 
     suspend fun decrypt(encryptedData: EncryptedData, key: ByteArray): ByteArray {
+        LibsodiumManager.ensureInitialized()
         require(key.size == KEY_SIZE) { "Key must be $KEY_SIZE bytes" }
         require(encryptedData.version == CryptoConstants.CURRENT_STORAGE_FORMAT) {
             "Unsupported version: ${encryptedData.version}"
         }
+        require(encryptedData.iv.size == NONCE_SIZE) { "Invalid nonce size: ${encryptedData.iv.size}" }
+        require(encryptedData.tag.size == TAG_SIZE) { "Invalid tag size: ${encryptedData.tag.size}" }
 
-        val nonce = XChaCha20Poly1305.Nonce(encryptedData.iv)
-        val ciphertextWithTag = encryptedData.ciphertext + encryptedData.tag
-        val associatedData = byteArrayOf()
-
-        return XChaCha20Poly1305.decrypt(
-            ciphertextWithTag,
-            associatedData,
-            nonce,
-            key
-        )
+        return SecretBox.openEasy(
+            (encryptedData.tag + encryptedData.ciphertext).toUByteArray(),
+            encryptedData.iv.toUByteArray(),
+            key.toUByteArray()
+        ).toByteArray()
     }
 
     suspend fun encryptToStorageFormat(plaintext: ByteArray, key: ByteArray): String {
@@ -61,3 +57,6 @@ object AesGcmCipher {
         return decrypt(encryptedData, key)
     }
 }
+
+private fun UByteArray.toByteArray(): ByteArray = ByteArray(size) { this[it].toByte() }
+private fun ByteArray.toUByteArray(): UByteArray = UByteArray(size) { this[it].toUByte() }

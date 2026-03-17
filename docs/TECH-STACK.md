@@ -36,7 +36,7 @@
 | 组件 | 库 | 说明 |
 |------|-----|------|
 | **核心加密** | kotlin-multiplatform-libsodium (ionspin) | 跨平台 libsodium 绑定 |
-| **AES-256-GCM** | 平台原生 + libsodium | Android: javax.crypto; iOS: CommonCrypto; Desktop: libsodium |
+| **XChaCha20-Poly1305** | libsodium (ionspin) | 跨平台统一 AEAD 实现，24 字节 nonce，128 位 tag |
 | **Argon2id** | 平台原生实现 (expect/actual) | Android: argon2kt 1.6.0; iOS/Desktop: libsodium Argon2 |
 | **密钥存储** | 各平台原生 KeyStore | Android: AndroidKeyStore; iOS: Keychain; Desktop: 系统密钥存储 |
 | **安全随机** | kotlin.random / SecureRandom | 平台原生安全随机数 |
@@ -52,6 +52,7 @@
 5. **Argon2 内置** — libsodium 内含 Argon2id 实现
 
 **Argon2 策略：**
+
 - Android 优先使用 `argon2kt`（JNI 实现，性能更优）
 - 其他平台使用 libsodium 的 `crypto_pwhash` (Argon2id)
 - 通过 `expect/actual` 抽象为统一接口
@@ -141,6 +142,7 @@ android-library = { id = "com.android.library", version.ref = "agp" }
 ### 7.1 为什么不用 Voyager 导航
 
 Compose Multiplatform 1.10.0 已内置 Navigation 3 支持，提供：
+
 - 灵活的导航栈操作
 - 跨平台一致的 API
 - 官方维护和长期支持
@@ -150,6 +152,7 @@ Compose Multiplatform 1.10.0 已内置 Navigation 3 支持，提供：
 ### 7.2 为什么不用 Room
 
 Room 是 Android 专用的 ORM。SQLDelight 提供：
+
 - 真正的跨平台支持（Android、iOS、Desktop）
 - SQL-first 的类型安全查询
 - 编译时 SQL 验证
@@ -158,6 +161,7 @@ Room 是 Android 专用的 ORM。SQLDelight 提供：
 ### 7.3 为什么不用 Hilt/Dagger
 
 Hilt/Dagger 是 Android 专用。Koin 提供：
+
 - 纯 Kotlin DSL 的 DI
 - 完整的 KMP 支持
 - 轻量、无代码生成
