@@ -1,0 +1,57 @@
+build:
+  maxIssues: 0
+  excludeCorrectable: false
+  failThreshold: 10
+
+config:
+  validation: true
+  warningsAsErrors: false
+
+complexity:
+  LongParameterList:
+    threshold: 6
+    ignoreDefaultParameters: true
+  LongMethod:
+    threshold: 60
+  ComplexMethod:
+    threshold: 15
+  LargeClass:
+    threshold: 600
+
+style:
+  MaxLineLength:
+    maxLineLength: 120
+    excludeCommentStatements: true
+  ForbiddenComment:
+    values: ['TODO:', 'FIXME:']
+  ReturnCount:
+    max: 3
+
+exceptions:
+  TooGenericExceptionCaught:
+    enabled: false
+
+formatting:
+  Indentation:
+    indentSize: 4
+  MaximumLineLength:
+    maxLineLength: 120
+
+naming:
+  ClassNaming:
+    active: true
+  FunctionNaming:
+    active: true
+    ignoreAnnotated: ['Composable']
+  VariableNaming:
+    active: true
+
+performance:
+  SpreadOperator:
+    active: true
+
+potential-bugs:
+  Deprecation:
+    active: true
+  EmptyRange:
+    active: true

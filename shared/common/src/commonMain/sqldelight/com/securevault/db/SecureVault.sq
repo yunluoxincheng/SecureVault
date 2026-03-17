@@ -1,0 +1,90 @@
+CREATE TABLE password_entries (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    encrypted_title TEXT NOT NULL,
+    encrypted_username TEXT NOT NULL,
+    encrypted_password TEXT NOT NULL,
+    encrypted_url TEXT,
+    encrypted_notes TEXT,
+    encrypted_tags TEXT,
+    iv TEXT NOT NULL,
+    category TEXT NOT NULL DEFAULT 'default',
+    is_favorite INTEGER NOT NULL DEFAULT 0,
+    security_mode INTEGER NOT NULL DEFAULT 0,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL
+);
+
+CREATE TABLE vault_config (
+    key TEXT PRIMARY KEY,
+    value TEXT NOT NULL
+);
+
+CREATE TABLE generated_passwords (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    password TEXT NOT NULL,
+    strength INTEGER NOT NULL,
+    created_at INTEGER NOT NULL
+);
+
+CREATE INDEX idx_password_entries_category ON password_entries(category);
+CREATE INDEX idx_password_entries_favorite ON password_entries(is_favorite);
+CREATE INDEX idx_password_entries_security ON password_entries(security_mode);
+CREATE INDEX idx_password_entries_updated ON password_entries(updated_at DESC);
+
+selectAll:
+SELECT * FROM password_entries ORDER BY updated_at DESC;
+
+selectById:
+SELECT * FROM password_entries WHERE id = ?;
+
+selectByCategory:
+SELECT * FROM password_entries WHERE category = ? ORDER BY updated_at DESC;
+
+selectFavorites:
+SELECT * FROM password_entries WHERE is_favorite = 1 ORDER BY updated_at DESC;
+
+selectSecurityMode:
+SELECT * FROM password_entries WHERE security_mode = 1 ORDER BY updated_at DESC;
+
+searchByTitle:
+SELECT * FROM password_entries WHERE encrypted_title LIKE ? ORDER BY updated_at DESC;
+
+insertEntry:
+INSERT INTO password_entries (
+    encrypted_title, encrypted_username, encrypted_password,
+    encrypted_url, encrypted_notes, encrypted_tags,
+    iv, category, is_favorite, security_mode,
+    created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+updateEntry:
+UPDATE password_entries SET
+    encrypted_title = ?, encrypted_username = ?, encrypted_password = ?,
+    encrypted_url = ?, encrypted_notes = ?, encrypted_tags = ?,
+    iv = ?, category = ?, is_favorite = ?, security_mode = ?,
+    updated_at = ?
+WHERE id = ?;
+
+deleteEntry:
+DELETE FROM password_entries WHERE id = ?;
+
+deleteAllEntries:
+DELETE FROM password_entries;
+
+getConfig:
+SELECT value FROM vault_config WHERE key = ?;
+
+setConfig:
+INSERT OR REPLACE INTO vault_config (key, value) VALUES (?, ?);
+
+deleteConfig:
+DELETE FROM vault_config WHERE key = ?;
+
+insertGeneratedPassword:
+INSERT INTO generated_passwords (password, strength, created_at) VALUES (?, ?, ?);
+
+selectRecentGeneratedPasswords:
+SELECT * FROM generated_passwords ORDER BY created_at DESC LIMIT 20;
+
+clearGeneratedPasswords:
+DELETE FROM generated_passwords;
