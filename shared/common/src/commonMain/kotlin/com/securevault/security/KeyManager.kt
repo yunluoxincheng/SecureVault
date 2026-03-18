@@ -1,6 +1,8 @@
 package com.securevault.security
 
 import com.securevault.crypto.*
+import com.securevault.data.ConfigRepository
+import com.securevault.data.VaultConfigKeys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,7 +26,8 @@ sealed class KeyManagerError {
 class KeyManager(
     private val argon2Kdf: Argon2Kdf,
     private val platformKeyStore: PlatformKeyStore,
-    private val sessionManager: SessionManager
+    private val sessionManager: SessionManager,
+    private val configRepository: ConfigRepository? = null
 ) {
     private var vaultConfig: VaultConfig? = null
 
@@ -36,7 +39,7 @@ class KeyManager(
     }
 
     suspend fun setupVault(password: CharArray): KeyManagerResult<Unit> {
-        if (isVaultSetup()) {
+        if (isVaultSetup() || loadVaultConfigIfNeeded()) {
             return KeyManagerResult.Error(KeyManagerError.VaultAlreadySetup)
         }
 
@@ -48,6 +51,7 @@ class KeyManager(
             val dataKey = CryptoUtils.generateSecureRandom(CryptoConstants.AES_KEY_SIZE)
 
             val encryptedDataKey = AesGcmCipher.encrypt(dataKey, passwordKey)
+            platformKeyStore.storeDeviceKey(dataKey)
 
             sessionManager.unlock(dataKey)
 
@@ -60,6 +64,7 @@ class KeyManager(
                 argon2Config = config,
                 isSetup = true
             )
+            saveVaultConfig(vaultConfig!!)
 
             _state.value = KeyManagerState.Unlocked
             KeyManagerResult.Success(Unit)
@@ -71,6 +76,9 @@ class KeyManager(
     }
 
     suspend fun unlockWithPassword(password: CharArray): KeyManagerResult<Unit> {
+        if (vaultConfig == null) {
+            loadVaultConfigIfNeeded()
+        }
         val config = vaultConfig ?: return KeyManagerResult.Error(KeyManagerError.VaultNotSetup)
 
         if (!config.isSetup) {
@@ -85,6 +93,7 @@ class KeyManager(
             )
 
             val dataKey = AesGcmCipher.decrypt(config.encryptedDataKey, passwordKey)
+            platformKeyStore.storeDeviceKey(dataKey)
 
             MemorySanitizer.wipe(passwordKey)
 
@@ -101,6 +110,9 @@ class KeyManager(
     }
 
     suspend fun changeMasterPassword(currentPassword: CharArray, newPassword: CharArray): KeyManagerResult<Unit> {
+        if (vaultConfig == null) {
+            loadVaultConfigIfNeeded()
+        }
         val config = vaultConfig ?: return KeyManagerResult.Error(KeyManagerError.VaultNotSetup)
 
         return try {
@@ -111,12 +123,14 @@ class KeyManager(
             val newConfig = AdaptiveArgon2Config.getStandardConfig()
             val newPasswordKey = argon2Kdf.deriveKey(newPassword, newSalt, newConfig)
             val newEncryptedDataKey = AesGcmCipher.encrypt(dataKey, newPasswordKey)
+            platformKeyStore.storeDeviceKey(dataKey)
 
             vaultConfig = config.copy(
                 salt = newSalt,
                 encryptedDataKey = newEncryptedDataKey,
                 argon2Config = newConfig
             )
+            saveVaultConfig(vaultConfig!!)
 
             sessionManager.unlock(dataKey)
 
@@ -139,6 +153,32 @@ class KeyManager(
         _state.value = KeyManagerState.Locked
     }
 
+    fun canUnlockWithBiometric(): Boolean {
+        return platformKeyStore.hasDeviceKey()
+    }
+
+    suspend fun unlockWithBiometric(): KeyManagerResult<Unit> {
+        if (vaultConfig == null) {
+            loadVaultConfigIfNeeded()
+        }
+        if (vaultConfig == null || !vaultConfig!!.isSetup) {
+            return KeyManagerResult.Error(KeyManagerError.VaultNotSetup)
+        }
+
+        val dataKey = platformKeyStore.getDeviceKey()
+            ?: return KeyManagerResult.Error(KeyManagerError.BiometricNotEnrolled)
+
+        return try {
+            sessionManager.unlock(dataKey)
+            _state.value = KeyManagerState.Unlocked
+            KeyManagerResult.Success(Unit)
+        } catch (e: Exception) {
+            KeyManagerResult.Error(KeyManagerError.StorageError(e.message ?: "Device key unavailable"))
+        } finally {
+            MemorySanitizer.wipe(dataKey)
+        }
+    }
+
     fun getDataKey(): ByteArray? {
         return if (sessionManager.isUnlocked()) {
             sessionManager.getDataKey()
@@ -152,6 +192,42 @@ class KeyManager(
         sessionManager.clear()
         platformKeyStore.deleteDeviceKey()
         _state.value = KeyManagerState.NotSetup
+    }
+
+    private suspend fun loadVaultConfigIfNeeded(): Boolean {
+        if (vaultConfig != null) return true
+        val repository = configRepository ?: return false
+
+        val saltBase64 = repository.get(VaultConfigKeys.Salt) ?: return false
+        val encryptedDataKeyStorage = repository.get(VaultConfigKeys.EncryptedDataKeyPassword) ?: return false
+        val memory = repository.get(VaultConfigKeys.Argon2MemoryKb)?.toIntOrNull() ?: return false
+        val iterations = repository.get(VaultConfigKeys.Argon2Iterations)?.toIntOrNull() ?: return false
+        val parallelism = repository.get(VaultConfigKeys.Argon2Parallelism)?.toIntOrNull() ?: return false
+        val outputLength = repository.get(VaultConfigKeys.Argon2OutputLength)?.toIntOrNull() ?: return false
+
+        vaultConfig = VaultConfig(
+            salt = CryptoUtils.decodeBase64(saltBase64),
+            encryptedDataKey = EncryptedData.fromStorageFormat(encryptedDataKeyStorage),
+            argon2Config = Argon2Config(
+                memoryKB = memory,
+                iterations = iterations,
+                parallelism = parallelism,
+                outputLength = outputLength
+            ),
+            isSetup = true
+        )
+        _state.value = KeyManagerState.Locked
+        return true
+    }
+
+    private suspend fun saveVaultConfig(config: VaultConfig) {
+        val repository = configRepository ?: return
+        repository.set(VaultConfigKeys.Salt, CryptoUtils.encodeBase64(config.salt))
+        repository.set(VaultConfigKeys.EncryptedDataKeyPassword, config.encryptedDataKey.toStorageFormat())
+        repository.set(VaultConfigKeys.Argon2MemoryKb, config.argon2Config.memoryKB.toString())
+        repository.set(VaultConfigKeys.Argon2Iterations, config.argon2Config.iterations.toString())
+        repository.set(VaultConfigKeys.Argon2Parallelism, config.argon2Config.parallelism.toString())
+        repository.set(VaultConfigKeys.Argon2OutputLength, config.argon2Config.outputLength.toString())
     }
 }
 

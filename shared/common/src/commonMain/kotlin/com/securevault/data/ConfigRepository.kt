@@ -16,4 +16,7 @@ object VaultConfigKeys {
     const val Argon2Parallelism = "argon2_parallelism"
     const val Argon2OutputLength = "argon2_output_length"
     const val BiometricEnabled = "biometric_enabled"
+    const val ScreenshotAllowed = "screenshot_allowed"
+    const val OnboardingCompleted = "onboarding_completed"
+    const val VaultSetupCompleted = "vault_setup_completed"
 }

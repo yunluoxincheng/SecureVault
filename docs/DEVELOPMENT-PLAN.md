@@ -125,6 +125,21 @@
 - [x] 密码复制 + 30 秒自动清除
 - [x] 亮色/暗色主题切换正常
 
+### 审查备注（2026-03-18）
+
+- 本阶段主链路已通过代码审查与构建验证：`androidApp:assembleDebug` 成功。
+- 数据层与 Week 7 集成测试已通过：`PasswordRepositoryImplTest`、`Week7ViewModelIntegrationTest`。
+- `UnlockScreen` / `SetupScreen` 在当前实现中对应为 `LoginScreen` / `RegisterScreen`（功能语义一致）。
+- 已补：`VaultScreen` 已新增分类筛选交互入口（分类 Chip），并接入 `VaultViewModel` 分类筛选状态。
+- 已补：Android `androidTest` 已新增端到端冒烟用例 `AppE2ESmokeTest`（启动与重建不崩溃）。
+- 已补：`VaultScreen` 已新增“仅收藏”筛选入口，收藏功能已具备实际过滤用途。
+
+### 结项状态（2026-03-18）
+
+- [x] Phase 2: Android MVP 已完成。
+- [x] Android 端认证、密码 CRUD、搜索/分类/收藏筛选、生成器、设置与安全能力均已接通。
+- [x] 当前代码已通过关键编译校验（`composeApp:compileKotlinDesktop`、`androidApp:compileDebugKotlin`、`androidApp:assembleDebugAndroidTest`）。
+
 ---
 
 ## Phase 3: 安全模式（2 周）

@@ -1,5 +1,8 @@
 package com.securevault.ui.components
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -9,6 +12,8 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -36,6 +41,20 @@ fun calculatePasswordStrength(password: String): PasswordStrength {
 @Composable
 fun PasswordStrengthBar(password: String, modifier: Modifier = Modifier) {
     val strength = calculatePasswordStrength(password)
+    val targetProgress = if (password.isBlank()) {
+        0f
+    } else {
+        (PasswordStrengthCalculator.calculateScore(password) / 100f).coerceIn(0.05f, 1f)
+    }
+
+    val animatedProgress = remember { Animatable(0f) }
+    LaunchedEffect(targetProgress) {
+        val first = (targetProgress * 0.35f).coerceIn(0f, 1f)
+        val second = (targetProgress * 0.7f).coerceIn(0f, 1f)
+        animatedProgress.animateTo(first, animationSpec = tween(durationMillis = 90, easing = FastOutSlowInEasing))
+        animatedProgress.animateTo(second, animationSpec = tween(durationMillis = 120, easing = FastOutSlowInEasing))
+        animatedProgress.animateTo(targetProgress, animationSpec = tween(durationMillis = 180, easing = FastOutSlowInEasing))
+    }
 
     Column(
         modifier = modifier,
@@ -46,7 +65,7 @@ fun PasswordStrengthBar(password: String, modifier: Modifier = Modifier) {
             Text(text = strength.label, style = MaterialTheme.typography.bodyMedium, color = strength.color)
         }
         LinearProgressIndicator(
-            progress = { strength.progress },
+            progress = { animatedProgress.value },
             modifier = Modifier.fillMaxWidth().height(8.dp),
             color = strength.color
         )

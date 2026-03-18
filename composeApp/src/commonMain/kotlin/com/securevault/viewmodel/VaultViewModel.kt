@@ -15,6 +15,9 @@ import kotlinx.coroutines.launch
 
 data class VaultUiState(
     val entries: List<PasswordEntry> = emptyList(),
+    val categories: List<String> = emptyList(),
+    val selectedCategory: String? = null,
+    val favoritesOnly: Boolean = false,
     val query: String = "",
     val isLoading: Boolean = false,
     val errorMessage: String? = null
@@ -39,9 +42,31 @@ class VaultViewModel(
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
-                passwordRepository.search(_uiState.value.query, PasswordFilter(), dataKey)
-            }.onSuccess { entries ->
-                _uiState.update { it.copy(entries = entries, isLoading = false) }
+                val currentState = _uiState.value
+                val allEntries = passwordRepository.search("", PasswordFilter(), dataKey)
+                val categoryOptions = allEntries.map { it.category }.distinct().sorted()
+                val selectedCategory = currentState.selectedCategory
+                    ?.takeIf { categoryOptions.contains(it) }
+
+                val filteredEntries = passwordRepository.search(
+                    currentState.query,
+                    PasswordFilter(
+                        category = selectedCategory,
+                        onlyFavorites = currentState.favoritesOnly
+                    ),
+                    dataKey
+                )
+
+                Triple(filteredEntries, categoryOptions, selectedCategory)
+            }.onSuccess { (entries, categories, selectedCategory) ->
+                _uiState.update {
+                    it.copy(
+                        entries = entries,
+                        categories = categories,
+                        selectedCategory = selectedCategory,
+                        isLoading = false
+                    )
+                }
             }.onFailure { throwable ->
                 _uiState.update { it.copy(isLoading = false, errorMessage = throwable.message ?: "加载失败") }
             }
@@ -53,14 +78,44 @@ class VaultViewModel(
         loadEntries()
     }
 
+    fun updateCategory(category: String?) {
+        _uiState.update { it.copy(selectedCategory = category) }
+        loadEntries()
+    }
+
+    fun updateFavoritesOnly(enabled: Boolean) {
+        _uiState.update { it.copy(favoritesOnly = enabled) }
+        loadEntries()
+    }
+
     fun deleteEntry(id: Long) {
         val dataKey = keyManager.getDataKey() ?: return
         scope.launch {
             runCatching {
                 passwordRepository.deleteById(id)
-                passwordRepository.search(_uiState.value.query, PasswordFilter(), dataKey)
-            }.onSuccess { entries ->
-                _uiState.update { it.copy(entries = entries, errorMessage = null) }
+                val currentState = _uiState.value
+                val allEntries = passwordRepository.search("", PasswordFilter(), dataKey)
+                val categoryOptions = allEntries.map { it.category }.distinct().sorted()
+                val selectedCategory = currentState.selectedCategory
+                    ?.takeIf { categoryOptions.contains(it) }
+                val filteredEntries = passwordRepository.search(
+                    currentState.query,
+                    PasswordFilter(
+                        category = selectedCategory,
+                        onlyFavorites = currentState.favoritesOnly
+                    ),
+                    dataKey
+                )
+                Triple(filteredEntries, categoryOptions, selectedCategory)
+            }.onSuccess { (entries, categories, selectedCategory) ->
+                _uiState.update {
+                    it.copy(
+                        entries = entries,
+                        categories = categories,
+                        selectedCategory = selectedCategory,
+                        errorMessage = null
+                    )
+                }
             }.onFailure { throwable ->
                 _uiState.update { it.copy(errorMessage = throwable.message ?: "删除失败") }
             }

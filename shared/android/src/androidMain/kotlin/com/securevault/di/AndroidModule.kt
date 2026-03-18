@@ -28,5 +28,5 @@ fun createAndroidModule(context: Context) = module {
     single { SecureClipboard() }
     single { Argon2Kdf() }
     single { SessionManager() }
-    factory { KeyManager(get(), get(), get()) }
+    factory { KeyManager(get(), get(), get(), get()) }
 }

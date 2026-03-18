@@ -1,7 +1,10 @@
 package com.securevault.viewmodel
 
+import com.securevault.data.ConfigRepository
+import com.securevault.data.VaultConfigKeys
 import com.securevault.security.BiometricAuth
 import com.securevault.security.BiometricResult
+import com.securevault.security.KeyManagerError
 import com.securevault.security.KeyManager
 import com.securevault.security.KeyManagerResult
 import kotlinx.coroutines.CoroutineScope
@@ -23,7 +26,8 @@ data class UnlockUiState(
 
 class UnlockViewModel(
     private val keyManager: KeyManager,
-    private val biometricAuth: BiometricAuth
+    private val biometricAuth: BiometricAuth,
+    private val configRepository: ConfigRepository
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -35,11 +39,18 @@ class UnlockViewModel(
     }
 
     fun refreshState() {
-        _uiState.update {
-            it.copy(
-                isVaultSetup = keyManager.isVaultSetup(),
-                biometricAvailable = biometricAuth.isAvailable()
-            )
+        scope.launch {
+            val biometricEnabled = configRepository
+                .get(VaultConfigKeys.BiometricEnabled)
+                ?.toBooleanStrictOrNull()
+                ?: true
+
+            _uiState.update {
+                it.copy(
+                    isVaultSetup = keyManager.isVaultSetup(),
+                        biometricAvailable = biometricEnabled && biometricAuth.isAvailable() && keyManager.canUnlockWithBiometric()
+                )
+            }
         }
     }
 
@@ -47,12 +58,15 @@ class UnlockViewModel(
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             when (keyManager.setupVault(password.toCharArray())) {
-                is KeyManagerResult.Success -> _uiState.update {
-                    it.copy(
-                        isLoading = false,
-                        isUnlocked = true,
-                        isVaultSetup = true
-                    )
+                is KeyManagerResult.Success -> {
+                    configRepository.set(VaultConfigKeys.VaultSetupCompleted, true.toString())
+                    _uiState.update {
+                        it.copy(
+                            isLoading = false,
+                            isUnlocked = true,
+                            isVaultSetup = true
+                        )
+                    }
                 }
 
                 is KeyManagerResult.Error -> _uiState.update {
@@ -68,9 +82,24 @@ class UnlockViewModel(
     fun unlockWithPassword(password: String) {
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (keyManager.unlockWithPassword(password.toCharArray())) {
+            when (val result = keyManager.unlockWithPassword(password.toCharArray())) {
                 is KeyManagerResult.Success -> _uiState.update { it.copy(isLoading = false, isUnlocked = true) }
-                is KeyManagerResult.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = "主密码错误") }
+                is KeyManagerResult.Error -> {
+                    when (result.error) {
+                        KeyManagerError.InvalidPassword -> {
+                            _uiState.update { it.copy(isLoading = false, errorMessage = "主密码错误") }
+                        }
+
+                        KeyManagerError.VaultNotSetup -> {
+                            configRepository.set(VaultConfigKeys.VaultSetupCompleted, false.toString())
+                            _uiState.update { it.copy(isLoading = false, errorMessage = "未检测到已注册保险库，请先注册") }
+                        }
+
+                        else -> {
+                            _uiState.update { it.copy(isLoading = false, errorMessage = "解锁失败，请重试") }
+                        }
+                    }
+                }
             }
         }
     }
@@ -78,13 +107,37 @@ class UnlockViewModel(
     fun unlockWithBiometric() {
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            val result = biometricAuth.authenticate("SecureVault", "验证身份以解锁")
-            when (result) {
-                BiometricResult.Success -> _uiState.update { it.copy(isLoading = false, isUnlocked = true) }
+            val biometricEnabled = configRepository
+                .get(VaultConfigKeys.BiometricEnabled)
+                ?.toBooleanStrictOrNull()
+                ?: true
+            if (!biometricEnabled) {
+                _uiState.update { it.copy(isLoading = false, errorMessage = "请先在设置中开启生物识别") }
+                return@launch
+            }
+
+            when (val authResult = biometricAuth.authenticate("SecureVault", "验证身份以解锁")) {
+                BiometricResult.Success -> {
+                    when (val unlockResult = keyManager.unlockWithBiometric()) {
+                        is KeyManagerResult.Success -> {
+                            _uiState.update { it.copy(isLoading = false, isUnlocked = true) }
+                        }
+
+                        is KeyManagerResult.Error -> {
+                            val message = when (unlockResult.error) {
+                                KeyManagerError.VaultNotSetup -> "未检测到保险库，请先注册"
+                                KeyManagerError.BiometricNotEnrolled -> "尚未准备生物识别解锁，请先用主密码登录一次"
+                                else -> "生物识别解锁失败，请先使用主密码"
+                            }
+                            _uiState.update { it.copy(isLoading = false, errorMessage = message) }
+                        }
+                    }
+                }
+
                 BiometricResult.NotAvailable -> _uiState.update { it.copy(isLoading = false, errorMessage = "生物识别不可用") }
                 BiometricResult.Cancelled -> _uiState.update { it.copy(isLoading = false, errorMessage = "已取消生物识别") }
                 BiometricResult.Failed -> _uiState.update { it.copy(isLoading = false, errorMessage = "生物识别失败") }
-                is BiometricResult.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = result.message) }
+                is BiometricResult.Error -> _uiState.update { it.copy(isLoading = false, errorMessage = authResult.message) }
             }
         }
     }

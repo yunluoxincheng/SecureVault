@@ -2,6 +2,7 @@ package com.securevault.di
 
 import com.securevault.util.PasswordGenerator
 import com.securevault.viewmodel.AddEditPasswordViewModel
+import com.securevault.viewmodel.AuthFlowViewModel
 import com.securevault.viewmodel.GeneratorViewModel
 import com.securevault.viewmodel.PasswordDetailViewModel
 import com.securevault.viewmodel.SettingsViewModel
@@ -11,11 +12,12 @@ import org.koin.dsl.module
 
 val appModule = module {
     single { PasswordGenerator() }
+    factory { AuthFlowViewModel(get()) }
 
     factory { VaultViewModel(get(), get()) }
     factory { PasswordDetailViewModel(get(), get(), get()) }
     factory { AddEditPasswordViewModel(get(), get()) }
-    factory { UnlockViewModel(get(), get()) }
-    factory { SettingsViewModel(get(), get(), get()) }
+    factory { UnlockViewModel(get(), get(), get()) }
+    factory { SettingsViewModel(get(), get(), get(), get()) }
     factory { GeneratorViewModel(get(), get()) }
 }

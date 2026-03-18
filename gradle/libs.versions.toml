@@ -13,6 +13,7 @@ kermit = "2.0.5"
 detekt = "1.23.8"
 biometric = "1.1.0"
 preference = "1.2.1"
+navigation = "2.9.0-beta03"
 
 [libraries]
 kotlinx-coroutines-core = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-core", version.ref = "coroutines" }
@@ -38,6 +39,7 @@ kermit-core = { module = "co.touchlab:kermit-core", version.ref = "kermit" }
 
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 preference = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
+navigation-compose = { module = "org.jetbrains.androidx.navigation:navigation-compose", version.ref = "navigation" }
 
 [plugins]
 kotlin-multiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }

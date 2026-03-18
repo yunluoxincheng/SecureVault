@@ -58,4 +58,8 @@ dependencies {
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.biometric)
     implementation(libs.preference)
+
+    androidTestImplementation("androidx.test:core-ktx:1.6.1")
+    androidTestImplementation("androidx.test.ext:junit:1.2.1")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
 }
