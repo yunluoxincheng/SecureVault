@@ -185,9 +185,10 @@ fun SecureVaultApp() {
                         errorMessage = unlockState.errorMessage,
                         onRegister = { password -> unlockViewModel.setupVault(password) },
                         onGoLogin = {
-                            navController.navigate(Route.Login) {
-                                launchSingleTop = true
-                            }
+                            navController.navigateToLoginFromRegister(
+                                loginRoute = Route.Login,
+                                registerRoute = Route.Register
+                            )
                         }
                     )
                 }
@@ -249,12 +250,10 @@ fun SecureVaultApp() {
                         onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
                         onLock = {
                             settingsViewModel.lockNow()
-                            navController.navigate(Route.Login) {
-                                popUpTo(navController.graph.findStartDestination().id) {
-                                    inclusive = true
-                                }
-                                launchSingleTop = true
-                            }
+                            navController.navigateToLoginAfterLock(
+                                loginRoute = Route.Login,
+                                vaultRoute = Route.Vault
+                            )
                         }
                     )
                 }
