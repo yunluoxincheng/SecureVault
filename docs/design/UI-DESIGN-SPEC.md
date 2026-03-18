@@ -261,6 +261,106 @@ val passwordFontFamily = FontFamily(
 - 剪贴板操作（后台操作）
 - 加密/解密过程（用加载指示器代替）
 
+### 6.4 动效实现（代码层）
+
+> 版本 1.1 补充 — 对应 UI 升级实现（2026-03-19）
+
+#### 代码位置
+
+所有动效基础设施位于 `composeApp/src/commonMain/kotlin/com/securevault/ui/animation/`：
+
+| 文件 | 职责 |
+|------|------|
+| `AnimationTokens.kt` | 全局动效常量（时长、缓动曲线、Spring 参数） |
+| `Transitions.kt` | 页面进入/退出 Transition 定义（`NavTransitions` 对象） |
+| `ItemAnimations.kt` | 列表项入场 `Modifier.animateItemEntrance(index)` |
+| `ButtonAnimation.kt` | 按钮按压缩放 `Modifier.pressAnimation()` |
+
+#### AnimationTokens — 常量与 6.2 对照
+
+```kotlin
+object AnimationTokens {
+    // 时长（对应 6.2 表格）
+    const val pageEnterDuration   = 300   // 页面进入
+    const val pageExitDuration    = 250   // 页面退出
+    const val cardAppearDuration  = 200   // 卡片出现
+    const val dialogDuration      = 250   // 对话框弹出
+    const val crossFadeDuration   = 150   // 标签页切换 / 密码显示切换
+    const val copyFeedbackDuration = 300  // 复制反馈
+    const val strengthBarDuration  = 400  // 强度条
+    const val unlockDuration       = 500  // 解锁动画
+    const val staggerItemDelay     = 50   // 列表错落延迟（每项）
+
+    // 缓动曲线
+    val easeOut    = CubicBezierEasing(0f, 0f, 0.2f, 1f)
+    val easeIn     = CubicBezierEasing(0.4f, 0f, 1f, 1f)
+    val easeInOut  = CubicBezierEasing(0.4f, 0f, 0.2f, 1f)
+    val easeOutBack = CubicBezierEasing(0.34f, 1.56f, 0.64f, 1f)  // 对话框弹性
+
+    // 按钮按压 Spring
+    val buttonPressSpring = spring<Float>(
+        dampingRatio = Spring.DampingRatioMediumBouncy,
+        stiffness    = Spring.StiffnessHigh
+    )
+}
+```
+
+#### 页面转场规则（NavTransitions）
+
+在 `NavGraph.kt` 的 `NavHost` 中统一配置：
+
+| 导航类型 | Enter | Exit |
+|---------|-------|------|
+| 前进（push） | `fadeIn + slideInHorizontally(+1/4 宽)` 300ms EaseOut | `fadeOut + slideOutHorizontally(-1/4 宽)` 250ms EaseIn |
+| 后退（pop） | `fadeIn + slideInHorizontally(-1/4 宽)` 300ms EaseOut | `fadeOut + slideOutHorizontally(+1/4 宽)` 250ms EaseIn |
+| 标签页切换 | `fadeIn` 150ms EaseOut | `fadeOut` 150ms EaseIn |
+
+Auth 流程（onboarding / register / login）和三个主标签页均使用**标签页切换**风格（crossfade），其余所有 push/pop 使用**前进/后退**风格。
+
+#### 如何给新组件应用动效
+
+**按钮按压缩放（所有可点击按钮必须应用）：**
+
+```kotlin
+Modifier.pressAnimation(enabled = true)
+// 按下时缩放至 0.96，松开后弹回 1f（Spring 动画）
+```
+
+**列表项错落入场（LazyColumn / LazyRow 中使用）：**
+
+```kotlin
+// index 从 0 开始，每项延迟 50ms
+Modifier.animateItemEntrance(index = index)
+// 效果：alpha 0→1 + translationY 24dp→0，200ms EaseOut
+```
+
+**输入框焦点动效（内置于 SvTextField）：**
+
+- 边框颜色：`outline` → `primary`，`animateColorAsState` 150ms
+- 无需额外配置，直接使用 `SvTextField` / `SvPasswordTextField` 即可
+
+**复制反馈（内置于 DetailRow / PasswordCard）：**
+
+- 点击复制后图标切换为 `Check`，颜色渐变至 `primary`，1.5s 后自动复原
+- 使用 `animateColorAsState` 300ms EaseOut
+
+**对话框弹出（内置于 SvConfirmDialog）：**
+
+- `AnimatedVisibility` + `scaleIn(0.9f)` + `fadeIn`，250ms EaseOutBack
+
+#### 加载状态：骨架屏替代 Spinner
+
+当数据加载时（`isLoading = true`），使用 `SkeletonList` / `SkeletonCard` 替代文字提示或转圈。组件位于 `ui/components/LoadingSkeleton.kt`，shimmer 效果通过 `InfiniteTransition` + `Brush.linearGradient` 实现。
+
+```kotlin
+// VaultScreen 示例
+if (isLoading) {
+    SkeletonList(count = 6)
+} else {
+    // 正常列表
+}
+```
+
 ---
 
 ## 七、响应式布局

@@ -1,38 +1,36 @@
 package com.securevault.ui.screens
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
+import androidx.compose.material.icons.filled.Shield
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.components.PasswordCard
+import com.securevault.ui.components.SkeletonList
+import com.securevault.ui.components.SvTextField
+import com.securevault.ui.theme.spacing
 
 @Composable
 fun VaultScreen(
@@ -41,6 +39,7 @@ fun VaultScreen(
     selectedCategory: String?,
     favoritesOnly: Boolean,
     query: String,
+    isLoading: Boolean = false,
     onQueryChange: (String) -> Unit,
     onCategoryChange: (String?) -> Unit,
     onFavoritesOnlyChange: (Boolean) -> Unit,
@@ -51,54 +50,79 @@ fun VaultScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(horizontal = MaterialTheme.spacing.md),
         ) {
             Text(
                 text = "密码库",
-                style = MaterialTheme.typography.headlineSmall,
-                modifier = Modifier.padding(top = 8.dp)
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(top = MaterialTheme.spacing.md, bottom = MaterialTheme.spacing.sm),
             )
 
-            OutlinedTextField(
+            SvTextField(
                 value = query,
                 onValueChange = onQueryChange,
+                label = "搜索",
                 modifier = Modifier.fillMaxWidth(),
-                label = { Text("搜索") },
-                leadingIcon = { Icon(Icons.Default.Search, contentDescription = null) },
-                shape = RoundedCornerShape(16.dp)
+                leadingIcon = Icons.Default.Search,
             )
 
-            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                contentPadding = PaddingValues(vertical = MaterialTheme.spacing.sm),
+            ) {
                 item {
                     FilterChip(
                         selected = favoritesOnly,
                         onClick = { onFavoritesOnlyChange(!favoritesOnly) },
-                        label = { Text("仅收藏") }
+                        label = { Text("仅收藏") },
                     )
                 }
                 item {
                     FilterChip(
-                        selected = selectedCategory == null,
-                        onClick = { onCategoryChange(null) },
-                        label = { Text("全部") }
+                        selected = selectedCategory == null && !favoritesOnly,
+                        onClick = {
+                            onCategoryChange(null)
+                            if (favoritesOnly) onFavoritesOnlyChange(false)
+                        },
+                        label = { Text("全部") },
                     )
                 }
                 items(categories) { category ->
                     FilterChip(
                         selected = selectedCategory == category,
                         onClick = { onCategoryChange(category) },
-                        label = { Text(category) }
+                        label = { Text(category) },
                     )
                 }
             }
 
-            LazyColumn(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                items(entries, key = { it.id ?: it.hashCode().toLong() }) { entry ->
-                    PasswordCard(entry = entry, onClick = { onEntryClick(entry) })
+            if (isLoading) {
+                SkeletonList(
+                    count = 6,
+                    modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
+                )
+            } else if (entries.isEmpty()) {
+                VaultEmptyState(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                    contentPadding = PaddingValues(
+                        top = MaterialTheme.spacing.xs,
+                        bottom = 88.dp,
+                    ),
+                ) {
+                    itemsIndexed(entries, key = { _, e -> e.id ?: e.hashCode().toLong() }) { index, entry ->
+                        PasswordCard(
+                            entry = entry,
+                            onClick = { onEntryClick(entry) },
+                            index = index,
+                        )
+                    }
                 }
             }
         }
@@ -107,51 +131,41 @@ fun VaultScreen(
             onClick = onAddClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
-                .padding(16.dp)
+                .padding(MaterialTheme.spacing.md),
+            elevation = FloatingActionButtonDefaults.elevation(
+                defaultElevation = 6.dp,
+                pressedElevation = 2.dp,
+            ),
         ) {
-            Icon(Icons.Default.Add, contentDescription = "添加")
+            Icon(Icons.Default.Add, contentDescription = "添加密码")
         }
     }
 }
 
 @Composable
-private fun PasswordCard(
-    entry: PasswordEntry,
-    onClick: () -> Unit
-) {
-    ElevatedCard(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
-        colors = CardDefaults.elevatedCardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+private fun VaultEmptyState(modifier: Modifier = Modifier) {
+    Column(
+        modifier = modifier,
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center,
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(Icons.Default.Lock, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Column(modifier = Modifier.weight(1f)) {
-                Text(text = entry.title, style = MaterialTheme.typography.titleMedium)
-                Text(text = entry.username, style = MaterialTheme.typography.bodyMedium)
-                val url = entry.url
-                if (!url.isNullOrBlank()) {
-                    Text(
-                        text = url,
-                        style = MaterialTheme.typography.bodySmall,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
-                }
-            }
-
-            if (entry.securityMode) {
-                Card {
-                    Text(
-                        text = "安全模式",
-                        modifier = Modifier.padding(horizontal = 8.dp, vertical = 4.dp),
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                }
-            }
-        }
+        Icon(
+            imageVector = Icons.Default.Shield,
+            contentDescription = null,
+            modifier = Modifier.size(64.dp),
+            tint = MaterialTheme.colorScheme.outline,
+        )
+        Text(
+            text = "暂无密码",
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            modifier = Modifier.padding(top = MaterialTheme.spacing.md),
+        )
+        Text(
+            text = "点击右下角 + 添加第一个密码",
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.outline,
+            modifier = Modifier.padding(top = MaterialTheme.spacing.xs),
+        )
     }
 }

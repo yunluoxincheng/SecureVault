@@ -1,31 +1,27 @@
 package com.securevault.ui.screens
 
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Remove
-import androidx.compose.material3.Button
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
-import androidx.compose.material3.Slider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
+import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +32,15 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.securevault.ui.animation.animateItemEntrance
+import com.securevault.ui.components.CountStepperRow
+import com.securevault.ui.components.OptionSwitchRow
+import com.securevault.ui.components.SvButton
+import com.securevault.ui.components.SvFilledCard
+import com.securevault.ui.components.SvOutlinedButton
+import com.securevault.ui.components.SvTopBar
+import com.securevault.ui.theme.PasswordFontFamily
+import com.securevault.ui.theme.spacing
 import com.securevault.util.PasswordGeneratorConfig
 import com.securevault.util.PasswordPreset
 import com.securevault.util.PasswordStrengthLevel
@@ -58,32 +63,40 @@ fun GeneratorScreen(
     var digitCount by remember(uiState.config.digitCount) { mutableStateOf(uiState.config.digitCount.coerceAtLeast(1)) }
     var symbolCount by remember(uiState.config.symbolCount) { mutableStateOf(uiState.config.symbolCount.coerceAtLeast(1)) }
     var lengthChangeSignal by remember { mutableStateOf(0) }
+    var copied by remember { mutableStateOf(false) }
     val lengthInt = length.toInt()
+
+    LaunchedEffect(copied) {
+        if (copied) {
+            delay(1500)
+            copied = false
+        }
+    }
+
+    val copyIconTint by animateColorAsState(
+        targetValue = if (copied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
+        animationSpec = tween(300),
+        label = "copyTint"
+    )
 
     fun normalizeCounts(targetLength: Int, rawDigit: Int = digitCount, rawSymbol: Int = symbolCount): Pair<Int, Int> {
         var normalizedDigit = if (includeDigits) rawDigit.coerceIn(1, 9) else 0
         var normalizedSymbol = if (includeSymbols) rawSymbol.coerceIn(1, 9) else 0
-
         if (includeDigits && includeSymbols) {
             while (normalizedDigit + normalizedSymbol > targetLength) {
-                if (normalizedDigit >= normalizedSymbol && normalizedDigit > 1) {
-                    normalizedDigit -= 1
-                } else if (normalizedSymbol > 1) {
-                    normalizedSymbol -= 1
-                } else {
-                    break
-                }
+                if (normalizedDigit >= normalizedSymbol && normalizedDigit > 1) normalizedDigit -= 1
+                else if (normalizedSymbol > 1) normalizedSymbol -= 1
+                else break
             }
         } else if (includeDigits) {
             normalizedDigit = normalizedDigit.coerceAtMost(targetLength.coerceAtLeast(1))
         } else if (includeSymbols) {
             normalizedSymbol = normalizedSymbol.coerceAtMost(targetLength.coerceAtLeast(1))
         }
-
         return normalizedDigit to normalizedSymbol
     }
 
-    fun regenerateWithCurrentConfig() {
+    fun regenerate() {
         onGenerateCustom(
             PasswordGeneratorConfig(
                 length = lengthInt,
@@ -100,91 +113,89 @@ fun GeneratorScreen(
     LaunchedEffect(lengthChangeSignal) {
         if (lengthChangeSignal > 0) {
             delay(180)
-            regenerateWithCurrentConfig()
+            regenerate()
         }
     }
 
     LazyColumn(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp)
+        modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.md),
+        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+        contentPadding = PaddingValues(bottom = MaterialTheme.spacing.xl),
     ) {
         item {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(top = 8.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    if (onBack != null) {
-                        IconButton(onClick = onBack) {
-                            Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "返回")
-                        }
-                    }
-                    Text("生成器", style = MaterialTheme.typography.headlineSmall)
-                }
-            }
+            SvTopBar(title = "生成器", onBack = onBack)
         }
 
+        // Generated password display
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-            ) {
+            SvFilledCard(modifier = Modifier.fillMaxWidth().animateItemEntrance(0)) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(14.dp),
-                    verticalAlignment = Alignment.CenterVertically
+                        .padding(MaterialTheme.spacing.md),
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = uiState.generatedPassword.ifBlank { "点击生成密码" },
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable(onClick = onCopyGenerated),
-                        style = MaterialTheme.typography.titleMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        text = uiState.generatedPassword.ifBlank { "点击生成按钮" },
+                        modifier = Modifier.weight(1f),
+                        style = if (uiState.generatedPassword.isNotBlank())
+                            MaterialTheme.typography.bodyLarge.copy(fontFamily = PasswordFontFamily)
+                        else
+                            MaterialTheme.typography.bodyLarge,
+                        color = if (uiState.generatedPassword.isNotBlank())
+                            MaterialTheme.colorScheme.onSurface
+                        else
+                            MaterialTheme.colorScheme.outline,
                     )
-                    IconButton(onClick = { regenerateWithCurrentConfig() }) {
+                    IconButton(onClick = { regenerate() }) {
                         Icon(Icons.Default.Refresh, contentDescription = "重新生成")
+                    }
+                    IconButton(onClick = {
+                        copied = true
+                        onCopyGenerated()
+                    }) {
+                        Icon(
+                            imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                            contentDescription = "复制",
+                            tint = copyIconTint,
+                        )
                     }
                 }
             }
         }
 
-        item {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Button(
-                    onClick = { onGeneratePreset(PasswordPreset.Strong) },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.weight(1f)
-                ) { Text("强") }
-                Button(
-                    onClick = { onGeneratePreset(PasswordPreset.Medium) },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.weight(1f)
-                ) { Text("中") }
-                Button(
-                    onClick = { onGeneratePreset(PasswordPreset.PinLike) },
-                    shape = RoundedCornerShape(14.dp),
-                    modifier = Modifier.weight(1f)
-                ) { Text("PIN") }
-            }
-        }
-
+        // Strength indicator
         item {
             Text(
                 text = "强度：${strengthLabel(uiState.strength)}",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.animateItemEntrance(1),
             )
+        }
+
+        // Preset buttons
+        item {
+            Row(
+                modifier = Modifier.fillMaxWidth().animateItemEntrance(2),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+            ) {
+                SvButton(
+                    text = "强密码",
+                    onClick = { onGeneratePreset(PasswordPreset.Strong) },
+                    modifier = Modifier.weight(1f),
+                )
+                SvButton(
+                    text = "中等",
+                    onClick = { onGeneratePreset(PasswordPreset.Medium) },
+                    modifier = Modifier.weight(1f),
+                )
+                SvOutlinedButton(
+                    text = "PIN",
+                    onClick = { onGeneratePreset(PasswordPreset.PinLike) },
+                    modifier = Modifier.weight(1f),
+                )
+            }
         }
 
         uiState.infoMessage?.let { message ->
@@ -192,7 +203,7 @@ fun GeneratorScreen(
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
         }
@@ -202,71 +213,64 @@ fun GeneratorScreen(
                 Text(
                     text = message,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error
+                    color = MaterialTheme.colorScheme.error,
                 )
             }
         }
 
+        // Length slider
         item {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(16.dp),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
+            SvFilledCard(
+                modifier = Modifier.fillMaxWidth().animateItemEntrance(3),
             ) {
-                Column(modifier = Modifier.padding(14.dp)) {
-                    Text("长度", style = MaterialTheme.typography.titleMedium)
-                    Text(text = length.toInt().toString(), style = MaterialTheme.typography.headlineSmall)
+                Column(modifier = Modifier.padding(MaterialTheme.spacing.md)) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Text("长度", style = MaterialTheme.typography.titleMedium)
+                        Text(
+                            text = "${lengthInt}",
+                            style = MaterialTheme.typography.headlineSmall,
+                            color = MaterialTheme.colorScheme.primary,
+                        )
+                    }
                     Slider(
                         value = length,
                         onValueChange = {
                             length = it
-                            val (normalizedDigit, normalizedSymbol) = normalizeCounts(it.toInt())
-                            digitCount = normalizedDigit
-                            symbolCount = normalizedSymbol
+                            val (nd, ns) = normalizeCounts(it.toInt())
+                            digitCount = nd
+                            symbolCount = ns
                             lengthChangeSignal += 1
                         },
                         valueRange = 4f..128f,
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(28.dp)
+                        modifier = Modifier.fillMaxWidth().height(28.dp),
                     )
                 }
             }
         }
 
+        item { OptionSwitchRow("A-Z 大写字母", includeUppercase, { includeUppercase = it; regenerate() }, modifier = Modifier.animateItemEntrance(4)) }
+        item { OptionSwitchRow("a-z 小写字母", includeLowercase, { includeLowercase = it; regenerate() }, modifier = Modifier.animateItemEntrance(5)) }
         item {
-            OptionSwitchRow("A-Z", includeUppercase) {
-                includeUppercase = it
-                regenerateWithCurrentConfig()
-            }
-        }
-        item {
-            OptionSwitchRow("a-z", includeLowercase) {
-                includeLowercase = it
-                regenerateWithCurrentConfig()
-            }
-        }
-        item {
-            OptionSwitchRow("0-9", includeDigits) {
+            OptionSwitchRow("0-9 数字", includeDigits, {
                 includeDigits = it
-                if (!it) digitCount = 0
-                if (it && digitCount < 1) digitCount = 1
-                val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                digitCount = normalizedDigit
-                symbolCount = normalizedSymbol
-                regenerateWithCurrentConfig()
-            }
+                if (!it) digitCount = 0 else if (digitCount < 1) digitCount = 1
+                val (nd, ns) = normalizeCounts(lengthInt)
+                digitCount = nd; symbolCount = ns
+                regenerate()
+            }, modifier = Modifier.animateItemEntrance(6))
         }
         item {
-            OptionSwitchRow("!@#$%^&*", includeSymbols) {
+            OptionSwitchRow("!@# 符号", includeSymbols, {
                 includeSymbols = it
-                if (!it) symbolCount = 0
-                if (it && symbolCount < 1) symbolCount = 1
-                val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                digitCount = normalizedDigit
-                symbolCount = normalizedSymbol
-                regenerateWithCurrentConfig()
-            }
+                if (!it) symbolCount = 0 else if (symbolCount < 1) symbolCount = 1
+                val (nd, ns) = normalizeCounts(lengthInt)
+                digitCount = nd; symbolCount = ns
+                regenerate()
+            }, modifier = Modifier.animateItemEntrance(7))
         }
 
         if (includeDigits) {
@@ -278,19 +282,18 @@ fun GeneratorScreen(
                     max = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1),
                     onDecrease = {
                         digitCount = (digitCount - 1).coerceAtLeast(1)
-                        val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                        digitCount = normalizedDigit
-                        symbolCount = normalizedSymbol
-                        regenerateWithCurrentConfig()
+                        val (nd, ns) = normalizeCounts(lengthInt)
+                        digitCount = nd; symbolCount = ns
+                        regenerate()
                     },
                     onIncrease = {
                         val maxDigit = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1)
                         digitCount = (digitCount + 1).coerceAtMost(maxDigit)
-                        val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                        digitCount = normalizedDigit
-                        symbolCount = normalizedSymbol
-                        regenerateWithCurrentConfig()
-                    }
+                        val (nd, ns) = normalizeCounts(lengthInt)
+                        digitCount = nd; symbolCount = ns
+                        regenerate()
+                    },
+                    modifier = Modifier.animateItemEntrance(8),
                 )
             }
         }
@@ -304,121 +307,30 @@ fun GeneratorScreen(
                     max = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1),
                     onDecrease = {
                         symbolCount = (symbolCount - 1).coerceAtLeast(1)
-                        val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                        digitCount = normalizedDigit
-                        symbolCount = normalizedSymbol
-                        regenerateWithCurrentConfig()
+                        val (nd, ns) = normalizeCounts(lengthInt)
+                        digitCount = nd; symbolCount = ns
+                        regenerate()
                     },
                     onIncrease = {
                         val maxSymbol = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1)
                         symbolCount = (symbolCount + 1).coerceAtMost(maxSymbol)
-                        val (normalizedDigit, normalizedSymbol) = normalizeCounts(lengthInt)
-                        digitCount = normalizedDigit
-                        symbolCount = normalizedSymbol
-                        regenerateWithCurrentConfig()
-                    }
+                        val (nd, ns) = normalizeCounts(lengthInt)
+                        digitCount = nd; symbolCount = ns
+                        regenerate()
+                    },
+                    modifier = Modifier.animateItemEntrance(9),
                 )
             }
         }
 
-        item { Spacer(modifier = Modifier.height(8.dp)) }
+        item { Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm)) }
     }
 }
 
-@Composable
-private fun OptionSwitchRow(label: String, value: Boolean, onChange: (Boolean) -> Unit) {
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 14.dp, vertical = 10.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(text = label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
-            Switch(checked = value, onCheckedChange = onChange)
-        }
-    }
-}
-
-@Composable
-private fun CountStepperRow(
-    label: String,
-    value: Int,
-    min: Int,
-    max: Int,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit
-) {
-    val safeMax = max.coerceAtLeast(min)
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(16.dp),
-        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(14.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text(label, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
-            ) {
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    IconButton(
-                        onClick = onDecrease,
-                        enabled = value > min,
-                        modifier = Modifier.size(34.dp)
-                    ) {
-                        Icon(Icons.Default.Remove, contentDescription = "减少")
-                    }
-                }
-
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    Text(
-                        text = value.toString(),
-                        style = MaterialTheme.typography.titleMedium,
-                        modifier = Modifier
-                            .widthIn(min = 36.dp)
-                            .padding(horizontal = 10.dp, vertical = 6.dp)
-                    )
-                }
-
-                Card(
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface)
-                ) {
-                    IconButton(
-                        onClick = onIncrease,
-                        enabled = value < safeMax,
-                        modifier = Modifier.size(34.dp)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = "增加")
-                    }
-                }
-            }
-        }
-    }
-}
-
-private fun strengthLabel(level: PasswordStrengthLevel): String {
-    return when (level) {
-        PasswordStrengthLevel.VeryWeak -> "非常弱"
-        PasswordStrengthLevel.Weak -> "弱"
-        PasswordStrengthLevel.Medium -> "中"
-        PasswordStrengthLevel.Strong -> "强"
-        PasswordStrengthLevel.VeryStrong -> "非常强"
-    }
+private fun strengthLabel(level: PasswordStrengthLevel): String = when (level) {
+    PasswordStrengthLevel.VeryWeak -> "非常弱"
+    PasswordStrengthLevel.Weak -> "弱"
+    PasswordStrengthLevel.Medium -> "中"
+    PasswordStrengthLevel.Strong -> "强"
+    PasswordStrengthLevel.VeryStrong -> "非常强"
 }

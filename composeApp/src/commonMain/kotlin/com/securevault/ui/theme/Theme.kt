@@ -6,9 +6,9 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.staticCompositionLocalOf
-import androidx.compose.ui.graphics.Color
 
 typealias DynamicColorSchemeProvider = (Boolean) -> ColorScheme?
 typealias SystemBarsStyleApplier = (Boolean) -> Unit
@@ -27,26 +27,76 @@ enum class ThemeMode {
     Dark
 }
 
-private val LightColorScheme: ColorScheme = lightColorScheme(
-    primary = Color(0xFF1B6B4F),
-    onPrimary = Color(0xFFFFFFFF),
-    primaryContainer = Color(0xFFA4F4D2),
-    secondary = Color(0xFF4A635A),
-    surface = Color(0xFFF8FAF7),
-    surfaceVariant = Color(0xFFDBE5DE),
-    error = Color(0xFFBA1A1A),
-    outline = Color(0xFF707973)
+val LightColorScheme: ColorScheme = lightColorScheme(
+    primary = PrimaryLight,
+    onPrimary = OnPrimaryLight,
+    primaryContainer = PrimaryContainerLight,
+    onPrimaryContainer = OnPrimaryContainerLight,
+    secondary = SecondaryLight,
+    onSecondary = OnSecondaryLight,
+    secondaryContainer = SecondaryContainerLight,
+    onSecondaryContainer = OnSecondaryContainerLight,
+    tertiary = TertiaryLight,
+    onTertiary = OnTertiaryLight,
+    tertiaryContainer = TertiaryContainerLight,
+    onTertiaryContainer = OnTertiaryContainerLight,
+    error = ErrorLight,
+    onError = OnErrorLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight,
+    background = BackgroundLight,
+    onBackground = OnBackgroundLight,
+    surface = SurfaceLight,
+    onSurface = OnSurfaceLight,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+    surfaceContainerLowest = SurfaceContainerLowestLight,
+    surfaceContainerLow = SurfaceContainerLowLight,
+    surfaceContainer = SurfaceContainerLight2,
+    surfaceContainerHigh = SurfaceContainerHighLight,
+    surfaceContainerHighest = SurfaceContainerHighestLight,
+    inverseSurface = InverseSurfaceLight,
+    inverseOnSurface = InverseOnSurfaceLight,
+    inversePrimary = InversePrimaryLight,
+    scrim = ScrimLight,
 )
 
-private val DarkColorScheme: ColorScheme = darkColorScheme(
-    primary = Color(0xFF7DDCB5),
-    onPrimary = Color(0xFF003828),
-    primaryContainer = Color(0xFF005138),
-    secondary = Color(0xFFB3CCC1),
-    surface = Color(0xFF191C1B),
-    surfaceVariant = Color(0xFF404944),
-    error = Color(0xFFFFB4AB),
-    outline = Color(0xFF8A938D)
+val DarkColorScheme: ColorScheme = darkColorScheme(
+    primary = PrimaryDark,
+    onPrimary = OnPrimaryDark,
+    primaryContainer = PrimaryContainerDark,
+    onPrimaryContainer = OnPrimaryContainerDark,
+    secondary = SecondaryDark,
+    onSecondary = OnSecondaryDark,
+    secondaryContainer = SecondaryContainerDark,
+    onSecondaryContainer = OnSecondaryContainerDark,
+    tertiary = TertiaryDark,
+    onTertiary = OnTertiaryDark,
+    tertiaryContainer = TertiaryContainerDark,
+    onTertiaryContainer = OnTertiaryContainerDark,
+    error = ErrorDark,
+    onError = OnErrorDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark,
+    background = BackgroundDark,
+    onBackground = OnBackgroundDark,
+    surface = SurfaceDark,
+    onSurface = OnSurfaceDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+    surfaceContainerLowest = SurfaceContainerLowestDark,
+    surfaceContainerLow = SurfaceContainerLowDark,
+    surfaceContainer = SurfaceContainerDark,
+    surfaceContainerHigh = SurfaceContainerHighDark,
+    surfaceContainerHighest = SurfaceContainerHighestDark,
+    inverseSurface = InverseSurfaceDark,
+    inverseOnSurface = InverseOnSurfaceDark,
+    inversePrimary = InversePrimaryDark,
+    scrim = ScrimDark,
 )
 
 @Composable
@@ -68,8 +118,15 @@ fun SecureVaultTheme(
         applySystemBarsStyle(isDark)
     }
 
-    MaterialTheme(
-        colorScheme = dynamicScheme ?: fallbackScheme,
-        content = content
-    )
+    CompositionLocalProvider(
+        LocalSpacing provides Spacing(),
+        LocalElevation provides Elevation(),
+    ) {
+        MaterialTheme(
+            colorScheme = dynamicScheme ?: fallbackScheme,
+            typography = SecureVaultTypography,
+            shapes = SecureVaultShapes,
+            content = content
+        )
+    }
 }
