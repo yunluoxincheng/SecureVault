@@ -94,6 +94,9 @@ Thumbs.db
 .env
 .env.local
 
+# Local AI customization (keep .github tracked for shared instructions)
+.claude/
+
 # Compose
 composeApp/composeResources/
 
