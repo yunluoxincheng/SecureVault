@@ -6,7 +6,9 @@ import com.securevault.data.PasswordRepository
 import com.securevault.security.KeyManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -28,6 +30,7 @@ class VaultViewModel(
     private val keyManager: KeyManager
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var queryDebounceJob: Job? = null
 
     private val _uiState = MutableStateFlow(VaultUiState())
     val uiState: StateFlow<VaultUiState> = _uiState.asStateFlow()
@@ -75,7 +78,11 @@ class VaultViewModel(
 
     fun updateQuery(query: String) {
         _uiState.update { it.copy(query = query) }
-        loadEntries()
+        queryDebounceJob?.cancel()
+        queryDebounceJob = scope.launch {
+            delay(250)
+            loadEntries()
+        }
     }
 
     fun updateCategory(category: String?) {

@@ -133,6 +133,10 @@
 - 已补：`VaultScreen` 已新增分类筛选交互入口（分类 Chip），并接入 `VaultViewModel` 分类筛选状态。
 - 已补：Android `androidTest` 已新增端到端冒烟用例 `AppE2ESmokeTest`（启动与重建不崩溃）。
 - 已补：`VaultScreen` 已新增“仅收藏”筛选入口，收藏功能已具备实际过滤用途。
+- 已补：`AddEditPasswordScreen` 密码输入改为默认隐藏，并提供显示/隐藏切换，避免明文暴露。
+- 已补：`VaultViewModel` 搜索输入增加 250ms 防抖，减少键入过程中的重复查询与 UI 抖动。
+- 已补：清理未接入导航的 `UnlockScreen` / `SetupScreen` 遗留页面，降低维护成本。
+- 已补：Android 12+ 已接入 Dynamic Color（低版本保留 fallback 配色），并实现状态栏/导航栏图标明暗与主题同步。
 
 ### 结项状态（2026-03-18）
 

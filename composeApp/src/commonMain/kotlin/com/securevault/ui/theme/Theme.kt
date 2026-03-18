@@ -6,7 +6,20 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+typealias DynamicColorSchemeProvider = (Boolean) -> ColorScheme?
+typealias SystemBarsStyleApplier = (Boolean) -> Unit
+
+val LocalDynamicColorSchemeProvider = staticCompositionLocalOf<DynamicColorSchemeProvider> {
+    { _ -> null }
+}
+
+val LocalSystemBarsStyleApplier = staticCompositionLocalOf<SystemBarsStyleApplier> {
+    {}
+}
 
 enum class ThemeMode {
     System,
@@ -47,8 +60,16 @@ fun SecureVaultTheme(
         ThemeMode.Dark -> true
     }
 
+    val fallbackScheme = if (isDark) DarkColorScheme else LightColorScheme
+    val dynamicScheme = LocalDynamicColorSchemeProvider.current(isDark)
+    val applySystemBarsStyle = LocalSystemBarsStyleApplier.current
+
+    SideEffect {
+        applySystemBarsStyle(isDark)
+    }
+
     MaterialTheme(
-        colorScheme = if (isDark) DarkColorScheme else LightColorScheme,
+        colorScheme = dynamicScheme ?: fallbackScheme,
         content = content
     )
 }

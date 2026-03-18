@@ -16,6 +16,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Visibility
+import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +36,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
@@ -54,6 +58,7 @@ fun AddEditPasswordScreen(
     var category by remember { mutableStateOf("默认") }
     var isFavorite by remember { mutableStateOf(false) }
     var securityMode by remember { mutableStateOf(false) }
+    var showPassword by remember { mutableStateOf(false) }
 
     LaunchedEffect(entry?.id, entry == null) {
         title = entry?.title.orEmpty()
@@ -115,10 +120,19 @@ fun AddEditPasswordScreen(
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("密码") },
                 shape = RoundedCornerShape(16.dp),
+                visualTransformation = if (showPassword) VisualTransformation.None else PasswordVisualTransformation(),
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Password,
                     autoCorrectEnabled = false
-                )
+                ),
+                trailingIcon = {
+                    IconButton(onClick = { showPassword = !showPassword }) {
+                        Icon(
+                            imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showPassword) "隐藏密码" else "显示密码"
+                        )
+                    }
+                }
             )
             Button(
                 onClick = {

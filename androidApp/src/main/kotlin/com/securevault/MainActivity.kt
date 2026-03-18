@@ -7,6 +7,7 @@ import androidx.fragment.app.FragmentActivity
 import com.securevault.security.AndroidActivityProvider
 import com.securevault.security.ScreenSecurity
 import com.securevault.ui.navigation.SecureVaultApp
+import com.securevault.ui.theme.ProvideAndroidThemeBindings
 import org.koin.android.ext.android.inject
 
 class MainActivity : FragmentActivity() {
@@ -18,7 +19,9 @@ class MainActivity : FragmentActivity() {
         screenSecurity.enableScreenshotProtection()
         enableEdgeToEdge()
         setContent {
-            SecureVaultApp()
+            ProvideAndroidThemeBindings {
+                SecureVaultApp()
+            }
         }
     }
 
