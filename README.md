@@ -29,6 +29,15 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 - targetSdk: 36（Android 16）
 - compileSdk: 36（Android 16）
 
+## Android UI 预览（Compose Preview）
+
+- 预览代码位置：`composeApp/src/androidMain/kotlin/com/securevault/ui/preview/AndroidUiPreviews.kt`
+- 预览覆盖范围：基础态、加载态、错误态、空态、边界态（含 Light/Dark 多预览）
+- 关键依赖：
+	- `compose.components.uiToolingPreview`（`@Preview` 注解）
+	- `compose.uiTooling`（Android Studio 预览渲染运行支持）
+- 若预览不显示：先执行 `Sync Project with Gradle Files`，再在 Preview 面板点击 `Build & Refresh`。
+
 ## 技术栈
 
 | 组件 | 技术 |

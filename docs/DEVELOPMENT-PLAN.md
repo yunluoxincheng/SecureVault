@@ -144,6 +144,14 @@
 - [x] Android 端认证、密码 CRUD、搜索/分类/收藏筛选、生成器、设置与安全能力均已接通。
 - [x] 当前代码已通过关键编译校验（`composeApp:compileKotlinDesktop`、`androidApp:compileDebugKotlin`、`androidApp:assembleDebugAndroidTest`）。
 
+### 增量更新（2026-03-19）
+
+- [x] 已在 `composeApp/src/androidMain/kotlin/com/securevault/ui/preview` 增加 Android Studio 可渲染的 Compose 预览。
+- [x] 主要 UI 已补齐 `@Composable + @Preview` 预览入口，并覆盖基础态/加载态/错误态/空态/边界态。
+- [x] 已新增多预览注解（Light/Dark）用于统一明暗主题回归。
+- [x] 已在 `composeApp` 的 `androidMain` 依赖补充 `compose.uiTooling`，解决 Android Studio 预览无法渲染问题。
+- [x] 变更已通过模块级验证：`./gradlew.bat :composeApp:assembleAndroidMain --console=plain`。
+
 ---
 
 ## Phase 3: 安全模式（2 周）

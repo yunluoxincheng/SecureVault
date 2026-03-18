@@ -59,6 +59,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 api(libs.koin.android)
+                implementation(compose.uiTooling)
             }
         }
 
