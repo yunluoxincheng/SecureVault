@@ -1,5 +1,6 @@
 package com.securevault.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -11,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -20,6 +22,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -32,16 +35,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.DetailRow
-import com.securevault.ui.components.SvButton
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppCard
+import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.SvConfirmDialog
-import com.securevault.ui.components.SvDangerButton
-import com.securevault.ui.components.SvFilledCard
-import com.securevault.ui.components.SvOutlinedButton
-import com.securevault.ui.components.SvTopBar
+import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.theme.SecurityModeColor
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 import kotlinx.coroutines.delay
 
@@ -68,7 +72,7 @@ fun PasswordDetailScreen(
 
     val copyIconTint by animateColorAsState(
         targetValue = if (passwordCopied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(300),
+        animationSpec = tween(AnimationTokens.copyFeedbackDuration),
         label = "passwordCopyTint"
     )
 
@@ -94,17 +98,19 @@ fun PasswordDetailScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(horizontal = MaterialTheme.spacing.md)
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
+                .align(Alignment.TopCenter)
+                .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding)
                 .verticalScroll(scrollState)
-                .padding(bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                .padding(bottom = MaterialTheme.layout.bottomBarActionInset),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.contentSpacing),
         ) {
-            SvTopBar(
+            MyAppTopBar(
                 title = "密码详情",
                 onBack = onBack,
             )
 
-            if (entry.securityMode) {
+            AnimatedVisibility(visible = entry.securityMode) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -132,14 +138,18 @@ fun PasswordDetailScreen(
             )
 
             // Password row (custom - has show/hide toggle)
-            SvFilledCard(modifier = Modifier.fillMaxWidth()) {
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Filled,
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(
-                            start = MaterialTheme.spacing.md,
-                            top = MaterialTheme.spacing.sm + 2.dp,
-                            bottom = MaterialTheme.spacing.sm + 2.dp,
+                            start = MaterialTheme.layout.cardPaddingHorizontal,
+                            end = MaterialTheme.spacing.sm,
+                            top = MaterialTheme.layout.cardPaddingVertical,
+                            bottom = MaterialTheme.layout.cardPaddingVertical,
                         ),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
@@ -199,25 +209,37 @@ fun PasswordDetailScreen(
             )
         }
 
-        Row(
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = MaterialTheme.spacing.md, vertical = MaterialTheme.spacing.sm),
-            horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
         ) {
-            SvOutlinedButton(
-                text = "删除",
-                onClick = { showDeleteConfirm = true },
-                modifier = Modifier.weight(1f),
-                leadingIcon = Icons.Default.Delete,
-            )
-            SvButton(
-                text = "编辑",
-                onClick = onEdit,
-                modifier = Modifier.weight(1f),
-                leadingIcon = Icons.Default.Edit,
-            )
+            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(
+                        horizontal = MaterialTheme.layout.pageHorizontalPadding,
+                        vertical = MaterialTheme.spacing.md,
+                    ),
+                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+            ) {
+                MyAppButton(
+                    text = "删除",
+                    onClick = { showDeleteConfirm = true },
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = Icons.Default.Delete,
+                    variant = MyAppButtonVariant.Secondary,
+                )
+                MyAppButton(
+                    text = "编辑",
+                    onClick = onEdit,
+                    modifier = Modifier.weight(1f),
+                    leadingIcon = Icons.Default.Edit,
+                )
+            }
         }
     }
 }

@@ -1,9 +1,31 @@
 package com.securevault.ui.preview
 
 import android.content.res.Configuration
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Lock
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppCard
+import com.securevault.ui.components.MyAppCardVariant
+import com.securevault.ui.components.MyAppInput
 import com.securevault.ui.components.PasswordStrengthBar
 import com.securevault.ui.screens.AddEditPasswordScreen
 import com.securevault.ui.screens.GeneratorScreen
@@ -13,7 +35,7 @@ import com.securevault.ui.screens.PasswordDetailScreen
 import com.securevault.ui.screens.RegisterScreen
 import com.securevault.ui.screens.SettingsScreen
 import com.securevault.ui.screens.VaultScreen
-import com.securevault.ui.theme.SecureVaultTheme
+import com.securevault.ui.theme.AppTheme
 import com.securevault.ui.theme.ThemeMode
 import com.securevault.util.PasswordPreset
 import com.securevault.util.PasswordStrengthLevel
@@ -25,10 +47,358 @@ annotation class LightDarkPreview
 
 @Composable
 private fun PreviewContainer(content: @Composable () -> Unit) {
-    SecureVaultTheme(themeMode = ThemeMode.System) {
+    AppTheme(themeMode = ThemeMode.System) {
         content()
     }
 }
+
+// ---------------------------------------------------------------------------
+// MyAppButton previews
+// ---------------------------------------------------------------------------
+
+@LightDarkPreview
+@Composable
+private fun MyAppButtonAllVariantsPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppButton(
+                text = "Unlock Vault",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Primary,
+            )
+            MyAppButton(
+                text = "Edit Entry",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Secondary,
+            )
+            MyAppButton(
+                text = "Use Biometrics",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Ghost,
+            )
+            MyAppButton(
+                text = "Delete Entry",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Danger,
+            )
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppButtonWithIconPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppButton(
+                text = "Unlock",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Primary,
+                leadingIcon = Icons.Outlined.Lock,
+            )
+            MyAppButton(
+                text = "Secure Mode",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Secondary,
+                leadingIcon = Icons.Outlined.Lock,
+            )
+            MyAppButton(
+                text = "Use Biometrics",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Ghost,
+                leadingIcon = Icons.Outlined.Lock,
+            )
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppButtonDisabledStatePreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppButton(
+                text = "Unlock Vault",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Primary,
+                enabled = false,
+            )
+            MyAppButton(
+                text = "Edit Entry",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Secondary,
+                enabled = false,
+            )
+            MyAppButton(
+                text = "Use Biometrics",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Ghost,
+                enabled = false,
+            )
+            MyAppButton(
+                text = "Delete Entry",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Danger,
+                enabled = false,
+            )
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppButtonLoadingStatePreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppButton(
+                text = "Unlocking…",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Primary,
+                isLoading = true,
+            )
+            MyAppButton(
+                text = "Saving…",
+                onClick = {},
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppButtonVariant.Danger,
+                isLoading = true,
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MyAppInput previews
+// ---------------------------------------------------------------------------
+
+@LightDarkPreview
+@Composable
+private fun MyAppInputStatesPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppInput(
+                value = "alice@example.com",
+                onValueChange = {},
+                label = "Account",
+                placeholder = "Enter account",
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MyAppInput(
+                value = "bad_input",
+                onValueChange = {},
+                label = "Master Password",
+                placeholder = "Enter master password",
+                modifier = Modifier.fillMaxWidth(),
+                isError = true,
+                errorMessage = "Password must be at least 12 characters",
+                isPassword = true,
+            )
+            MyAppInput(
+                value = "S3cure#Pass2026",
+                onValueChange = {},
+                label = "Vault Password",
+                placeholder = "Enter vault password",
+                modifier = Modifier.fillMaxWidth(),
+                supportingText = "Use uppercase, lowercase, number and symbol",
+                isPassword = true,
+            )
+            MyAppInput(
+                value = "Visible#Pass2026",
+                onValueChange = {},
+                label = "Vault Password (Visible)",
+                placeholder = "Enter vault password",
+                modifier = Modifier.fillMaxWidth(),
+                isPassword = true,
+                showPassword = true,
+                onTogglePasswordVisibility = {},
+            )
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppInputInteractivePreview() {
+    var account by remember { mutableStateOf("") }
+    var password by remember { mutableStateOf("") }
+    var showPassword by remember { mutableStateOf(false) }
+
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppInput(
+                value = account,
+                onValueChange = { account = it },
+                label = "Account",
+                placeholder = "you@securevault.dev",
+                modifier = Modifier.fillMaxWidth(),
+            )
+            MyAppInput(
+                value = password,
+                onValueChange = { password = it },
+                label = "Master Password",
+                placeholder = "Enter your password",
+                modifier = Modifier.fillMaxWidth(),
+                isPassword = true,
+                showPassword = showPassword,
+                onTogglePasswordVisibility = { showPassword = !showPassword },
+                isError = password.isNotEmpty() && password.length < 12,
+                errorMessage = "Minimum length is 12 characters",
+                supportingText = "Longer passwords are safer",
+            )
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppInputFocusStatePreview() {
+    val focusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppInput(
+                value = "focused.user@securevault.dev",
+                onValueChange = {},
+                label = "Focused Input",
+                placeholder = "Focus ring and glow demo",
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(focusRequester),
+                supportingText = "This preview auto-requests focus",
+            )
+            MyAppInput(
+                value = "",
+                onValueChange = {},
+                label = "Unfocused Input",
+                placeholder = "Default resting state",
+                modifier = Modifier.fillMaxWidth(),
+            )
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
+// MyAppCard previews
+// ---------------------------------------------------------------------------
+
+@LightDarkPreview
+@Composable
+private fun MyAppCardVariantsPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Filled,
+            ) {
+                Text(text = "Filled card")
+                Text(text = "Soft surface layer with default padding")
+            }
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Elevated,
+            ) {
+                Text(text = "Elevated card")
+                Text(text = "Modern layered depth and rounded corners")
+            }
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Outlined,
+            ) {
+                Text(text = "Outlined card")
+                Text(text = "Subtle border for secondary grouping")
+            }
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppCardClickablePreview() {
+    var taps by remember { mutableStateOf(0) }
+
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Elevated,
+                onClick = { taps++ },
+            ) {
+                Text(text = "Clickable elevated card")
+                Text(text = "Tap to preview press shadow animation")
+                Text(text = "Tap count: $taps")
+            }
+        }
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun MyAppCardZeroPaddingPreview() {
+    PreviewContainer {
+        Column(
+            modifier = Modifier.padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Elevated,
+                contentPadding = PaddingValues(0.dp),
+            ) {
+                Text(
+                    text = "Zero padding card",
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 12.dp),
+                )
+            }
+        }
+    }
+}
+
+// ---------------------------------------------------------------------------
 
 @LightDarkPreview
 @Composable

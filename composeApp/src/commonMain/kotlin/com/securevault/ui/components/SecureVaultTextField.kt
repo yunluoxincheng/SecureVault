@@ -1,28 +1,10 @@
 package com.securevault.ui.components
 
-import androidx.compose.animation.animateColorAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Visibility
-import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.OutlinedTextFieldDefaults
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.focus.onFocusChanged
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.input.KeyboardType
-import androidx.compose.ui.text.input.PasswordVisualTransformation
-import androidx.compose.ui.text.input.VisualTransformation
 
 @Composable
 fun SvTextField(
@@ -39,35 +21,19 @@ fun SvTextField(
     enabled: Boolean = true,
     readOnly: Boolean = false,
 ) {
-    var isFocused by remember { mutableStateOf(false) }
-    val focusedBorderColor by animateColorAsState(
-        targetValue = if (isFocused) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outline,
-        animationSpec = tween(150),
-        label = "borderColor"
-    )
-
-    OutlinedTextField(
+    MyAppInput(
         value = value,
         onValueChange = onValueChange,
-        label = { Text(label) },
-        modifier = modifier.onFocusChanged { isFocused = it.isFocused },
-        shape = MaterialTheme.shapes.large,
-        leadingIcon = if (leadingIcon != null) {
-            { Icon(leadingIcon, contentDescription = null) }
-        } else null,
+        label = label,
+        modifier = modifier,
+        leadingIcon = leadingIcon,
         trailingIcon = trailingIcon,
         keyboardOptions = keyboardOptions,
         singleLine = singleLine,
         isError = isError,
-        supportingText = if (supportingText != null) {
-            { Text(supportingText) }
-        } else null,
+        supportingText = supportingText,
         enabled = enabled,
         readOnly = readOnly,
-        colors = OutlinedTextFieldDefaults.colors(
-            focusedBorderColor = focusedBorderColor,
-            unfocusedBorderColor = MaterialTheme.colorScheme.outlineVariant,
-        ),
     )
 }
 
@@ -82,22 +48,12 @@ fun SvPasswordTextField(
     supportingText: String? = null,
     enabled: Boolean = true,
 ) {
-    var showPassword by remember { mutableStateOf(false) }
-
-    SvTextField(
+    MyAppInput(
         value = value,
         onValueChange = onValueChange,
         label = label,
         modifier = modifier,
         leadingIcon = leadingIcon,
-        trailingIcon = {
-            IconButton(onClick = { showPassword = !showPassword }) {
-                Icon(
-                    imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (showPassword) "隐藏密码" else "显示密码"
-                )
-            }
-        },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             autoCorrectEnabled = false
@@ -105,6 +61,7 @@ fun SvPasswordTextField(
         isError = isError,
         supportingText = supportingText,
         enabled = enabled,
+        isPassword = true,
     )
 }
 
@@ -122,20 +79,12 @@ fun SvPasswordTextFieldControlled(
     supportingText: String? = null,
     enabled: Boolean = true,
 ) {
-    SvTextField(
+    MyAppInput(
         value = value,
         onValueChange = onValueChange,
         label = label,
         modifier = modifier,
         leadingIcon = leadingIcon,
-        trailingIcon = {
-            IconButton(onClick = onToggleVisibility) {
-                Icon(
-                    imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                    contentDescription = if (showPassword) "隐藏密码" else "显示密码"
-                )
-            }
-        },
         keyboardOptions = KeyboardOptions(
             keyboardType = KeyboardType.Password,
             autoCorrectEnabled = false
@@ -143,5 +92,8 @@ fun SvPasswordTextFieldControlled(
         isError = isError,
         supportingText = supportingText,
         enabled = enabled,
+        isPassword = true,
+        showPassword = showPassword,
+        onTogglePasswordVisibility = onToggleVisibility,
     )
 }

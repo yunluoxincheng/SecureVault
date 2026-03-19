@@ -5,12 +5,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
@@ -24,11 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.theme.FavoriteColor
 import com.securevault.ui.theme.SecurityModeColor
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -38,100 +35,94 @@ fun PasswordCard(
     modifier: Modifier = Modifier,
     index: Int = 0,
 ) {
-    SvElevatedCard(
+    MyAppCard(
         onClick = onClick,
         modifier = modifier
-            .fillMaxWidth()
             .animateItemEntrance(index),
+        variant = MyAppCardVariant.Elevated,
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = MaterialTheme.spacing.md, vertical = MaterialTheme.spacing.sm + 2.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            // Leading icon container
-            Box(
-                modifier = Modifier
-                    .size(40.dp)
-                    .clip(CircleShape)
-                    .background(
-                        if (entry.securityMode)
-                            MaterialTheme.colorScheme.secondaryContainer
-                        else
-                            MaterialTheme.colorScheme.primaryContainer
-                    ),
-                contentAlignment = Alignment.Center,
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(20.dp),
-                    tint = if (entry.securityMode)
-                        SecurityModeColor
-                    else
-                        MaterialTheme.colorScheme.onPrimaryContainer,
-                )
-            }
-
-            Spacer(modifier = Modifier.width(MaterialTheme.spacing.md))
-
-            // Text content
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = entry.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis,
-                )
-                if (entry.username.isNotBlank()) {
-                    Text(
-                        text = entry.username,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-                val url = entry.url
-                if (!url.isNullOrBlank()) {
-                    Text(
-                        text = url,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.outline,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                }
-            }
-
-            // Trailing indicators
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                if (entry.isFavorite) {
+        MyAppListItem(
+            headline = entry.title,
+            supportingText = entry.username.takeIf { it.isNotBlank() },
+            contentPadding = androidx.compose.foundation.layout.PaddingValues(
+                horizontal = MaterialTheme.layout.cardPaddingHorizontal,
+                vertical = MaterialTheme.layout.cardPaddingVertical,
+            ),
+            leading = {
+                Box(
+                    modifier = Modifier
+                        .size(MaterialTheme.layout.listItemIconContainerSize)
+                        .clip(CircleShape)
+                        .background(
+                            if (entry.securityMode) {
+                                MaterialTheme.colorScheme.secondaryContainer
+                            } else {
+                                MaterialTheme.colorScheme.surfaceContainerHighest
+                            }
+                        ),
+                    contentAlignment = Alignment.Center,
+                ) {
                     Icon(
-                        imageVector = Icons.Default.Star,
-                        contentDescription = "已收藏",
-                        modifier = Modifier.size(16.dp),
-                        tint = FavoriteColor,
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.layout.listItemIconSize),
+                        tint = if (entry.securityMode) {
+                            SecurityModeColor
+                        } else {
+                            MaterialTheme.colorScheme.primary
+                        },
                     )
                 }
-                if (entry.securityMode) {
-                    val badgeBg by animateColorAsState(
-                        targetValue = SecurityModeColor.copy(alpha = 0.12f),
-                        animationSpec = tween(300),
-                        label = "securityBadgeBg"
-                    )
-                    Text(
-                        text = "安全",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = SecurityModeColor,
-                        modifier = Modifier
-                            .padding(top = if (entry.isFavorite) 2.dp else 0.dp)
-                            .background(badgeBg, MaterialTheme.shapes.extraSmall)
-                            .padding(horizontal = 4.dp, vertical = 1.dp),
-                    )
+            },
+            trailing = {
+                Column(
+                    horizontalAlignment = Alignment.End,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.xs),
+                ) {
+                    if (entry.isFavorite) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "已收藏",
+                            modifier = Modifier.size(MaterialTheme.layout.smallStatusIconSize),
+                            tint = FavoriteColor.copy(alpha = 0.9f),
+                        )
+                    }
+                    if (entry.securityMode) {
+                        val badgeBg by animateColorAsState(
+                            targetValue = SecurityModeColor.copy(alpha = 0.1f),
+                            animationSpec = tween(300),
+                            label = "securityBadgeBg"
+                        )
+                        Text(
+                            text = "安全",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = SecurityModeColor,
+                            modifier = Modifier
+                                .background(badgeBg, MaterialTheme.shapes.extraSmall)
+                                .padding(
+                                    horizontal = MaterialTheme.layout.badgeHorizontalPadding,
+                                    vertical = MaterialTheme.layout.badgeVerticalPadding,
+                                ),
+                        )
+                    }
                 }
-            }
+            },
+        )
+
+        val url = entry.url
+        if (!url.isNullOrBlank()) {
+            Text(
+                text = url,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+                modifier = Modifier.padding(
+                    start = MaterialTheme.layout.cardPaddingHorizontal + MaterialTheme.layout.listItemIconContainerSize + MaterialTheme.spacing.md,
+                    end = MaterialTheme.layout.cardPaddingHorizontal,
+                    bottom = MaterialTheme.layout.cardPaddingVertical,
+                ),
+            )
         }
     }
 }

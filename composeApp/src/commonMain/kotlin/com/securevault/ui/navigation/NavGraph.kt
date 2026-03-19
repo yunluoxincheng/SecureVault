@@ -36,7 +36,7 @@ import com.securevault.ui.screens.PasswordDetailScreen
 import com.securevault.ui.screens.RegisterScreen
 import com.securevault.ui.screens.SettingsScreen
 import com.securevault.ui.screens.VaultScreen
-import com.securevault.ui.theme.SecureVaultTheme
+import com.securevault.ui.theme.AppTheme
 import com.securevault.ui.theme.spacing
 import com.securevault.util.PasswordPreset
 import com.securevault.viewmodel.AddEditPasswordViewModel
@@ -90,7 +90,7 @@ fun SecureVaultApp() {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    SecureVaultTheme(themeMode = settingsState.themeMode) {
+    AppTheme(themeMode = settingsState.themeMode) {
         if (authState.isLoading) {
             Scaffold { paddingValues ->
                 SkeletonList(
@@ -98,7 +98,7 @@ fun SecureVaultApp() {
                     modifier = Modifier.padding(paddingValues).padding(MaterialTheme.spacing.md),
                 )
             }
-            return@SecureVaultTheme
+            return@AppTheme
         }
 
         val startRoute = when (authState.startDestination) {

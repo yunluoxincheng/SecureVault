@@ -4,6 +4,7 @@ import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
@@ -32,14 +34,17 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.CountStepperRow
+import com.securevault.ui.components.MyAppCard
+import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.OptionSwitchRow
 import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvFilledCard
 import com.securevault.ui.components.SvOutlinedButton
 import com.securevault.ui.components.SvTopBar
 import com.securevault.ui.theme.PasswordFontFamily
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 import com.securevault.util.PasswordGeneratorConfig
 import com.securevault.util.PasswordPreset
@@ -75,7 +80,7 @@ fun GeneratorScreen(
 
     val copyIconTint by animateColorAsState(
         targetValue = if (copied) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant,
-        animationSpec = tween(300),
+        animationSpec = tween(AnimationTokens.copyFeedbackDuration),
         label = "copyTint"
     )
 
@@ -117,18 +122,29 @@ fun GeneratorScreen(
         }
     }
 
-    LazyColumn(
-        modifier = Modifier.fillMaxSize().padding(horizontal = MaterialTheme.spacing.md),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
-        contentPadding = PaddingValues(bottom = MaterialTheme.spacing.xl),
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        item {
-            SvTopBar(title = "生成器", onBack = onBack)
-        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
+                .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.compactContentSpacing),
+            contentPadding = PaddingValues(bottom = MaterialTheme.spacing.xl),
+        ) {
+            item {
+                SvTopBar(title = "生成器", onBack = onBack)
+            }
 
         // Generated password display
         item {
-            SvFilledCard(modifier = Modifier.fillMaxWidth().animateItemEntrance(0)) {
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth().animateItemEntrance(0),
+                variant = MyAppCardVariant.Filled,
+                contentPadding = PaddingValues(0.dp),
+            ) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -198,30 +214,32 @@ fun GeneratorScreen(
             }
         }
 
-        uiState.infoMessage?.let { message ->
-            item {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+            uiState.infoMessage?.let { message ->
+                item {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
-        }
 
-        uiState.errorMessage?.let { message ->
-            item {
-                Text(
-                    text = message,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.error,
-                )
+            uiState.errorMessage?.let { message ->
+                item {
+                    Text(
+                        text = message,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
             }
-        }
 
         // Length slider
         item {
-            SvFilledCard(
+            MyAppCard(
                 modifier = Modifier.fillMaxWidth().animateItemEntrance(3),
+                variant = MyAppCardVariant.Filled,
+                contentPadding = PaddingValues(0.dp),
             ) {
                 Column(modifier = Modifier.padding(MaterialTheme.spacing.md)) {
                     Row(
@@ -273,57 +291,58 @@ fun GeneratorScreen(
             }, modifier = Modifier.animateItemEntrance(7))
         }
 
-        if (includeDigits) {
-            item {
-                CountStepperRow(
-                    label = "最少数字个数",
-                    value = digitCount,
-                    min = 1,
-                    max = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1),
-                    onDecrease = {
-                        digitCount = (digitCount - 1).coerceAtLeast(1)
-                        val (nd, ns) = normalizeCounts(lengthInt)
-                        digitCount = nd; symbolCount = ns
-                        regenerate()
-                    },
-                    onIncrease = {
-                        val maxDigit = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1)
-                        digitCount = (digitCount + 1).coerceAtMost(maxDigit)
-                        val (nd, ns) = normalizeCounts(lengthInt)
-                        digitCount = nd; symbolCount = ns
-                        regenerate()
-                    },
-                    modifier = Modifier.animateItemEntrance(8),
-                )
+            if (includeDigits) {
+                item {
+                    CountStepperRow(
+                        label = "最少数字个数",
+                        value = digitCount,
+                        min = 1,
+                        max = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1),
+                        onDecrease = {
+                            digitCount = (digitCount - 1).coerceAtLeast(1)
+                            val (nd, ns) = normalizeCounts(lengthInt)
+                            digitCount = nd; symbolCount = ns
+                            regenerate()
+                        },
+                        onIncrease = {
+                            val maxDigit = minOf(9, lengthInt - if (includeSymbols) symbolCount else 0).coerceAtLeast(1)
+                            digitCount = (digitCount + 1).coerceAtMost(maxDigit)
+                            val (nd, ns) = normalizeCounts(lengthInt)
+                            digitCount = nd; symbolCount = ns
+                            regenerate()
+                        },
+                        modifier = Modifier.animateItemEntrance(8),
+                    )
+                }
             }
-        }
 
-        if (includeSymbols) {
-            item {
-                CountStepperRow(
-                    label = "最少符号个数",
-                    value = symbolCount,
-                    min = 1,
-                    max = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1),
-                    onDecrease = {
-                        symbolCount = (symbolCount - 1).coerceAtLeast(1)
-                        val (nd, ns) = normalizeCounts(lengthInt)
-                        digitCount = nd; symbolCount = ns
-                        regenerate()
-                    },
-                    onIncrease = {
-                        val maxSymbol = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1)
-                        symbolCount = (symbolCount + 1).coerceAtMost(maxSymbol)
-                        val (nd, ns) = normalizeCounts(lengthInt)
-                        digitCount = nd; symbolCount = ns
-                        regenerate()
-                    },
-                    modifier = Modifier.animateItemEntrance(9),
-                )
+            if (includeSymbols) {
+                item {
+                    CountStepperRow(
+                        label = "最少符号个数",
+                        value = symbolCount,
+                        min = 1,
+                        max = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1),
+                        onDecrease = {
+                            symbolCount = (symbolCount - 1).coerceAtLeast(1)
+                            val (nd, ns) = normalizeCounts(lengthInt)
+                            digitCount = nd; symbolCount = ns
+                            regenerate()
+                        },
+                        onIncrease = {
+                            val maxSymbol = minOf(9, lengthInt - if (includeDigits) digitCount else 0).coerceAtLeast(1)
+                            symbolCount = (symbolCount + 1).coerceAtMost(maxSymbol)
+                            val (nd, ns) = normalizeCounts(lengthInt)
+                            digitCount = nd; symbolCount = ns
+                            regenerate()
+                        },
+                        modifier = Modifier.animateItemEntrance(9),
+                    )
+                }
             }
-        }
 
-        item { Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm)) }
+            item { Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm)) }
+        }
     }
 }
 

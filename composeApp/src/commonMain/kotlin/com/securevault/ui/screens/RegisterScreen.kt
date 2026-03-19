@@ -1,10 +1,18 @@
 package com.securevault.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
@@ -15,10 +23,12 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
 import com.securevault.ui.components.PasswordStrengthBar
-import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvPasswordTextField
-import com.securevault.ui.components.SvTextButton
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppInput
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -34,74 +44,94 @@ fun RegisterScreen(
     val passwordHints = remember(password) { buildPasswordHints(password) }
     val scrollState = rememberScrollState()
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.md)
-            .verticalScroll(scrollState),
-        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
+            .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding),
+        contentAlignment = Alignment.TopCenter,
     ) {
-        Text(
-            text = "创建保险库",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(top = MaterialTheme.spacing.xl),
-        )
-        Text(
-            text = "设置一个强主密码，这是保护你所有密码的钥匙",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-
-        SvPasswordTextField(
-            value = password,
-            onValueChange = { password = it },
-            label = "设置主密码",
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-        )
-
-        PasswordStrengthBar(password = password, modifier = Modifier.fillMaxWidth())
-
-        if (passwordHints.isNotEmpty()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
+                .verticalScroll(scrollState)
+                .padding(bottom = MaterialTheme.spacing.xl),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.contentSpacing),
+        ) {
             Text(
-                text = "建议：${passwordHints.joinToString("、")}",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                text = "创建保险库",
+                style = MaterialTheme.typography.headlineLarge,
+                modifier = Modifier.padding(top = MaterialTheme.layout.sectionSpacing),
             )
-        }
-
-        SvPasswordTextField(
-            value = confirmPassword,
-            onValueChange = { confirmPassword = it },
-            label = "确认主密码",
-            modifier = Modifier.fillMaxWidth(),
-            isError = confirmPassword.isNotBlank() && !valid,
-            supportingText = if (confirmPassword.isNotBlank() && password != confirmPassword) "两次密码不一致" else null,
-            enabled = !isLoading,
-        )
-
-        if (!errorMessage.isNullOrBlank()) {
             Text(
-                text = errorMessage,
+                text = "设置一个强主密码，这是保护你所有密码的钥匙",
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.error,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = MaterialTheme.spacing.sm),
+            )
+
+            MyAppInput(
+                value = password,
+                onValueChange = { password = it },
+                label = "设置主密码",
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                isPassword = true,
+            )
+
+            PasswordStrengthBar(password = password, modifier = Modifier.fillMaxWidth())
+
+            AnimatedVisibility(
+                visible = passwordHints.isNotEmpty(),
+                enter = fadeIn(tween(120)) + expandVertically(animationSpec = tween(120)),
+                exit = fadeOut(tween(120)) + shrinkVertically(animationSpec = tween(120)),
+            ) {
+                Text(
+                    text = "建议：${passwordHints.joinToString("、")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            }
+
+            MyAppInput(
+                value = confirmPassword,
+                onValueChange = { confirmPassword = it },
+                label = "确认主密码",
+                modifier = Modifier.fillMaxWidth(),
+                isError = confirmPassword.isNotBlank() && !valid,
+                supportingText = if (confirmPassword.isNotBlank() && password != confirmPassword) "两次密码不一致" else null,
+                enabled = !isLoading,
+                isPassword = true,
+            )
+
+            AnimatedVisibility(
+                visible = !errorMessage.isNullOrBlank(),
+                enter = fadeIn(tween(120)) + expandVertically(animationSpec = tween(120)),
+                exit = fadeOut(tween(120)) + shrinkVertically(animationSpec = tween(120)),
+            ) {
+                Text(
+                    text = errorMessage.orEmpty(),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.error,
+                )
+            }
+
+            MyAppButton(
+                text = if (isLoading) "创建中…" else "创建保险库",
+                onClick = { onRegister(password) },
+                modifier = Modifier.fillMaxWidth(),
+                enabled = valid,
+                isLoading = isLoading,
+            )
+
+            MyAppButton(
+                text = "已有帐号？登录",
+                onClick = onGoLogin,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                variant = MyAppButtonVariant.Text,
             )
         }
-
-        SvButton(
-            text = if (isLoading) "创建中…" else "创建保险库",
-            onClick = { onRegister(password) },
-            modifier = Modifier.fillMaxWidth(),
-            enabled = valid,
-            isLoading = isLoading,
-        )
-
-        SvTextButton(
-            text = "已有帐号？登录",
-            onClick = onGoLogin,
-            modifier = Modifier.fillMaxWidth(),
-            enabled = !isLoading,
-        )
     }
 }
 

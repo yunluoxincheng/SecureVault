@@ -3,8 +3,12 @@ package com.securevault.ui.screens
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -12,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
@@ -28,9 +33,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.securevault.ui.animation.AnimationTokens
-import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvPasswordTextField
-import com.securevault.ui.components.SvTextButton
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppInput
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -55,102 +61,120 @@ fun LoginScreen(
         }
     }
 
-    Column(
+    Box(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.md),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding),
+        contentAlignment = Alignment.Center,
     ) {
-        AnimatedVisibility(
-            visible = contentVisible,
-            enter = fadeIn(tween(AnimationTokens.pageEnterDuration)) +
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.sectionSpacing),
+        ) {
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(AnimationTokens.pageEnterDuration)) +
                     slideInVertically(
-                        initialOffsetY = { -it / 3 },
+                        initialOffsetY = { -it / 4 },
                         animationSpec = tween(AnimationTokens.pageEnterDuration, easing = AnimationTokens.easeOut)
                     ),
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(
-                    imageVector = Icons.Default.Lock,
-                    contentDescription = null,
-                    modifier = Modifier.size(64.dp),
-                    tint = MaterialTheme.colorScheme.primary,
-                )
-                Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
-                Text(
-                    text = "SecureVault",
-                    style = MaterialTheme.typography.headlineLarge,
-                    color = MaterialTheme.colorScheme.onSurface,
-                )
-                Text(
-                    text = "输入主密码解锁",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(top = 4.dp),
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(MaterialTheme.spacing.xl))
-
-        AnimatedVisibility(
-            visible = contentVisible,
-            enter = fadeIn(tween(AnimationTokens.pageEnterDuration, delayMillis = 100)) +
-                    slideInVertically(
-                        initialOffsetY = { it / 4 },
-                        animationSpec = tween(AnimationTokens.pageEnterDuration, easing = AnimationTokens.easeOut)
-                    ),
-        ) {
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
             ) {
-                SvPasswordTextField(
-                    value = password,
-                    onValueChange = { password = it },
-                    label = "主密码",
-                    leadingIcon = Icons.Default.Lock,
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = !isLoading,
-                )
-
-                SvButton(
-                    text = if (isLoading) "解锁中…" else "解锁",
-                    onClick = { onLogin(password) },
-                    modifier = Modifier.fillMaxWidth(),
-                    enabled = password.isNotBlank(),
-                    isLoading = isLoading,
-                )
-
-                if (!errorMessage.isNullOrBlank()) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Icon(
+                        imageVector = Icons.Default.Lock,
+                        contentDescription = null,
+                        modifier = Modifier.size(MaterialTheme.layout.heroIconSize),
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                    Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
                     Text(
-                        text = errorMessage,
+                        text = "SecureVault",
+                        style = MaterialTheme.typography.headlineLarge,
+                        color = MaterialTheme.colorScheme.onSurface,
+                    )
+                    Text(
+                        text = "输入主密码解锁",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.error,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(top = MaterialTheme.spacing.xs),
                     )
                 }
+            }
 
-                Text(
-                    text = "— 或 —",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.outline,
-                )
-
-                if (biometricAvailable) {
-                    SvTextButton(
-                        text = "使用生物识别",
-                        onClick = onBiometricLogin,
+            AnimatedVisibility(
+                visible = contentVisible,
+                enter = fadeIn(tween(AnimationTokens.pageEnterDuration, delayMillis = 80)) +
+                    slideInVertically(
+                        initialOffsetY = { it / 5 },
+                        animationSpec = tween(AnimationTokens.pageEnterDuration, easing = AnimationTokens.easeOut)
+                    ),
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .widthIn(max = 480.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.contentSpacing),
+                ) {
+                    MyAppInput(
+                        value = password,
+                        onValueChange = { password = it },
+                        label = "主密码",
+                        leadingIcon = Icons.Default.Lock,
+                        modifier = Modifier.fillMaxWidth(),
                         enabled = !isLoading,
-                        leadingIcon = Icons.Default.Fingerprint,
+                        isPassword = true,
+                    )
+
+                    AnimatedVisibility(
+                        visible = !errorMessage.isNullOrBlank(),
+                        enter = fadeIn(tween(AnimationTokens.crossFadeDuration)) +
+                            expandVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
+                        exit = fadeOut(tween(AnimationTokens.crossFadeDuration)) +
+                            shrinkVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
+                    ) {
+                        Text(
+                            text = errorMessage.orEmpty(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.fillMaxWidth(),
+                        )
+                    }
+
+                    MyAppButton(
+                        text = if (isLoading) "解锁中…" else "解锁",
+                        onClick = { onLogin(password) },
+                        modifier = Modifier.fillMaxWidth(),
+                        enabled = password.isNotBlank(),
+                        isLoading = isLoading,
+                    )
+
+                    Text(
+                        text = "或使用其他方式",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.outline,
+                    )
+
+                    if (biometricAvailable) {
+                        MyAppButton(
+                            text = "使用生物识别",
+                            onClick = onBiometricLogin,
+                            enabled = !isLoading,
+                            leadingIcon = Icons.Default.Fingerprint,
+                            variant = MyAppButtonVariant.Text,
+                        )
+                    }
+
+                    MyAppButton(
+                        text = "没有帐号？注册",
+                        onClick = onGoRegister,
+                        enabled = !isLoading,
+                        variant = MyAppButtonVariant.Text,
                     )
                 }
-
-                SvTextButton(
-                    text = "没有帐号？注册",
-                    onClick = onGoRegister,
-                    enabled = !isLoading,
-                )
             }
         }
     }

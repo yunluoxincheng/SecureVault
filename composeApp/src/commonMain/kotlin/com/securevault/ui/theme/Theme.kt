@@ -100,7 +100,7 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
 )
 
 @Composable
-fun SecureVaultTheme(
+fun AppTheme(
     themeMode: ThemeMode,
     content: @Composable () -> Unit
 ) {
@@ -121,6 +121,8 @@ fun SecureVaultTheme(
     CompositionLocalProvider(
         LocalSpacing provides Spacing(),
         LocalElevation provides Elevation(),
+        LocalRadius provides Radius(),
+        LocalLayoutTokens provides LayoutTokens(),
     ) {
         MaterialTheme(
             colorScheme = dynamicScheme ?: fallbackScheme,
@@ -129,4 +131,15 @@ fun SecureVaultTheme(
             content = content
         )
     }
+}
+
+@Composable
+fun SecureVaultTheme(
+    themeMode: ThemeMode,
+    content: @Composable () -> Unit
+) {
+    AppTheme(
+        themeMode = themeMode,
+        content = content
+    )
 }

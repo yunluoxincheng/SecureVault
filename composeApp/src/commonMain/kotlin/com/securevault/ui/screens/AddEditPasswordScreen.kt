@@ -3,16 +3,18 @@ package com.securevault.ui.screens
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.navigationBarsPadding
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.ui.unit.dp
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -23,14 +25,18 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppCard
+import com.securevault.ui.components.MyAppCardVariant
+import com.securevault.ui.components.MyAppInput
+import com.securevault.ui.components.MyAppListItemContainer
+import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.OptionSwitchRow
 import com.securevault.ui.components.PasswordStrengthBar
-import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvOutlinedButton
-import com.securevault.ui.components.SvPasswordTextField
-import com.securevault.ui.components.SvTextField
-import com.securevault.ui.components.SvTopBar
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -72,13 +78,15 @@ fun AddEditPasswordScreen(
         Column(
             modifier = Modifier
                 .fillMaxSize()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
+                .align(Alignment.TopCenter)
                 .imePadding()
-                .padding(horizontal = MaterialTheme.spacing.md)
+                .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding)
                 .verticalScroll(scrollState)
-                .padding(bottom = 96.dp),
-            verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                .padding(bottom = MaterialTheme.layout.bottomBarActionInset),
+            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.contentSpacing),
         ) {
-            SvTopBar(
+            MyAppTopBar(
                 title = if (isEditing) "编辑密码" else "添加密码",
                 onBack = onCancel,
             )
@@ -87,30 +95,32 @@ fun AddEditPasswordScreen(
                 text = "基本信息",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.xs),
             )
 
-            SvTextField(
+            MyAppInput(
                 value = title,
                 onValueChange = { title = it },
                 label = "标题 *",
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            SvTextField(
+            MyAppInput(
                 value = username,
                 onValueChange = { username = it },
                 label = "用户名 *",
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            SvPasswordTextField(
+            MyAppInput(
                 value = password,
                 onValueChange = { password = it },
                 label = "密码 *",
                 modifier = Modifier.fillMaxWidth(),
+                isPassword = true,
             )
 
-            SvOutlinedButton(
+            MyAppButton(
                 text = "生成强密码",
                 onClick = {
                     val generated = onGeneratePassword()
@@ -118,18 +128,19 @@ fun AddEditPasswordScreen(
                 },
                 modifier = Modifier.fillMaxWidth(),
                 leadingIcon = Icons.Default.AutoAwesome,
+                variant = MyAppButtonVariant.Secondary,
             )
 
             PasswordStrengthBar(password = password, modifier = Modifier.fillMaxWidth())
 
-            SvTextField(
+            MyAppInput(
                 value = url,
                 onValueChange = { url = it },
                 label = "URL（可选）",
                 modifier = Modifier.fillMaxWidth(),
             )
 
-            SvTextField(
+            MyAppInput(
                 value = notes,
                 onValueChange = { notes = it },
                 label = "备注（可选）",
@@ -137,7 +148,7 @@ fun AddEditPasswordScreen(
                 singleLine = false,
             )
 
-            SvTextField(
+            MyAppInput(
                 value = category,
                 onValueChange = { category = it },
                 label = "分类",
@@ -148,22 +159,38 @@ fun AddEditPasswordScreen(
                 text = "选项",
                 style = MaterialTheme.typography.titleSmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(
+                    start = MaterialTheme.spacing.xs,
+                    end = MaterialTheme.spacing.xs,
+                    top = MaterialTheme.spacing.sm,
+                ),
             )
 
-            OptionSwitchRow(
-                label = "收藏",
-                checked = isFavorite,
-                onCheckedChange = { isFavorite = it },
-            )
-
-            OptionSwitchRow(
-                label = "安全模式（密码不可见）",
-                checked = securityMode,
-                onCheckedChange = { securityMode = it },
-            )
+            MyAppCard(
+                modifier = Modifier.fillMaxWidth(),
+                variant = MyAppCardVariant.Filled,
+                contentPadding = PaddingValues(0.dp),
+            ) {
+                OptionSwitchRow(
+                    label = "收藏",
+                    checked = isFavorite,
+                    onCheckedChange = { isFavorite = it },
+                    container = MyAppListItemContainer.None,
+                )
+                HorizontalDivider(
+                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.md),
+                    color = MaterialTheme.colorScheme.outlineVariant,
+                )
+                OptionSwitchRow(
+                    label = "安全模式（密码不可见）",
+                    checked = securityMode,
+                    onCheckedChange = { securityMode = it },
+                    container = MyAppListItemContainer.None,
+                )
+            }
         }
 
-        SvButton(
+        MyAppButton(
             text = "保存",
             onClick = {
                 val now = System.currentTimeMillis()
@@ -186,8 +213,12 @@ fun AddEditPasswordScreen(
             },
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = MaterialTheme.spacing.md, vertical = MaterialTheme.spacing.sm),
+                .padding(
+                    horizontal = MaterialTheme.layout.pageHorizontalPadding,
+                    vertical = MaterialTheme.spacing.sm,
+                ),
             enabled = canSave,
         )
     }

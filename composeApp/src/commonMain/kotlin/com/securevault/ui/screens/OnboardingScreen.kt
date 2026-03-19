@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import com.securevault.ui.components.SvButton
 import com.securevault.ui.components.SvTextButton
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 import kotlinx.coroutines.launch
 
@@ -72,53 +74,60 @@ fun OnboardingScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(horizontal = MaterialTheme.spacing.md),
+            .padding(horizontal = MaterialTheme.layout.pageHorizontalPadding),
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        HorizontalPager(
-            state = pagerState,
+        Column(
             modifier = Modifier
                 .fillMaxWidth()
+                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                 .weight(1f),
-        ) { page ->
-            OnboardingPageContent(page = pages[page])
-        }
-
-        // Page indicators
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(bottom = MaterialTheme.spacing.md),
-            horizontalArrangement = Arrangement.Center,
-            verticalAlignment = Alignment.CenterVertically,
         ) {
-            repeat(pages.size) { index ->
-                val isSelected = pagerState.currentPage == index
-                val indicatorWidth by animateDpAsState(
-                    targetValue = if (isSelected) 24.dp else 8.dp,
-                    animationSpec = tween(200),
-                    label = "indicatorWidth"
-                )
-                val color by animateColorAsState(
-                    targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                    animationSpec = tween(200),
-                    label = "indicatorColor"
-                )
-                Box(
-                    modifier = Modifier
-                        .padding(horizontal = 3.dp)
-                        .height(8.dp)
-                        .width(indicatorWidth)
-                        .clip(CircleShape)
-                        .background(color)
-                )
+            HorizontalPager(
+                state = pagerState,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f),
+            ) { page ->
+                OnboardingPageContent(page = pages[page])
+            }
+
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(bottom = MaterialTheme.spacing.md),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                repeat(pages.size) { index ->
+                    val isSelected = pagerState.currentPage == index
+                    val indicatorWidth by animateDpAsState(
+                        targetValue = if (isSelected) 24.dp else 8.dp,
+                        animationSpec = tween(200),
+                        label = "indicatorWidth"
+                    )
+                    val color by animateColorAsState(
+                        targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
+                        animationSpec = tween(200),
+                        label = "indicatorColor"
+                    )
+                    Box(
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.spacing.xs)
+                            .height(8.dp)
+                            .width(indicatorWidth)
+                            .clip(CircleShape)
+                            .background(color)
+                    )
+                }
             }
         }
 
-        // Navigation buttons
         if (pagerState.currentPage < pages.lastIndex) {
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
+                    .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                     .padding(bottom = MaterialTheme.spacing.md),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
@@ -143,6 +152,7 @@ fun OnboardingScreen(
                 onClick = onFinish,
                 modifier = Modifier
                     .fillMaxWidth()
+                    .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                     .padding(bottom = MaterialTheme.spacing.md),
             )
         }

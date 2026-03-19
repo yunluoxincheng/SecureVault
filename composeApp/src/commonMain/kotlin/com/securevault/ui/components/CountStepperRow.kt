@@ -17,6 +17,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -31,13 +32,17 @@ fun CountStepperRow(
 ) {
     val safeMax = max.coerceAtLeast(min)
 
-    SvFilledCard(modifier = modifier.fillMaxWidth()) {
+    MyAppCard(
+        modifier = modifier.fillMaxWidth(),
+        variant = MyAppCardVariant.Filled,
+        contentPadding = androidx.compose.foundation.layout.PaddingValues(0.dp),
+    ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(
-                    horizontal = MaterialTheme.spacing.md,
-                    vertical = MaterialTheme.spacing.sm,
+                    horizontal = MaterialTheme.layout.cardPaddingHorizontal,
+                    vertical = MaterialTheme.layout.cardPaddingVertical,
                 ),
             verticalAlignment = Alignment.CenterVertically,
         ) {
@@ -54,7 +59,7 @@ fun CountStepperRow(
                 IconButton(
                     onClick = onDecrease,
                     enabled = value > min,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(MaterialTheme.layout.minInteractiveSize),
                 ) {
                     Icon(Icons.Default.Remove, contentDescription = "减少")
                 }
@@ -70,7 +75,7 @@ fun CountStepperRow(
                 IconButton(
                     onClick = onIncrease,
                     enabled = value < safeMax,
-                    modifier = Modifier.size(36.dp),
+                    modifier = Modifier.size(MaterialTheme.layout.minInteractiveSize),
                 ) {
                     Icon(Icons.Default.Add, contentDescription = "增加")
                 }

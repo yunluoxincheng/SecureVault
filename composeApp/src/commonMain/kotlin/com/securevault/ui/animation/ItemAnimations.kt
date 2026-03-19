@@ -29,7 +29,7 @@ fun Modifier.animateItemEntrance(index: Int = 0): Modifier = composed {
         label = "itemAlpha"
     )
     val translationY by animateFloatAsState(
-        targetValue = if (visible) 0f else 24f,
+        targetValue = if (visible) 0f else AnimationTokens.itemEntranceOffsetPx.toFloat(),
         animationSpec = tween(
             durationMillis = AnimationTokens.cardAppearDuration,
             easing = AnimationTokens.easeOut

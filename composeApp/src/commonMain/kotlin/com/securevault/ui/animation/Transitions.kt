@@ -9,69 +9,35 @@ import androidx.compose.animation.slideInHorizontally
 import androidx.compose.animation.slideOutHorizontally
 
 object NavTransitions {
-    val enterForward: EnterTransition = fadeIn(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageEnterDuration,
-            easing = AnimationTokens.easeOut
-        )
-    ) + slideInHorizontally(
-        initialOffsetX = { it / 4 },
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageEnterDuration,
-            easing = AnimationTokens.easeOut
-        )
-    )
+    val enterForward: EnterTransition =
+        fadeIn(animationSpec = AnimationTokens.pageEnterTween()) +
+            slideInHorizontally(
+                initialOffsetX = { it / 8 },
+                animationSpec = AnimationTokens.pageEnterTween()
+            )
 
-    val exitForward: ExitTransition = fadeOut(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageExitDuration,
-            easing = AnimationTokens.easeIn
-        )
-    ) + slideOutHorizontally(
-        targetOffsetX = { -it / 4 },
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageExitDuration,
-            easing = AnimationTokens.easeIn
-        )
-    )
+    val exitForward: ExitTransition =
+        fadeOut(animationSpec = AnimationTokens.pageExitTween()) +
+            slideOutHorizontally(
+                targetOffsetX = { -it / 8 },
+                animationSpec = AnimationTokens.pageExitTween()
+            )
 
-    val enterBackward: EnterTransition = fadeIn(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageEnterDuration,
-            easing = AnimationTokens.easeOut
-        )
-    ) + slideInHorizontally(
-        initialOffsetX = { -it / 4 },
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageEnterDuration,
-            easing = AnimationTokens.easeOut
-        )
-    )
+    val enterBackward: EnterTransition =
+        fadeIn(animationSpec = AnimationTokens.pageEnterTween()) +
+            slideInHorizontally(
+                initialOffsetX = { -it / 8 },
+                animationSpec = AnimationTokens.pageEnterTween()
+            )
 
-    val exitBackward: ExitTransition = fadeOut(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageExitDuration,
-            easing = AnimationTokens.easeIn
-        )
-    ) + slideOutHorizontally(
-        targetOffsetX = { it / 4 },
-        animationSpec = tween(
-            durationMillis = AnimationTokens.pageExitDuration,
-            easing = AnimationTokens.easeIn
-        )
-    )
+    val exitBackward: ExitTransition =
+        fadeOut(animationSpec = AnimationTokens.pageExitTween()) +
+            slideOutHorizontally(
+                targetOffsetX = { it / 8 },
+                animationSpec = AnimationTokens.pageExitTween()
+            )
 
-    val enterTab: EnterTransition = fadeIn(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.crossFadeDuration,
-            easing = AnimationTokens.easeOut
-        )
-    )
+    val enterTab: EnterTransition = fadeIn(animationSpec = AnimationTokens.crossFadeTween())
 
-    val exitTab: ExitTransition = fadeOut(
-        animationSpec = tween(
-            durationMillis = AnimationTokens.crossFadeDuration,
-            easing = AnimationTokens.easeIn
-        )
-    )
+    val exitTab: ExitTransition = fadeOut(animationSpec = AnimationTokens.crossFadeTween())
 }

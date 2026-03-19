@@ -6,15 +6,16 @@ import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 
 object AnimationTokens {
-    const val pageEnterDuration = 300
-    const val pageExitDuration = 250
-    const val cardAppearDuration = 200
-    const val dialogDuration = 250
-    const val crossFadeDuration = 150
-    const val copyFeedbackDuration = 300
-    const val strengthBarDuration = 400
+    const val pageEnterDuration = 280
+    const val pageExitDuration = 220
+    const val cardAppearDuration = 220
+    const val dialogDuration = 240
+    const val crossFadeDuration = 160
+    const val copyFeedbackDuration = 260
+    const val strengthBarDuration = 360
     const val unlockDuration = 500
-    const val staggerItemDelay = 50
+    const val staggerItemDelay = 36
+    const val itemEntranceOffsetPx = 16
 
     val easeOut = CubicBezierEasing(0f, 0f, 0.2f, 1f)
     val easeIn = CubicBezierEasing(0.4f, 0f, 1f, 1f)
@@ -29,6 +30,6 @@ object AnimationTokens {
 
     val buttonPressSpring = spring<Float>(
         dampingRatio = Spring.DampingRatioMediumBouncy,
-        stiffness = Spring.StiffnessHigh
+        stiffness = Spring.StiffnessMedium
     )
 }
