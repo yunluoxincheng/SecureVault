@@ -1,5 +1,10 @@
 package com.securevault.ui.screens
 
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -11,8 +16,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
@@ -137,29 +142,50 @@ fun VaultScreen(
                     count = 6,
                     modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
                 )
-            } else if (entries.isEmpty()) {
-                VaultEmptyState(
+            } else {
+                AnimatedContent(
+                    targetState = entries,
                     modifier = Modifier
                         .weight(1f)
                         .fillMaxWidth(),
-                )
-            } else {
-                LazyColumn(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.compactContentSpacing),
-                    contentPadding = PaddingValues(
-                        top = MaterialTheme.spacing.xs,
-                        bottom = MaterialTheme.layout.fabContentClearance,
-                    ),
-                ) {
-                    itemsIndexed(entries, key = { _, e -> vaultEntryKey(e) }) { index, entry ->
-                        PasswordCard(
-                            entry = entry,
-                            onClick = { onEntryClick(entry) },
-                            index = index,
-                            animateEntrance = animateVaultListEntrance,
-                            animationResetKey = animationResetKey,
+                    transitionSpec = {
+                        fadeIn(
+                            animationSpec = tween(
+                                durationMillis = AnimationTokens.crossFadeDuration,
+                                easing = AnimationTokens.easeOut,
+                            )
+                        ) togetherWith fadeOut(
+                            animationSpec = tween(
+                                durationMillis = AnimationTokens.crossFadeDuration,
+                                easing = AnimationTokens.easeIn,
+                            )
                         )
+                    },
+                    label = "vaultEntriesSwap",
+                ) { animatedEntries ->
+                    if (animatedEntries.isEmpty()) {
+                        VaultEmptyState(
+                            modifier = Modifier.fillMaxSize(),
+                        )
+                    } else {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.compactContentSpacing),
+                            contentPadding = PaddingValues(
+                                top = MaterialTheme.spacing.xs,
+                                bottom = MaterialTheme.layout.fabContentClearance,
+                            ),
+                        ) {
+                            itemsIndexed(animatedEntries, key = { _, e -> vaultEntryKey(e) }) { index, entry ->
+                                PasswordCard(
+                                    entry = entry,
+                                    onClick = { onEntryClick(entry) },
+                                    index = index,
+                                    animateEntrance = animateVaultListEntrance,
+                                    animationResetKey = animationResetKey,
+                                )
+                            }
+                        }
                     }
                 }
             }
