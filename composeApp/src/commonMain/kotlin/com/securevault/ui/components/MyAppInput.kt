@@ -18,7 +18,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
@@ -39,11 +38,10 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.radius
 import com.securevault.ui.theme.spacing
-
-private const val INPUT_ANIM_MS = 180
 
 /**
  * Primary input field for the app.
@@ -95,7 +93,7 @@ fun MyAppInput(
             isFocused -> colorPrimary.copy(alpha = 0.92f)
             else -> colorOutlineVariant.copy(alpha = 0.9f)
         },
-        animationSpec = tween(INPUT_ANIM_MS),
+        animationSpec = tween(AnimationTokens.crossFadeDuration),
         label = "inputBorder",
     )
 
@@ -106,7 +104,7 @@ fun MyAppInput(
             isFocused -> colorPrimary.copy(alpha = 0.92f)
             else -> colorOnSurfaceVariant
         },
-        animationSpec = tween(INPUT_ANIM_MS),
+        animationSpec = tween(AnimationTokens.crossFadeDuration),
         label = "inputLabel",
     )
 
@@ -117,7 +115,7 @@ fun MyAppInput(
             isFocused -> colorPrimary.copy(alpha = 0.92f)
             else -> colorOnSurfaceVariant
         },
-        animationSpec = tween(INPUT_ANIM_MS),
+        animationSpec = tween(AnimationTokens.crossFadeDuration),
         label = "inputLeadingIcon",
     )
 
@@ -127,7 +125,7 @@ fun MyAppInput(
             isFocused -> focusedContainer
             else -> restingContainer
         },
-        animationSpec = tween(INPUT_ANIM_MS),
+        animationSpec = tween(AnimationTokens.crossFadeDuration),
         label = "inputContainer",
     )
 
@@ -138,7 +136,7 @@ fun MyAppInput(
             isFocused -> 0.07f
             else -> 0f
         },
-        animationSpec = tween(INPUT_ANIM_MS),
+        animationSpec = tween(AnimationTokens.crossFadeDuration),
         label = "inputGlow",
     )
 
@@ -160,19 +158,17 @@ fun MyAppInput(
             {
                 val toggleAction = onTogglePasswordVisibility
                     ?: { internalPasswordVisible = !internalPasswordVisible }
-                IconButton(onClick = toggleAction) {
-                    Crossfade(
-                        targetState = isPasswordVisible,
-                        animationSpec = tween(INPUT_ANIM_MS),
-                        label = "passwordEye",
-                    ) { visible ->
-                        Icon(
-                            imageVector = if (visible) Icons.Default.VisibilityOff
-                                          else Icons.Default.Visibility,
-                            contentDescription = if (visible) "Hide password" else "Show password",
-                            tint = leadingTint,
-                        )
-                    }
+                Crossfade(
+                    targetState = isPasswordVisible,
+                    animationSpec = tween(AnimationTokens.crossFadeDuration),
+                    label = "passwordEye",
+                ) { visible ->
+                    MyAppIconAction(
+                        icon = if (visible) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                        contentDescription = if (visible) "Hide password" else "Show password",
+                        onClick = toggleAction,
+                        tint = leadingTint,
+                    )
                 }
             }
         }
@@ -233,8 +229,10 @@ fun MyAppInput(
         // Animated error message below the field
         AnimatedVisibility(
             visible = isError && errorMessage != null,
-            enter = fadeIn(tween(INPUT_ANIM_MS)) + expandVertically(tween(INPUT_ANIM_MS)),
-            exit = fadeOut(tween(INPUT_ANIM_MS)) + shrinkVertically(tween(INPUT_ANIM_MS)),
+            enter = fadeIn(tween(AnimationTokens.crossFadeDuration)) +
+                expandVertically(tween(AnimationTokens.crossFadeDuration)),
+            exit = fadeOut(tween(AnimationTokens.crossFadeDuration)) +
+                shrinkVertically(tween(AnimationTokens.crossFadeDuration)),
         ) {
             Text(
                 text = errorMessage.orEmpty(),
@@ -246,8 +244,10 @@ fun MyAppInput(
 
         AnimatedVisibility(
             visible = !isError && supportingText != null,
-            enter = fadeIn(tween(INPUT_ANIM_MS)) + expandVertically(tween(INPUT_ANIM_MS)),
-            exit = fadeOut(tween(INPUT_ANIM_MS)) + shrinkVertically(tween(INPUT_ANIM_MS)),
+            enter = fadeIn(tween(AnimationTokens.crossFadeDuration)) +
+                expandVertically(tween(AnimationTokens.crossFadeDuration)),
+            exit = fadeOut(tween(AnimationTokens.crossFadeDuration)) +
+                shrinkVertically(tween(AnimationTokens.crossFadeDuration)),
         ) {
             Text(
                 text = supportingText.orEmpty(),

@@ -17,9 +17,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.FloatingActionButtonDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +24,8 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.components.MyAppFilterChip
+import com.securevault.ui.components.MyAppFloatingActionButton
 import com.securevault.ui.components.MyAppInput
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.PasswordCard
@@ -83,27 +82,27 @@ fun VaultScreen(
                 contentPadding = PaddingValues(vertical = MaterialTheme.spacing.xs),
             ) {
                 item {
-                    FilterChip(
+                    MyAppFilterChip(
                         selected = favoritesOnly,
                         onClick = { onFavoritesOnlyChange(!favoritesOnly) },
-                        label = { Text("仅收藏") },
+                        label = "仅收藏",
                     )
                 }
                 item {
-                    FilterChip(
+                    MyAppFilterChip(
                         selected = selectedCategory == null && !favoritesOnly,
                         onClick = {
                             onCategoryChange(null)
                             if (favoritesOnly) onFavoritesOnlyChange(false)
                         },
-                        label = { Text("全部") },
+                        label = "全部",
                     )
                 }
                 items(categories) { category ->
-                    FilterChip(
+                    MyAppFilterChip(
                         selected = selectedCategory == category,
                         onClick = { onCategoryChange(category) },
-                        label = { Text(category) },
+                        label = category,
                     )
                 }
             }
@@ -141,20 +140,14 @@ fun VaultScreen(
             }
         }
 
-        FloatingActionButton(
+        MyAppFloatingActionButton(
+            icon = Icons.Default.Add,
+            contentDescription = "添加密码",
             onClick = onAddClick,
             modifier = Modifier
                 .align(Alignment.BottomEnd)
                 .padding(MaterialTheme.spacing.md),
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer,
-            elevation = FloatingActionButtonDefaults.elevation(
-                defaultElevation = MaterialTheme.layout.fabElevation,
-                pressedElevation = MaterialTheme.layout.fabPressedElevation,
-            ),
-        ) {
-            Icon(Icons.Default.Add, contentDescription = "添加密码")
-        }
+        )
     }
 }
 

@@ -27,6 +27,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.theme.spacing
 
 @Composable
@@ -41,7 +42,7 @@ private fun shimmerBrush(): Brush {
         initialValue = 0f,
         targetValue = 1000f,
         animationSpec = infiniteRepeatable(
-            animation = tween(1000),
+            animation = tween(AnimationTokens.shimmerDuration),
             repeatMode = RepeatMode.Restart,
         ),
         label = "shimmerTranslate"

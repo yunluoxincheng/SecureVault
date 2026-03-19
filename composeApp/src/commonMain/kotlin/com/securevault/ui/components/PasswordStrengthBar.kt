@@ -12,18 +12,22 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import com.securevault.ui.animation.AnimationTokens
+import com.securevault.ui.theme.StrengthMedium
+import com.securevault.ui.theme.StrengthStrong
+import com.securevault.ui.theme.StrengthVeryStrong
+import com.securevault.ui.theme.StrengthVeryWeak
+import com.securevault.ui.theme.StrengthWeak
 import com.securevault.ui.theme.spacing
 import com.securevault.util.PasswordStrengthCalculator
 import com.securevault.util.PasswordStrengthLevel
 
-enum class PasswordStrength(val label: String, val progress: Float, val color: Color) {
-    VeryWeak("非常弱", 0.1f, Color(0xFFD32F2F)),
-    Weak("弱", 0.3f, Color(0xFFF57C00)),
-    Medium("一般", 0.5f, Color(0xFFFBC02D)),
-    Strong("强", 0.75f, Color(0xFF388E3C)),
-    VeryStrong("非常强", 1f, Color(0xFF1B6B4F))
+enum class PasswordStrength(val label: String, val progress: Float) {
+    VeryWeak("非常弱", 0.1f),
+    Weak("弱", 0.3f),
+    Medium("一般", 0.5f),
+    Strong("强", 0.75f),
+    VeryStrong("非常强", 1f)
 }
 
 fun calculatePasswordStrength(password: String): PasswordStrength {
@@ -39,6 +43,13 @@ fun calculatePasswordStrength(password: String): PasswordStrength {
 @Composable
 fun PasswordStrengthBar(password: String, modifier: Modifier = Modifier) {
     val strength = calculatePasswordStrength(password)
+    val strengthColor = when (strength) {
+        PasswordStrength.VeryWeak -> StrengthVeryWeak
+        PasswordStrength.Weak -> StrengthWeak
+        PasswordStrength.Medium -> StrengthMedium
+        PasswordStrength.Strong -> StrengthStrong
+        PasswordStrength.VeryStrong -> StrengthVeryStrong
+    }
     val targetProgress = if (password.isBlank()) {
         0f
     } else {
@@ -60,12 +71,12 @@ fun PasswordStrengthBar(password: String, modifier: Modifier = Modifier) {
     ) {
         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
             Text(text = "密码强度", style = MaterialTheme.typography.bodyMedium)
-            Text(text = strength.label, style = MaterialTheme.typography.bodyMedium, color = strength.color)
+            Text(text = strength.label, style = MaterialTheme.typography.bodyMedium, color = strengthColor)
         }
         LinearProgressIndicator(
             progress = { animatedProgress.value },
             modifier = Modifier.fillMaxWidth().height(MaterialTheme.spacing.sm),
-            color = strength.color
+            color = strengthColor
         )
     }
 }

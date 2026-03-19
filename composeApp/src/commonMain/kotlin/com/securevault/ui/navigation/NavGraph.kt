@@ -5,13 +5,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Key
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -20,10 +16,13 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.navigation3.runtime.entryProvider
 import androidx.navigation3.runtime.rememberDecoratedNavEntries
 import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
 import androidx.navigation3.ui.NavDisplay
+import com.securevault.ui.components.MyAppBottomBar
+import com.securevault.ui.components.MyAppBottomBarItem
 import com.securevault.ui.components.SkeletonList
 import com.securevault.ui.components.SvToastHost
 import com.securevault.ui.screens.AddEditPasswordScreen
@@ -52,7 +51,7 @@ private val mainTabRoutes = setOf(VaultRoute, GeneratorRoute, SettingsRoute)
 private data class BottomTab(
     val route: MainTabRoute,
     val label: String,
-    val icon: @Composable () -> Unit
+    val icon: ImageVector,
 )
 
 @Composable
@@ -100,9 +99,9 @@ fun SecureVaultApp() {
 
         val bottomTabs = remember {
             listOf(
-                BottomTab(VaultRoute, "密码库") { Icon(Icons.Default.Lock, contentDescription = null) },
-                BottomTab(GeneratorRoute, "生成器") { Icon(Icons.Default.Key, contentDescription = null) },
-                BottomTab(SettingsRoute, "设置") { Icon(Icons.Default.Settings, contentDescription = null) },
+                BottomTab(VaultRoute, "密码库", Icons.Default.Lock),
+                BottomTab(GeneratorRoute, "生成器", Icons.Default.Key),
+                BottomTab(SettingsRoute, "设置", Icons.Default.Settings),
             )
         }
 
@@ -260,20 +259,17 @@ fun SecureVaultApp() {
         Scaffold(
             bottomBar = {
                 if (showBottomBar) {
-                    NavigationBar {
-                        bottomTabs.forEach { tab ->
-                            val isSelected = navigationState.currentTab == tab.route
-                            NavigationBarItem(
-                                selected = isSelected,
-                                onClick = {
-                                    if (isSelected) return@NavigationBarItem
-                                    navigator.navigate(tab.route)
-                                },
+                    MyAppBottomBar(
+                        items = bottomTabs.map { tab ->
+                            MyAppBottomBarItem(
+                                value = tab.route,
+                                label = tab.label,
                                 icon = tab.icon,
-                                label = { Text(tab.label) },
                             )
-                        }
-                    }
+                        },
+                        selectedItem = navigationState.currentTab,
+                        onItemSelected = { route -> navigator.navigate(route) },
+                    )
                 }
             },
             snackbarHost = { SvToastHost(snackbarHostState) },

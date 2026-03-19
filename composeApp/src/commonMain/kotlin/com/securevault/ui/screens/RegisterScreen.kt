@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.Alignment
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.PasswordStrengthBar
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
@@ -83,8 +84,10 @@ fun RegisterScreen(
 
             AnimatedVisibility(
                 visible = passwordHints.isNotEmpty(),
-                enter = fadeIn(tween(120)) + expandVertically(animationSpec = tween(120)),
-                exit = fadeOut(tween(120)) + shrinkVertically(animationSpec = tween(120)),
+                enter = fadeIn(tween(AnimationTokens.crossFadeDuration)) +
+                    expandVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
+                exit = fadeOut(tween(AnimationTokens.crossFadeDuration)) +
+                    shrinkVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
             ) {
                 Text(
                     text = "建议：${passwordHints.joinToString("、")}",
@@ -106,8 +109,10 @@ fun RegisterScreen(
 
             AnimatedVisibility(
                 visible = !errorMessage.isNullOrBlank(),
-                enter = fadeIn(tween(120)) + expandVertically(animationSpec = tween(120)),
-                exit = fadeOut(tween(120)) + shrinkVertically(animationSpec = tween(120)),
+                enter = fadeIn(tween(AnimationTokens.crossFadeDuration)) +
+                    expandVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
+                exit = fadeOut(tween(AnimationTokens.crossFadeDuration)) +
+                    shrinkVertically(animationSpec = tween(AnimationTokens.crossFadeDuration)),
             ) {
                 Text(
                     text = errorMessage.orEmpty(),

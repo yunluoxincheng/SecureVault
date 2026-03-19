@@ -11,20 +11,19 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
-import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.SettingsSwitchRow
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppDivider
+import com.securevault.ui.components.MyAppSelectionRow
 import com.securevault.ui.theme.ThemeMode
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
@@ -75,25 +74,17 @@ fun SettingsScreen(
             ) {
                 Column {
                     ThemeMode.entries.forEachIndexed { index, mode ->
-                        MyAppListItem(
+                        MyAppSelectionRow(
                             headline = when (mode) {
                                 ThemeMode.System -> "跟随系统"
                                 ThemeMode.Light -> "浅色模式"
                                 ThemeMode.Dark -> "深色模式"
                             },
+                            selected = currentTheme == mode,
                             onClick = { onThemeChange(mode) },
-                            trailing = {
-                                RadioButton(
-                                    selected = currentTheme == mode,
-                                    onClick = { onThemeChange(mode) },
-                                )
-                            },
                         )
                         if (index < ThemeMode.entries.lastIndex) {
-                            HorizontalDivider(
-                                modifier = Modifier.padding(horizontal = MaterialTheme.spacing.md),
-                                color = MaterialTheme.colorScheme.outlineVariant,
-                            )
+                            MyAppDivider()
                         }
                     }
                 }
@@ -123,10 +114,7 @@ fun SettingsScreen(
                         checked = biometricEnabled,
                         onCheckedChange = onBiometricChange,
                     )
-                    HorizontalDivider(
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.md),
-                        color = MaterialTheme.colorScheme.outlineVariant,
-                    )
+                    MyAppDivider()
                     SettingsSwitchRow(
                         label = "允许应用内截图",
                         description = "关闭可防止密码出现在截图或应用切换界面",

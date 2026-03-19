@@ -1,7 +1,5 @@
 package com.securevault.ui.components
 
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 
@@ -14,17 +12,13 @@ fun OptionSwitchRow(
     enabled: Boolean = true,
     container: MyAppListItemContainer = MyAppListItemContainer.Filled,
 ) {
-    MyAppListItem(
+    MyAppSwitchRow(
         headline = label,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
         modifier = modifier,
+        enabled = enabled,
         container = container,
-        trailing = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                enabled = enabled,
-            )
-        },
     )
 }
 
@@ -37,16 +31,12 @@ fun SettingsSwitchRow(
     modifier: Modifier = Modifier,
     enabled: Boolean = true,
 ) {
-    MyAppListItem(
+    MyAppSwitchRow(
         headline = label,
+        checked = checked,
+        onCheckedChange = onCheckedChange,
         modifier = modifier,
         supportingText = description,
-        trailing = {
-            Switch(
-                checked = checked,
-                onCheckedChange = onCheckedChange,
-                enabled = enabled,
-            )
-        },
+        enabled = enabled,
     )
 }

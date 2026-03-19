@@ -5,8 +5,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -50,16 +48,15 @@ fun DetailRow(
         maxLines = maxLines,
         trailing = if (showCopy) {
             {
-                IconButton(onClick = {
+                MyAppIconAction(
+                    icon = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                    contentDescription = "复制",
+                    onClick = {
                     copied = true
                     onCopy()
-                }) {
-                    Icon(
-                        imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
-                        contentDescription = "复制",
-                        tint = iconTint,
-                    )
-                }
+                    },
+                    tint = iconTint,
+                )
             }
         } else {
             null

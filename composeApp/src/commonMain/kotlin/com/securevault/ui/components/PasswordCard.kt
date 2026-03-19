@@ -22,6 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.style.TextOverflow
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.theme.FavoriteColor
 import com.securevault.ui.theme.SecurityModeColor
@@ -98,7 +99,7 @@ fun PasswordCard(
                     if (entry.securityMode) {
                         val badgeBg by animateColorAsState(
                             targetValue = SecurityModeColor.copy(alpha = 0.1f),
-                            animationSpec = tween(300),
+                            animationSpec = tween(AnimationTokens.crossFadeDuration),
                             label = "securityBadgeBg"
                         )
                         Text(

@@ -20,10 +20,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -39,10 +36,12 @@ import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.CountStepperRow
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.components.MyAppIconAction
+import com.securevault.ui.components.MyAppSlider
+import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.OptionSwitchRow
-import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvOutlinedButton
-import com.securevault.ui.components.SvTopBar
 import com.securevault.ui.theme.PasswordFontFamily
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
@@ -117,7 +116,7 @@ fun GeneratorScreen(
 
     LaunchedEffect(lengthChangeSignal) {
         if (lengthChangeSignal > 0) {
-            delay(180)
+            delay(AnimationTokens.crossFadeDuration.toLong())
             regenerate()
         }
     }
@@ -135,7 +134,7 @@ fun GeneratorScreen(
             contentPadding = PaddingValues(bottom = MaterialTheme.spacing.xl),
         ) {
             item {
-                SvTopBar(title = "生成器", onBack = onBack)
+                MyAppTopBar(title = "生成器", onBack = onBack)
             }
 
         // Generated password display
@@ -163,19 +162,20 @@ fun GeneratorScreen(
                         else
                             MaterialTheme.colorScheme.outline,
                     )
-                    IconButton(onClick = { regenerate() }) {
-                        Icon(Icons.Default.Refresh, contentDescription = "重新生成")
-                    }
-                    IconButton(onClick = {
-                        copied = true
-                        onCopyGenerated()
-                    }) {
-                        Icon(
-                            imageVector = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
-                            contentDescription = "复制",
-                            tint = copyIconTint,
-                        )
-                    }
+                    MyAppIconAction(
+                        icon = Icons.Default.Refresh,
+                        contentDescription = "重新生成",
+                        onClick = { regenerate() },
+                    )
+                    MyAppIconAction(
+                        icon = if (copied) Icons.Default.Check else Icons.Default.ContentCopy,
+                        contentDescription = "复制",
+                        onClick = {
+                            copied = true
+                            onCopyGenerated()
+                        },
+                        tint = copyIconTint,
+                    )
                 }
             }
         }
@@ -196,20 +196,21 @@ fun GeneratorScreen(
                 modifier = Modifier.fillMaxWidth().animateItemEntrance(2),
                 horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
             ) {
-                SvButton(
+                MyAppButton(
                     text = "强密码",
                     onClick = { onGeneratePreset(PasswordPreset.Strong) },
                     modifier = Modifier.weight(1f),
                 )
-                SvButton(
+                MyAppButton(
                     text = "中等",
                     onClick = { onGeneratePreset(PasswordPreset.Medium) },
                     modifier = Modifier.weight(1f),
                 )
-                SvOutlinedButton(
+                MyAppButton(
                     text = "PIN",
                     onClick = { onGeneratePreset(PasswordPreset.PinLike) },
                     modifier = Modifier.weight(1f),
+                    variant = MyAppButtonVariant.Secondary,
                 )
             }
         }
@@ -254,7 +255,7 @@ fun GeneratorScreen(
                             color = MaterialTheme.colorScheme.primary,
                         )
                     }
-                    Slider(
+                    MyAppSlider(
                         value = length,
                         onValueChange = {
                             length = it
@@ -264,7 +265,9 @@ fun GeneratorScreen(
                             lengthChangeSignal += 1
                         },
                         valueRange = 4f..128f,
-                        modifier = Modifier.fillMaxWidth().height(28.dp),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(MaterialTheme.layout.sliderTouchHeight),
                     )
                 }
             }

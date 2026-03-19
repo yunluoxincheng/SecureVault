@@ -31,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
 import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
@@ -115,7 +114,7 @@ fun LoginScreen(
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .widthIn(max = 480.dp),
+                        .widthIn(max = MaterialTheme.layout.authFormMaxWidth),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.spacedBy(MaterialTheme.layout.contentSpacing),
                 ) {

@@ -34,9 +34,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.unit.dp
-import com.securevault.ui.components.SvButton
-import com.securevault.ui.components.SvTextButton
+import com.securevault.ui.animation.AnimationTokens
+import com.securevault.ui.components.MyAppButton
+import com.securevault.ui.components.MyAppButtonVariant
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 import kotlinx.coroutines.launch
@@ -102,19 +102,23 @@ fun OnboardingScreen(
                 repeat(pages.size) { index ->
                     val isSelected = pagerState.currentPage == index
                     val indicatorWidth by animateDpAsState(
-                        targetValue = if (isSelected) 24.dp else 8.dp,
-                        animationSpec = tween(200),
+                        targetValue = if (isSelected) {
+                            MaterialTheme.layout.inlineIndicatorSelectedWidth
+                        } else {
+                            MaterialTheme.layout.inlineIndicatorSize
+                        },
+                        animationSpec = tween(AnimationTokens.cardAppearDuration),
                         label = "indicatorWidth"
                     )
                     val color by animateColorAsState(
                         targetValue = if (isSelected) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.outlineVariant,
-                        animationSpec = tween(200),
+                        animationSpec = tween(AnimationTokens.cardAppearDuration),
                         label = "indicatorColor"
                     )
                     Box(
                         modifier = Modifier
                             .padding(horizontal = MaterialTheme.spacing.xs)
-                            .height(8.dp)
+                            .height(MaterialTheme.layout.inlineIndicatorSize)
                             .width(indicatorWidth)
                             .clip(CircleShape)
                             .background(color)
@@ -132,22 +136,23 @@ fun OnboardingScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SvTextButton(
+                MyAppButton(
                     text = "跳过",
                     onClick = onFinish,
+                    variant = MyAppButtonVariant.Text,
                 )
-                SvButton(
+                MyAppButton(
                     text = "下一步",
                     onClick = {
                         scope.launch {
                             pagerState.animateScrollToPage(pagerState.currentPage + 1)
                         }
                     },
-                    modifier = Modifier.width(120.dp),
+                    modifier = Modifier.width(MaterialTheme.layout.onboardingActionWidth),
                 )
             }
         } else {
-            SvButton(
+            MyAppButton(
                 text = "开始使用",
                 onClick = onFinish,
                 modifier = Modifier
@@ -170,7 +175,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
     ) {
         Box(
             modifier = Modifier
-                .size(100.dp)
+                .size(MaterialTheme.layout.onboardingIllustrationSize)
                 .clip(CircleShape)
                 .background(MaterialTheme.colorScheme.primaryContainer),
             contentAlignment = Alignment.Center,
@@ -178,7 +183,7 @@ private fun OnboardingPageContent(page: OnboardingPage) {
             Icon(
                 imageVector = page.icon,
                 contentDescription = null,
-                modifier = Modifier.size(52.dp),
+                modifier = Modifier.size(MaterialTheme.layout.onboardingIllustrationIconSize),
                 tint = MaterialTheme.colorScheme.onPrimaryContainer,
             )
         }

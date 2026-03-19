@@ -14,7 +14,6 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AutoAwesome
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -31,6 +30,7 @@ import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
+import com.securevault.ui.components.MyAppDivider
 import com.securevault.ui.components.MyAppInput
 import com.securevault.ui.components.MyAppListItemContainer
 import com.securevault.ui.components.MyAppTopBar
@@ -177,10 +177,7 @@ fun AddEditPasswordScreen(
                     onCheckedChange = { isFavorite = it },
                     container = MyAppListItemContainer.None,
                 )
-                HorizontalDivider(
-                    modifier = Modifier.padding(horizontal = MaterialTheme.spacing.md),
-                    color = MaterialTheme.colorScheme.outlineVariant,
-                )
+                MyAppDivider()
                 OptionSwitchRow(
                     label = "安全模式（密码不可见）",
                     checked = securityMode,

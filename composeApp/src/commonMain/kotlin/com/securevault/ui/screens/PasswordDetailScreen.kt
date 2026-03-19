@@ -22,9 +22,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +33,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.securevault.data.PasswordEntry
 import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.DetailRow
@@ -42,7 +41,9 @@ import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
-import com.securevault.ui.components.SvConfirmDialog
+import com.securevault.ui.components.MyAppDialog
+import com.securevault.ui.components.MyAppDivider
+import com.securevault.ui.components.MyAppIconAction
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.theme.SecurityModeColor
 import com.securevault.ui.theme.layout
@@ -76,7 +77,7 @@ fun PasswordDetailScreen(
         label = "passwordCopyTint"
     )
 
-    SvConfirmDialog(
+    MyAppDialog(
         visible = showDeleteConfirm,
         title = "确认删除",
         message = "删除「${entry.title}」后将无法恢复，是否继续？",
@@ -172,23 +173,21 @@ fun PasswordDetailScreen(
                     }
 
                     if (!entry.securityMode) {
-                        IconButton(onClick = { showPassword = !showPassword }) {
-                            Icon(
-                                imageVector = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                contentDescription = if (showPassword) "隐藏" else "显示",
-                            )
-                        }
-                    }
-                    IconButton(onClick = {
-                        passwordCopied = true
-                        onCopyPassword()
-                    }) {
-                        Icon(
-                            imageVector = if (passwordCopied) Icons.Default.Check else Icons.Default.ContentCopy,
-                            contentDescription = if (entry.securityMode) "使用" else "复制",
-                            tint = copyIconTint,
+                        MyAppIconAction(
+                            icon = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                            contentDescription = if (showPassword) "隐藏" else "显示",
+                            onClick = { showPassword = !showPassword },
                         )
                     }
+                    MyAppIconAction(
+                        icon = if (passwordCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                        contentDescription = if (entry.securityMode) "使用" else "复制",
+                        onClick = {
+                            passwordCopied = true
+                            onCopyPassword()
+                        },
+                        tint = copyIconTint,
+                    )
                 }
             }
 
@@ -216,7 +215,10 @@ fun PasswordDetailScreen(
                 .widthIn(max = MaterialTheme.layout.pageMaxWidth)
                 .align(Alignment.BottomCenter)
         ) {
-            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f))
+            MyAppDivider(
+                horizontalInset = 0.dp,
+                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
+            )
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

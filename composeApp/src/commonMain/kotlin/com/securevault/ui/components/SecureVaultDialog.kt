@@ -15,7 +15,7 @@ import androidx.compose.ui.window.DialogProperties
 import com.securevault.ui.animation.AnimationTokens
 
 @Composable
-fun SvConfirmDialog(
+fun MyAppDialog(
     visible: Boolean,
     title: String,
     message: String,
@@ -58,4 +58,27 @@ fun SvConfirmDialog(
             containerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
         )
     }
+}
+
+@Composable
+fun SvConfirmDialog(
+    visible: Boolean,
+    title: String,
+    message: String,
+    confirmText: String = "确认",
+    dismissText: String = "取消",
+    onConfirm: () -> Unit,
+    onDismiss: () -> Unit,
+    isDanger: Boolean = false,
+) {
+    MyAppDialog(
+        visible = visible,
+        title = title,
+        message = message,
+        confirmText = confirmText,
+        dismissText = dismissText,
+        onConfirm = onConfirm,
+        onDismiss = onDismiss,
+        isDanger = isDanger,
+    )
 }
