@@ -452,9 +452,9 @@ private fun BaseVaultScreenPreview() {
             selectedCategory = null,
             favoritesOnly = false,
             query = "",
+            hasLoadedAtLeastOnce = true,
             onQueryChange = {},
-            onCategoryChange = {},
-            onFavoritesOnlyChange = {},
+            onFiltersChange = { _, _ -> },
             onEntryClick = {},
             onAddClick = {}
         )
@@ -690,9 +690,9 @@ private fun EmptyVaultScreenPreview() {
             selectedCategory = null,
             favoritesOnly = false,
             query = "",
+            hasLoadedAtLeastOnce = true,
             onQueryChange = {},
-            onCategoryChange = {},
-            onFavoritesOnlyChange = {},
+            onFiltersChange = { _, _ -> },
             onEntryClick = {},
             onAddClick = {}
         )

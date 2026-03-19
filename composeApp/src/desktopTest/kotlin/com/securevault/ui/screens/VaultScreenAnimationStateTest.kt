@@ -3,6 +3,8 @@ package com.securevault.ui.screens
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertNotEquals
+import kotlin.test.assertFalse
+import kotlin.test.assertTrue
 
 class VaultScreenAnimationStateTest {
 
@@ -23,7 +25,7 @@ class VaultScreenAnimationStateTest {
     }
 
     @Test
-    fun animationResetKey_changes_whenFiltersChange() {
+    fun animationResetKey_staysSame_whenFiltersChangeWithinVault() {
         val allEntries = vaultListAnimationResetKey(
             vaultVisitNonce = 2,
             selectedCategory = null,
@@ -40,8 +42,66 @@ class VaultScreenAnimationStateTest {
             favoritesOnly = false,
         )
 
-        assertNotEquals(allEntries, favoriteEntries)
-        assertNotEquals(allEntries, workEntries)
+        assertEquals(allEntries, favoriteEntries)
+        assertEquals(allEntries, workEntries)
+    }
+
+    @Test
+    fun shouldAnimateVaultListEntrance_onlyBeforeFirstPlayInVisit() {
+        assertTrue(
+            shouldAnimateVaultListEntrance(
+                hasPlayedEntranceInVisit = false,
+                isLoading = false,
+                hasEntries = true,
+            )
+        )
+        assertFalse(
+            shouldAnimateVaultListEntrance(
+                hasPlayedEntranceInVisit = true,
+                isLoading = false,
+                hasEntries = true,
+            )
+        )
+    }
+
+    @Test
+    fun shouldAnimateVaultListEntrance_falseWhileLoadingOrEmpty() {
+        assertFalse(
+            shouldAnimateVaultListEntrance(
+                hasPlayedEntranceInVisit = false,
+                isLoading = true,
+                hasEntries = true,
+            )
+        )
+        assertFalse(
+            shouldAnimateVaultListEntrance(
+                hasPlayedEntranceInVisit = false,
+                isLoading = false,
+                hasEntries = false,
+            )
+        )
+    }
+
+    @Test
+    fun shouldShowVaultLoadingSkeleton_true_onlyDuringFirstLoad() {
+        assertTrue(
+            shouldShowVaultLoadingSkeleton(
+                isLoading = true,
+                entries = emptyList(),
+                hasLoadedAtLeastOnce = false,
+            )
+        )
+    }
+
+    @Test
+    fun shouldShowVaultLoadingSkeleton_false_afterInitialLoadEvenIfListTemporarilyEmpty() {
+        assertFalse(
+            shouldShowVaultLoadingSkeleton(
+                isLoading = true,
+                entries = emptyList(),
+                hasLoadedAtLeastOnce = true,
+            )
+        )
     }
 
     @Test

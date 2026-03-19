@@ -118,7 +118,9 @@ fun SecureVaultApp() {
             val isAtVaultRoot = navigationState.currentSurface == NavigationSurface.Main &&
                 navigationState.currentTab == VaultRoute &&
                 currentRoute == VaultRoute
-            if (isAtVaultRoot) vaultVisitNonce += 1
+            if (isAtVaultRoot) {
+                vaultVisitNonce += 1
+            }
         }
 
         LaunchedEffect(unlockState.isUnlocked) {
@@ -190,9 +192,14 @@ fun SecureVaultApp() {
                     query = vaultState.query,
                     vaultVisitNonce = vaultVisitNonce,
                     isLoading = vaultState.isLoading,
+                    hasLoadedAtLeastOnce = vaultState.hasLoadedAtLeastOnce,
                     onQueryChange = { vaultViewModel.updateQuery(it) },
-                    onCategoryChange = { vaultViewModel.updateCategory(it) },
-                    onFavoritesOnlyChange = { vaultViewModel.updateFavoritesOnly(it) },
+                    onFiltersChange = { category, favoritesOnly ->
+                        vaultViewModel.updateFilters(
+                            category = category,
+                            favoritesOnly = favoritesOnly,
+                        )
+                    },
                     onEntryClick = { entry -> navigator.navigate(DetailRoute(entry.id)) },
                     onAddClick = { navigator.navigate(AddEditRoute(null)) },
                 )

@@ -4,6 +4,7 @@ import com.securevault.data.PasswordEntry
 import com.securevault.data.PasswordFilter
 import com.securevault.data.PasswordRepository
 import com.securevault.security.KeyManager
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -22,6 +23,7 @@ data class VaultUiState(
     val favoritesOnly: Boolean = false,
     val query: String = "",
     val isLoading: Boolean = false,
+    val hasLoadedAtLeastOnce: Boolean = false,
     val errorMessage: String? = null
 )
 
@@ -31,46 +33,55 @@ class VaultViewModel(
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
     private var queryDebounceJob: Job? = null
+    private var loadEntriesJob: Job? = null
+    private var loadRequestId: Long = 0L
 
     private val _uiState = MutableStateFlow(VaultUiState())
     val uiState: StateFlow<VaultUiState> = _uiState.asStateFlow()
 
     fun loadEntries() {
+        val targetState = _uiState.value
         val dataKey = keyManager.getDataKey()
         if (dataKey == null) {
             _uiState.update { it.copy(entries = emptyList(), errorMessage = "保险库已锁定") }
             return
         }
 
-        scope.launch {
+        loadEntriesJob?.cancel()
+        val requestId = ++loadRequestId
+        loadEntriesJob = scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             runCatching {
-                val currentState = _uiState.value
                 val allEntries = passwordRepository.search("", PasswordFilter(), dataKey)
                 val categoryOptions = allEntries.map { it.category }.distinct().sorted()
-                val selectedCategory = currentState.selectedCategory
+                val selectedCategory = targetState.selectedCategory
                     ?.takeIf { categoryOptions.contains(it) }
 
                 val filteredEntries = passwordRepository.search(
-                    currentState.query,
+                    targetState.query,
                     PasswordFilter(
                         category = selectedCategory,
-                        onlyFavorites = currentState.favoritesOnly
+                        onlyFavorites = targetState.favoritesOnly
                     ),
                     dataKey
                 )
 
                 Triple(filteredEntries, categoryOptions, selectedCategory)
             }.onSuccess { (entries, categories, selectedCategory) ->
+                if (requestId != loadRequestId) return@onSuccess
                 _uiState.update {
                     it.copy(
                         entries = entries,
                         categories = categories,
                         selectedCategory = selectedCategory,
-                        isLoading = false
+                        favoritesOnly = targetState.favoritesOnly,
+                        query = targetState.query,
+                        isLoading = false,
+                        hasLoadedAtLeastOnce = true,
                     )
                 }
             }.onFailure { throwable ->
+                if (throwable is CancellationException || requestId != loadRequestId) return@onFailure
                 _uiState.update { it.copy(isLoading = false, errorMessage = throwable.message ?: "加载失败") }
             }
         }
@@ -86,14 +97,25 @@ class VaultViewModel(
     }
 
     fun updateCategory(category: String?) {
-        if (_uiState.value.selectedCategory == category) return
-        _uiState.update { it.copy(selectedCategory = category) }
-        loadEntries()
+        updateFilters(category = category)
     }
 
     fun updateFavoritesOnly(enabled: Boolean) {
-        if (_uiState.value.favoritesOnly == enabled) return
-        _uiState.update { it.copy(favoritesOnly = enabled) }
+        updateFilters(favoritesOnly = enabled)
+    }
+
+    fun updateFilters(
+        category: String? = _uiState.value.selectedCategory,
+        favoritesOnly: Boolean = _uiState.value.favoritesOnly,
+    ) {
+        val currentState = _uiState.value
+        if (currentState.selectedCategory == category && currentState.favoritesOnly == favoritesOnly) return
+        _uiState.update {
+            it.copy(
+                selectedCategory = category,
+                favoritesOnly = favoritesOnly,
+            )
+        }
         loadEntries()
     }
 

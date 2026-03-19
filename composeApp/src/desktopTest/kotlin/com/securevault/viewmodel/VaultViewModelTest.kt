@@ -13,7 +13,9 @@ import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withTimeout
 import kotlin.test.Test
 import kotlin.test.assertEquals
+import kotlin.test.assertFalse
 import kotlin.test.assertIs
+import kotlin.test.assertTrue
 
 class VaultViewModelTest {
 
@@ -52,11 +54,54 @@ class VaultViewModelTest {
 
         assertEquals(searchCountAfterFirstToggle, repository.searchCallCount)
     }
+
+    @Test
+    fun updateFilters_whenCategoryAndFavoritesChange_loadsOnce() = runBlocking {
+        val repository = CountingPasswordRepository(sampleEntries())
+        val viewModel = VaultViewModel(repository, unlockedKeyManager())
+
+        viewModel.loadEntries()
+        waitForSearchCount(repository, 2)
+
+        viewModel.updateFilters(category = null, favoritesOnly = true)
+        waitForSearchCount(repository, 4)
+        val searchCountAfterFavoriteFilter = repository.searchCallCount
+
+        viewModel.updateFilters(category = null, favoritesOnly = false)
+        waitForSearchCount(repository, 6)
+
+        assertEquals(searchCountAfterFavoriteFilter + 2, repository.searchCallCount)
+    }
+
+    @Test
+    fun updateFilters_whenRapidlySwitching_keepsLatestResult() = runBlocking {
+        val repository = DelayedPasswordRepository()
+        val viewModel = VaultViewModel(repository, unlockedKeyManager())
+
+        viewModel.updateFilters(category = "work", favoritesOnly = true)
+        viewModel.updateFilters(category = "finance", favoritesOnly = true)
+
+        waitForEntryTitle(viewModel, "Finance Favorite")
+
+        val state = viewModel.uiState.value
+        assertEquals("finance", state.selectedCategory)
+        assertTrue(state.favoritesOnly)
+        assertFalse(state.isLoading)
+        assertEquals(listOf("Finance Favorite"), state.entries.map { it.title })
+    }
 }
 
 private suspend fun waitForSearchCount(repository: CountingPasswordRepository, expectedCount: Int) {
     withTimeout(5_000) {
         while (repository.searchCallCount < expectedCount) {
+            delay(10)
+        }
+    }
+}
+
+private suspend fun waitForEntryTitle(viewModel: VaultViewModel, expectedTitle: String) {
+    withTimeout(5_000) {
+        while (viewModel.uiState.value.entries.map { it.title } != listOf(expectedTitle) || viewModel.uiState.value.isLoading) {
             delay(10)
         }
     }
@@ -121,6 +166,57 @@ private class CountingPasswordRepository(
             .filter { entry ->
                 query.isBlank() || entry.title.contains(query, ignoreCase = true) || entry.username.contains(query, ignoreCase = true)
             }
+            .filter { entry -> filter.category == null || entry.category == filter.category }
+            .filter { entry -> !filter.onlyFavorites || entry.isFavorite }
+            .toList()
+    }
+}
+
+private class DelayedPasswordRepository : PasswordRepository {
+    private val entries = listOf(
+        PasswordEntry(
+            id = 1L,
+            title = "Work Favorite",
+            username = "work",
+            password = "secret-1",
+            category = "work",
+            isFavorite = true,
+            createdAt = 1_710_000_000_000L,
+            updatedAt = 1_710_000_000_000L,
+        ),
+        PasswordEntry(
+            id = 2L,
+            title = "Finance Favorite",
+            username = "finance",
+            password = "secret-2",
+            category = "finance",
+            isFavorite = true,
+            createdAt = 1_710_000_000_001L,
+            updatedAt = 1_710_000_000_001L,
+        ),
+    )
+
+    override suspend fun create(entry: PasswordEntry, dataKey: ByteArray): Long = error("Not needed in test")
+
+    override suspend fun update(entry: PasswordEntry, dataKey: ByteArray): Boolean = error("Not needed in test")
+
+    override suspend fun deleteById(id: Long) = error("Not needed in test")
+
+    override suspend fun clear() = error("Not needed in test")
+
+    override suspend fun getById(id: Long, dataKey: ByteArray): PasswordEntry? = entries.firstOrNull { it.id == id }
+
+    override suspend fun getAll(dataKey: ByteArray): List<PasswordEntry> = entries
+
+    override suspend fun search(query: String, filter: PasswordFilter, dataKey: ByteArray): List<PasswordEntry> {
+        if (query.isBlank() && filter.category == "work" && filter.onlyFavorites) {
+            delay(200)
+        }
+        if (query.isBlank() && filter.category == "finance" && filter.onlyFavorites) {
+            delay(20)
+        }
+        return entries
+            .asSequence()
             .filter { entry -> filter.category == null || entry.category == filter.category }
             .filter { entry -> !filter.onlyFavorites || entry.isFavorite }
             .toList()

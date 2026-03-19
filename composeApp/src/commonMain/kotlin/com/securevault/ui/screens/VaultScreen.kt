@@ -21,9 +21,15 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import com.securevault.data.PasswordEntry
+import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.MyAppFilterChip
 import com.securevault.ui.components.MyAppFloatingActionButton
 import com.securevault.ui.components.MyAppInput
@@ -32,6 +38,7 @@ import com.securevault.ui.components.PasswordCard
 import com.securevault.ui.components.SkeletonList
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
+import kotlinx.coroutines.delay
 
 @Composable
 fun VaultScreen(
@@ -42,12 +49,13 @@ fun VaultScreen(
     query: String,
     vaultVisitNonce: Int = 0,
     isLoading: Boolean = false,
+    hasLoadedAtLeastOnce: Boolean = false,
     onQueryChange: (String) -> Unit,
-    onCategoryChange: (String?) -> Unit,
-    onFavoritesOnlyChange: (Boolean) -> Unit,
+    onFiltersChange: (String?, Boolean) -> Unit,
     onEntryClick: (PasswordEntry) -> Unit,
     onAddClick: () -> Unit
 ) {
+    var hasPlayedEntranceInVisit by rememberSaveable(vaultVisitNonce) { mutableStateOf(false) }
     val animationResetKey = vaultListAnimationResetKey(
         vaultVisitNonce = vaultVisitNonce,
         selectedCategory = selectedCategory,
@@ -56,7 +64,27 @@ fun VaultScreen(
     val showLoadingSkeleton = shouldShowVaultLoadingSkeleton(
         isLoading = isLoading,
         entries = entries,
+        hasLoadedAtLeastOnce = hasLoadedAtLeastOnce,
     )
+    val animateVaultListEntrance = shouldAnimateVaultListEntrance(
+        hasPlayedEntranceInVisit = hasPlayedEntranceInVisit,
+        isLoading = isLoading,
+        hasEntries = entries.isNotEmpty(),
+    )
+
+    fun applyFilters(targetCategory: String?, targetFavoritesOnly: Boolean) {
+        onFiltersChange(targetCategory, targetFavoritesOnly)
+    }
+
+    LaunchedEffect(vaultVisitNonce, animateVaultListEntrance, entries.size) {
+        if (!animateVaultListEntrance) return@LaunchedEffect
+
+        val totalDurationMs =
+            (entries.lastIndex.coerceAtLeast(0) * AnimationTokens.staggerItemDelay) +
+                AnimationTokens.cardAppearDuration
+        delay(totalDurationMs.toLong())
+        hasPlayedEntranceInVisit = true
+    }
 
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -84,24 +112,21 @@ fun VaultScreen(
                 item {
                     MyAppFilterChip(
                         selected = favoritesOnly,
-                        onClick = { onFavoritesOnlyChange(!favoritesOnly) },
+                        onClick = { applyFilters(selectedCategory, !favoritesOnly) },
                         label = "仅收藏",
                     )
                 }
                 item {
                     MyAppFilterChip(
                         selected = selectedCategory == null && !favoritesOnly,
-                        onClick = {
-                            onCategoryChange(null)
-                            if (favoritesOnly) onFavoritesOnlyChange(false)
-                        },
+                        onClick = { applyFilters(null, false) },
                         label = "全部",
                     )
                 }
                 items(categories) { category ->
                     MyAppFilterChip(
                         selected = selectedCategory == category,
-                        onClick = { onCategoryChange(category) },
+                        onClick = { applyFilters(category, favoritesOnly) },
                         label = category,
                     )
                 }
@@ -132,7 +157,7 @@ fun VaultScreen(
                             entry = entry,
                             onClick = { onEntryClick(entry) },
                             index = index,
-                            animateEntrance = true,
+                            animateEntrance = animateVaultListEntrance,
                             animationResetKey = animationResetKey,
                         )
                     }
@@ -156,14 +181,23 @@ internal fun vaultListAnimationResetKey(
     selectedCategory: String?,
     favoritesOnly: Boolean,
 ): String {
-    return "$vaultVisitNonce|${selectedCategory.orEmpty()}|$favoritesOnly"
+    return vaultVisitNonce.toString()
 }
 
 internal fun shouldShowVaultLoadingSkeleton(
     isLoading: Boolean,
     entries: List<PasswordEntry>,
+    hasLoadedAtLeastOnce: Boolean,
 ): Boolean {
-    return isLoading && entries.isEmpty()
+    return isLoading && entries.isEmpty() && !hasLoadedAtLeastOnce
+}
+
+internal fun shouldAnimateVaultListEntrance(
+    hasPlayedEntranceInVisit: Boolean,
+    isLoading: Boolean,
+    hasEntries: Boolean,
+): Boolean {
+    return !hasPlayedEntranceInVisit && !isLoading && hasEntries
 }
 
 private fun vaultEntryKey(entry: PasswordEntry): Long {

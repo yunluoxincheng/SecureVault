@@ -13,6 +13,7 @@ class VaultScreenLoadingBehaviorTest {
             shouldShowVaultLoadingSkeleton(
                 isLoading = true,
                 entries = emptyList(),
+                hasLoadedAtLeastOnce = false,
             )
         )
     }
@@ -23,6 +24,7 @@ class VaultScreenLoadingBehaviorTest {
             shouldShowVaultLoadingSkeleton(
                 isLoading = true,
                 entries = listOf(sampleEntry()),
+                hasLoadedAtLeastOnce = true,
             )
         )
     }
