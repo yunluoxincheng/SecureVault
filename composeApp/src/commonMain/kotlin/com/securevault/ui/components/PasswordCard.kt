@@ -20,6 +20,8 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextOverflow
 import com.securevault.data.PasswordEntry
 import com.securevault.ui.animation.AnimationTokens
@@ -32,6 +34,7 @@ import com.securevault.ui.theme.spacing
 @Composable
 fun PasswordCard(
     entry: PasswordEntry,
+    securityModeEnabled: Boolean = false,
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     index: Int = 0,
@@ -39,6 +42,8 @@ fun PasswordCard(
     animationResetKey: Any? = Unit,
     onEntranceAnimationStarted: (() -> Unit)? = null,
 ) {
+    val securityModeActive = securityModeEnabled || entry.securityMode
+
     MyAppCard(
         onClick = onClick,
         modifier = modifier
@@ -63,7 +68,7 @@ fun PasswordCard(
                         .size(MaterialTheme.layout.listItemIconContainerSize)
                         .clip(CircleShape)
                         .background(
-                            if (entry.securityMode) {
+                            if (securityModeActive) {
                                 MaterialTheme.colorScheme.secondaryContainer
                             } else {
                                 MaterialTheme.colorScheme.surfaceContainerHighest
@@ -75,7 +80,7 @@ fun PasswordCard(
                         imageVector = Icons.Default.Lock,
                         contentDescription = null,
                         modifier = Modifier.size(MaterialTheme.layout.listItemIconSize),
-                        tint = if (entry.securityMode) {
+                        tint = if (securityModeActive) {
                             SecurityModeColor
                         } else {
                             MaterialTheme.colorScheme.primary
@@ -96,18 +101,25 @@ fun PasswordCard(
                             tint = FavoriteColor.copy(alpha = 0.9f),
                         )
                     }
-                    if (entry.securityMode) {
+                    if (securityModeActive) {
                         val badgeBg by animateColorAsState(
                             targetValue = SecurityModeColor.copy(alpha = 0.1f),
                             animationSpec = tween(AnimationTokens.crossFadeDuration),
                             label = "securityBadgeBg"
                         )
                         Text(
-                            text = "安全",
+                            text = if (securityModeEnabled) "全局" else "安全",
                             style = MaterialTheme.typography.labelSmall,
                             color = SecurityModeColor,
                             modifier = Modifier
                                 .background(badgeBg, MaterialTheme.shapes.extraSmall)
+                                .semantics {
+                                    contentDescription = if (securityModeEnabled) {
+                                        "全局安全模式条目"
+                                    } else {
+                                        "条目安全模式"
+                                    }
+                                }
                                 .padding(
                                     horizontal = MaterialTheme.layout.badgeHorizontalPadding,
                                     vertical = MaterialTheme.layout.badgeVerticalPadding,

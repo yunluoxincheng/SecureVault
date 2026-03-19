@@ -2,6 +2,7 @@ package com.securevault.viewmodel
 
 import com.securevault.crypto.Argon2Kdf
 import com.securevault.data.PasswordEntry
+import com.securevault.data.PasswordCipherPayload
 import com.securevault.data.PasswordFilter
 import com.securevault.data.PasswordRepository
 import com.securevault.security.KeyManager
@@ -157,6 +158,8 @@ private class CountingPasswordRepository(
 
     override suspend fun getById(id: Long, dataKey: ByteArray): PasswordEntry? = entries.firstOrNull { it.id == id }
 
+    override suspend fun getPasswordCipherById(id: Long): PasswordCipherPayload? = null
+
     override suspend fun getAll(dataKey: ByteArray): List<PasswordEntry> = entries
 
     override suspend fun search(query: String, filter: PasswordFilter, dataKey: ByteArray): List<PasswordEntry> {
@@ -205,6 +208,8 @@ private class DelayedPasswordRepository : PasswordRepository {
     override suspend fun clear() = error("Not needed in test")
 
     override suspend fun getById(id: Long, dataKey: ByteArray): PasswordEntry? = entries.firstOrNull { it.id == id }
+
+    override suspend fun getPasswordCipherById(id: Long): PasswordCipherPayload? = null
 
     override suspend fun getAll(dataKey: ByteArray): List<PasswordEntry> = entries
 

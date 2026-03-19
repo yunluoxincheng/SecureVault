@@ -34,6 +34,8 @@ class AddEditPasswordViewModel(
             return
         }
 
+        _uiState.update { it.copy(entry = null, errorMessage = null, saveSuccess = false) }
+
         val dataKey = keyManager.getDataKey()
         if (dataKey == null) {
             _uiState.update { it.copy(errorMessage = "保险库已锁定") }

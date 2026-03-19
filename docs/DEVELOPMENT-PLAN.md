@@ -164,13 +164,21 @@
 
 #### Week 8: 安全模式
 
-- [ ] 实现 `SecurityModeManager`
-- [ ] 实现 `SecurityModeScreen` (开关界面、说明)
-- [ ] 实现安全模式密码保存（独立 SecureModeKey 加密）
-- [ ] 实现安全模式密码使用（不返回明文，直接剪贴板/填充）
-- [ ] `PasswordDetailScreen` 适配安全模式（密码不可见，仅显示"使用"按钮）
+- [x] 实现 `SecurityModeManager`
+- [x] 实现 `SecurityModeScreen` (开关界面、说明)
+- [x] 实现安全模式密码保存（独立 SecureModeKey 加密）
+- [x] 实现安全模式密码使用（不返回明文，直接剪贴板/填充）
+- [x] `PasswordDetailScreen` 适配安全模式（密码不可见，仅显示"使用"按钮）
 
-- [ ] `VaultScreen` 标记安全模式条目（图标/标签区分）
+- [x] `VaultScreen` 标记安全模式条目（图标/标签区分）
+
+### 修复补充（2026-03-20）
+
+- [x] 已修复“设置页开启全局安全模式后，列表/详情未同步进入安全模式”的状态断层，统一按“全局开关 OR 条目标记”生效。
+- [x] 已修复新增/编辑页安全模式开关状态不一致问题：全局开启时强制开启且不可关闭；编辑页回填逻辑已避免旧状态残留。
+- [x] 已补充详情页与列表的提示文案区分（全局/条目）以及标签可访问性语义（`contentDescription`）。
+- [x] 已新增 Android 回归用例 `PasswordCardSecuritySemanticsTest`，覆盖“全局安全模式条目/条目安全模式”语义断言。
+- [x] 相关变更已通过编译校验：`./gradlew.bat :composeApp:assembleAndroidMain --console=plain`、`./gradlew.bat :androidApp:assembleDebugAndroidTest --console=plain`。
 
 #### Week 9: 导出/导入
 

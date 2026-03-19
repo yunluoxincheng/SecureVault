@@ -1,7 +1,10 @@
 package com.securevault.data
 
 import app.cash.sqldelight.driver.jdbc.sqlite.JdbcSqliteDriver
+import com.securevault.crypto.AesGcmCipher
 import com.securevault.db.SecureVaultDatabase
+import com.securevault.security.SecureClipboard
+import com.securevault.security.SecurityModeManager
 import kotlinx.coroutines.runBlocking
 import kotlin.test.AfterTest
 import kotlin.test.Test
@@ -15,7 +18,9 @@ class PasswordRepositoryImplTest {
 
     private val driver = JdbcSqliteDriver(JdbcSqliteDriver.IN_MEMORY)
     private val database = createDatabase(driver)
-    private val repository = PasswordRepositoryImpl(database)
+    private val configRepository = ConfigRepositoryImpl(database)
+    private val securityModeManager = SecurityModeManager(configRepository, SecureClipboard())
+    private val repository = PasswordRepositoryImpl(database, securityModeManager)
     private val dataKey = ByteArray(32) { (it + 1).toByte() }
 
     @AfterTest
@@ -114,6 +119,34 @@ class PasswordRepositoryImplTest {
         assertEquals(listOf("personal"), reloaded.tags)
         assertEquals("personal", reloaded.category)
         assertTrue(reloaded.isFavorite)
+        assertTrue(reloaded.securityMode)
+    }
+
+    @Test
+    fun securityModePassword_usesIndependentKeyEncryption() = runBlocking {
+        val id = repository.create(
+            entry = PasswordEntry(
+                title = "Wallet",
+                username = "user",
+                password = "secure-pass",
+                securityMode = true,
+                createdAt = 120L,
+                updatedAt = 120L,
+            ),
+            dataKey = dataKey,
+        )
+
+        val row = database.secureVaultQueries.selectById(id).executeAsOneOrNull()
+        assertNotNull(row)
+
+        val decryptWithDataKey = runCatching {
+            AesGcmCipher.decryptFromStorageFormat(row.encrypted_password, dataKey)
+        }
+        assertTrue(decryptWithDataKey.isFailure)
+
+        val reloaded = repository.getById(id, dataKey)
+        assertNotNull(reloaded)
+        assertEquals("secure-pass", reloaded.password)
         assertTrue(reloaded.securityMode)
     }
 

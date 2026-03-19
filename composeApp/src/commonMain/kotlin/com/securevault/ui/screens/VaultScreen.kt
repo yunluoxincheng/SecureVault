@@ -52,6 +52,7 @@ fun VaultScreen(
     selectedCategory: String?,
     favoritesOnly: Boolean,
     query: String,
+    securityModeEnabled: Boolean = false,
     vaultVisitNonce: Int = 0,
     isLoading: Boolean = false,
     hasLoadedAtLeastOnce: Boolean = false,
@@ -179,6 +180,7 @@ fun VaultScreen(
                             itemsIndexed(animatedEntries, key = { _, e -> vaultEntryKey(e) }) { index, entry ->
                                 PasswordCard(
                                     entry = entry,
+                                    securityModeEnabled = securityModeEnabled,
                                     onClick = { onEntryClick(entry) },
                                     index = index,
                                     animateEntrance = animateVaultListEntrance,

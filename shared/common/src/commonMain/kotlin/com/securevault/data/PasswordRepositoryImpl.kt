@@ -5,11 +5,13 @@ import com.securevault.crypto.CryptoUtils
 import com.securevault.crypto.EncryptedData
 import com.securevault.db.Password_entries
 import com.securevault.db.SecureVaultDatabase
+import com.securevault.security.SecurityModeManager
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
 class PasswordRepositoryImpl(
-    private val database: SecureVaultDatabase
+    private val database: SecureVaultDatabase,
+    private val securityModeManager: SecurityModeManager? = null,
 ) : PasswordRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
@@ -17,7 +19,7 @@ class PasswordRepositoryImpl(
     override suspend fun create(entry: PasswordEntry, dataKey: ByteArray): Long {
         val encryptedTitle = encryptField(entry.title, dataKey)
         val encryptedUsername = encryptField(entry.username, dataKey)
-        val encryptedPassword = encryptField(entry.password, dataKey)
+        val encryptedPassword = encryptPassword(entry.password, dataKey, entry.securityMode)
         val encryptedUrl = encryptNullableField(entry.url, dataKey)
         val encryptedNotes = encryptNullableField(entry.notes, dataKey)
         val encryptedTags = encryptField(json.encodeToString(entry.tags), dataKey)
@@ -47,7 +49,7 @@ class PasswordRepositoryImpl(
 
         val encryptedTitle = encryptField(entry.title, dataKey)
         val encryptedUsername = encryptField(entry.username, dataKey)
-        val encryptedPassword = encryptField(entry.password, dataKey)
+        val encryptedPassword = encryptPassword(entry.password, dataKey, entry.securityMode)
         val encryptedUrl = encryptNullableField(entry.url, dataKey)
         val encryptedNotes = encryptNullableField(entry.notes, dataKey)
         val encryptedTags = encryptField(json.encodeToString(entry.tags), dataKey)
@@ -82,6 +84,14 @@ class PasswordRepositoryImpl(
     override suspend fun getById(id: Long, dataKey: ByteArray): PasswordEntry? {
         val row = database.secureVaultQueries.selectById(id).executeAsOneOrNull() ?: return null
         return row.toDomain(dataKey)
+    }
+
+    override suspend fun getPasswordCipherById(id: Long): PasswordCipherPayload? {
+        val row = database.secureVaultQueries.selectById(id).executeAsOneOrNull() ?: return null
+        return PasswordCipherPayload(
+            encryptedPassword = row.encrypted_password,
+            securityMode = row.security_mode == 1L,
+        )
     }
 
     override suspend fun getAll(dataKey: ByteArray): List<PasswordEntry> {
@@ -141,7 +151,7 @@ class PasswordRepositoryImpl(
             id = id,
             title = decryptField(encrypted_title, dataKey),
             username = decryptField(encrypted_username, dataKey),
-            password = decryptField(encrypted_password, dataKey),
+            password = decryptPassword(encrypted_password, dataKey, security_mode == 1L),
             url = decryptNullableField(encrypted_url, dataKey),
             notes = decryptNullableField(encrypted_notes, dataKey),
             tags = decryptTags(encrypted_tags, dataKey),
@@ -162,6 +172,19 @@ class PasswordRepositoryImpl(
         return encryptField(value, dataKey)
     }
 
+    private suspend fun encryptPassword(value: String, dataKey: ByteArray, securityMode: Boolean): String {
+        val manager = securityModeManager
+        return if (manager != null) {
+            manager.encryptPasswordForStorage(
+                plaintextPassword = value,
+                dataKey = dataKey,
+                securityMode = securityMode,
+            )
+        } else {
+            encryptField(value, dataKey)
+        }
+    }
+
     private suspend fun decryptField(value: String, dataKey: ByteArray): String {
         return AesGcmCipher.decryptFromStorageFormat(value, dataKey).decodeToString()
     }
@@ -169,6 +192,19 @@ class PasswordRepositoryImpl(
     private suspend fun decryptNullableField(value: String?, dataKey: ByteArray): String? {
         if (value == null) return null
         return decryptField(value, dataKey)
+    }
+
+    private suspend fun decryptPassword(value: String, dataKey: ByteArray, securityMode: Boolean): String {
+        val manager = securityModeManager
+        return if (manager != null) {
+            manager.decryptPasswordForRead(
+                encryptedPassword = value,
+                dataKey = dataKey,
+                securityMode = securityMode,
+            )
+        } else {
+            decryptField(value, dataKey)
+        }
     }
 
     private suspend fun decryptTags(value: String?, dataKey: ByteArray): List<String> {

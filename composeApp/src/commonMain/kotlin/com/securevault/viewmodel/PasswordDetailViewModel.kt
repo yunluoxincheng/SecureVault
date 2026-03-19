@@ -3,6 +3,7 @@ package com.securevault.viewmodel
 import com.securevault.data.PasswordEntry
 import com.securevault.data.PasswordRepository
 import com.securevault.security.KeyManager
+import com.securevault.security.SecurityModeManager
 import com.securevault.security.SecureClipboard
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -23,7 +24,8 @@ data class PasswordDetailUiState(
 class PasswordDetailViewModel(
     private val passwordRepository: PasswordRepository,
     private val keyManager: KeyManager,
-    private val secureClipboard: SecureClipboard
+    private val secureClipboard: SecureClipboard,
+    private val securityModeManager: SecurityModeManager,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -70,9 +72,41 @@ class PasswordDetailViewModel(
     }
 
     fun copyPassword() {
-        val password = _uiState.value.entry?.password ?: return
-        secureClipboard.copy(password, "Password")
-        secureClipboard.scheduleAutoClear()
-        _uiState.update { it.copy(message = "密码已复制，将在 30 秒后清除") }
+        val entry = _uiState.value.entry ?: return
+        val dataKey = keyManager.getDataKey()
+        if (dataKey == null) {
+            _uiState.update { it.copy(message = "保险库已锁定") }
+            return
+        }
+
+        scope.launch {
+            runCatching {
+                if (entry.securityMode) {
+                    val entryId = entry.id ?: throw IllegalStateException("密码条目不存在")
+                    val payload = passwordRepository.getPasswordCipherById(entryId)
+                        ?: throw IllegalStateException("密码条目不存在")
+                    securityModeManager.usePassword(
+                        encryptedPassword = payload.encryptedPassword,
+                        dataKey = dataKey,
+                        securityMode = payload.securityMode,
+                    )
+                } else {
+                    secureClipboard.copy(entry.password, "Password")
+                    secureClipboard.scheduleAutoClear()
+                }
+            }.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        message = if (entry.securityMode) {
+                            "密码已使用（已复制），将在 30 秒后清除"
+                        } else {
+                            "密码已复制，将在 30 秒后清除"
+                        }
+                    )
+                }
+            }.onFailure { throwable ->
+                _uiState.update { it.copy(message = throwable.message ?: "密码使用失败") }
+            }
+        }
     }
 }

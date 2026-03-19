@@ -53,12 +53,14 @@ import kotlinx.coroutines.delay
 @Composable
 fun PasswordDetailScreen(
     entry: PasswordEntry,
+    securityModeEnabled: Boolean = false,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
     onCopyUsername: () -> Unit,
     onCopyPassword: () -> Unit
 ) {
+    val securityModeActive = securityModeEnabled || entry.securityMode
     var showPassword by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var passwordCopied by remember { mutableStateOf(false) }
@@ -111,7 +113,7 @@ fun PasswordDetailScreen(
                 onBack = onBack,
             )
 
-            AnimatedVisibility(visible = entry.securityMode) {
+            AnimatedVisibility(visible = securityModeActive) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -123,7 +125,11 @@ fun PasswordDetailScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        text = "安全模式：密码不可见，仅可使用",
+                        text = if (securityModeEnabled) {
+                            "全局安全模式已开启：密码不可见，仅可使用"
+                        } else {
+                            "安全模式：密码不可见，仅可使用"
+                        },
                         style = MaterialTheme.typography.bodyMedium,
                         color = SecurityModeColor,
                     )
@@ -160,10 +166,10 @@ fun PasswordDetailScreen(
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
-                        val displayValue = if (entry.securityMode || !showPassword) "••••••••••••" else entry.password
+                        val displayValue = if (securityModeActive || !showPassword) "••••••••••••" else entry.password
                         Text(
                             text = displayValue,
-                            style = if (!showPassword || entry.securityMode)
+                            style = if (!showPassword || securityModeActive)
                                 MaterialTheme.typography.bodyLarge
                             else
                                 MaterialTheme.typography.bodyLarge.copy(
@@ -172,22 +178,30 @@ fun PasswordDetailScreen(
                         )
                     }
 
-                    if (!entry.securityMode) {
+                    if (!securityModeActive) {
                         MyAppIconAction(
                             icon = if (showPassword) Icons.Default.VisibilityOff else Icons.Default.Visibility,
                             contentDescription = if (showPassword) "隐藏" else "显示",
                             onClick = { showPassword = !showPassword },
                         )
                     }
-                    MyAppIconAction(
-                        icon = if (passwordCopied) Icons.Default.Check else Icons.Default.ContentCopy,
-                        contentDescription = if (entry.securityMode) "使用" else "复制",
-                        onClick = {
-                            passwordCopied = true
-                            onCopyPassword()
-                        },
-                        tint = copyIconTint,
-                    )
+                    if (securityModeActive) {
+                        MyAppButton(
+                            text = "使用",
+                            onClick = onCopyPassword,
+                            variant = MyAppButtonVariant.Secondary,
+                        )
+                    } else {
+                        MyAppIconAction(
+                            icon = if (passwordCopied) Icons.Default.Check else Icons.Default.ContentCopy,
+                            contentDescription = "复制",
+                            onClick = {
+                                passwordCopied = true
+                                onCopyPassword()
+                            },
+                            tint = copyIconTint,
+                        )
+                    }
                 }
             }
 

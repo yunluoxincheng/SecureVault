@@ -10,7 +10,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Lock
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -19,6 +21,7 @@ import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.SettingsSwitchRow
+import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
@@ -37,6 +40,7 @@ fun SettingsScreen(
     onThemeChange: (ThemeMode) -> Unit,
     onBiometricChange: (Boolean) -> Unit,
     onScreenshotAllowedChange: (Boolean) -> Unit,
+    onOpenSecurityMode: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onLock: () -> Unit
 ) {
@@ -121,6 +125,21 @@ fun SettingsScreen(
                         checked = screenshotAllowed,
                         onCheckedChange = onScreenshotAllowedChange,
                     )
+                    if (onOpenSecurityMode != null) {
+                        MyAppDivider()
+                        MyAppListItem(
+                            headline = "安全模式",
+                            supportingText = "配置安全模式开关与使用说明",
+                            onClick = onOpenSecurityMode,
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "进入安全模式设置",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
+                        )
+                    }
                 }
             }
         }

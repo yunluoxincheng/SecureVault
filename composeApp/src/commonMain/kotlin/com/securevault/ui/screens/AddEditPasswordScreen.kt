@@ -42,6 +42,7 @@ import com.securevault.ui.theme.spacing
 @Composable
 fun AddEditPasswordScreen(
     entry: PasswordEntry?,
+    securityModeEnabled: Boolean = false,
     onSave: (PasswordEntry) -> Unit,
     onCancel: () -> Unit,
     onGeneratePassword: () -> String
@@ -55,7 +56,7 @@ fun AddEditPasswordScreen(
     var isFavorite by remember { mutableStateOf(false) }
     var securityMode by remember { mutableStateOf(false) }
 
-    LaunchedEffect(entry?.id, entry == null) {
+    LaunchedEffect(entry?.id, entry?.updatedAt, entry == null, securityModeEnabled) {
         title = entry?.title.orEmpty()
         username = entry?.username.orEmpty()
         password = entry?.password.orEmpty()
@@ -63,8 +64,10 @@ fun AddEditPasswordScreen(
         notes = entry?.notes.orEmpty()
         category = entry?.category ?: "默认"
         isFavorite = entry?.isFavorite ?: false
-        securityMode = entry?.securityMode ?: false
+        securityMode = entry?.securityMode ?: securityModeEnabled
     }
+
+    val effectiveSecurityMode = securityModeEnabled || securityMode
 
     val canSave = title.isNotBlank() && username.isNotBlank() && password.isNotBlank()
     val scrollState = rememberScrollState()
@@ -180,10 +183,23 @@ fun AddEditPasswordScreen(
                 MyAppDivider()
                 OptionSwitchRow(
                     label = "安全模式（密码不可见）",
-                    checked = securityMode,
+                    checked = effectiveSecurityMode,
                     onCheckedChange = { securityMode = it },
+                    enabled = !securityModeEnabled,
                     container = MyAppListItemContainer.None,
                 )
+                if (securityModeEnabled) {
+                    Text(
+                        text = "全局安全模式已开启，单条目安全模式不可关闭",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(
+                            start = MaterialTheme.spacing.md,
+                            end = MaterialTheme.spacing.md,
+                            bottom = MaterialTheme.spacing.sm,
+                        ),
+                    )
+                }
             }
         }
 
@@ -201,7 +217,7 @@ fun AddEditPasswordScreen(
                         notes = notes.ifBlank { null },
                         category = category.ifBlank { "默认" },
                         isFavorite = isFavorite,
-                        securityMode = securityMode,
+                        securityMode = effectiveSecurityMode,
                         tags = entry?.tags ?: emptyList(),
                         createdAt = entry?.createdAt ?: now,
                         updatedAt = now

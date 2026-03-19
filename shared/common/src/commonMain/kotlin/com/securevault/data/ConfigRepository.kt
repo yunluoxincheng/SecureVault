@@ -17,6 +17,8 @@ object VaultConfigKeys {
     const val Argon2OutputLength = "argon2_output_length"
     const val BiometricEnabled = "biometric_enabled"
     const val ScreenshotAllowed = "screenshot_allowed"
+    const val SecurityModeEnabled = "security_mode_enabled"
+    const val EncryptedSecureModeKey = "encrypted_secure_mode_key"
     const val OnboardingCompleted = "onboarding_completed"
     const val VaultSetupCompleted = "vault_setup_completed"
 }

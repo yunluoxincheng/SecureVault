@@ -452,6 +452,7 @@ private fun BaseVaultScreenPreview() {
             selectedCategory = null,
             favoritesOnly = false,
             query = "",
+            securityModeEnabled = false,
             hasLoadedAtLeastOnce = true,
             onQueryChange = {},
             onFiltersChange = { _, _ -> },
@@ -576,6 +577,7 @@ private fun BasePasswordDetailScreenPreview() {
     PreviewContainer {
         PasswordDetailScreen(
             entry = sampleEntry,
+            securityModeEnabled = false,
             onBack = {},
             onEdit = {},
             onDelete = {},
@@ -690,6 +692,7 @@ private fun EmptyVaultScreenPreview() {
             selectedCategory = null,
             favoritesOnly = false,
             query = "",
+            securityModeEnabled = false,
             hasLoadedAtLeastOnce = true,
             onQueryChange = {},
             onFiltersChange = { _, _ -> },
@@ -732,6 +735,7 @@ private fun EdgePasswordDetailScreenNormalModePreview() {
     PreviewContainer {
         PasswordDetailScreen(
             entry = sampleEntry,
+            securityModeEnabled = false,
             onBack = {},
             onEdit = {},
             onDelete = {},

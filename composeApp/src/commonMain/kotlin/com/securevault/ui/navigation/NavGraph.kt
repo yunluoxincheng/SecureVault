@@ -31,6 +31,7 @@ import com.securevault.ui.screens.LoginScreen
 import com.securevault.ui.screens.OnboardingScreen
 import com.securevault.ui.screens.PasswordDetailScreen
 import com.securevault.ui.screens.RegisterScreen
+import com.securevault.ui.screens.SecurityModeScreen
 import com.securevault.ui.screens.SettingsScreen
 import com.securevault.ui.screens.VaultScreen
 import com.securevault.ui.theme.AppTheme
@@ -42,6 +43,7 @@ import com.securevault.viewmodel.AuthStartDestination
 import com.securevault.viewmodel.GeneratorViewModel
 import com.securevault.viewmodel.PasswordDetailViewModel
 import com.securevault.viewmodel.SettingsViewModel
+import com.securevault.viewmodel.SecurityModeViewModel
 import com.securevault.viewmodel.UnlockViewModel
 import com.securevault.viewmodel.VaultViewModel
 import org.koin.compose.koinInject
@@ -62,6 +64,7 @@ fun SecureVaultApp() {
     val detailViewModel: PasswordDetailViewModel = koinInject()
     val addEditViewModel: AddEditPasswordViewModel = koinInject()
     val settingsViewModel: SettingsViewModel = koinInject()
+    val securityModeViewModel: SecurityModeViewModel = koinInject()
     val generatorViewModel: GeneratorViewModel = koinInject()
 
     val authState by authFlowViewModel.uiState.collectAsState()
@@ -70,6 +73,7 @@ fun SecureVaultApp() {
     val detailState by detailViewModel.uiState.collectAsState()
     val addEditState by addEditViewModel.uiState.collectAsState()
     val settingsState by settingsViewModel.uiState.collectAsState()
+    val securityModeState by securityModeViewModel.uiState.collectAsState()
     val generatorState by generatorViewModel.uiState.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -152,6 +156,13 @@ fun SecureVaultApp() {
             detailState.message?.let { snackbarHostState.showSnackbar(it) }
         }
 
+        LaunchedEffect(securityModeState.message) {
+            securityModeState.message?.let {
+                snackbarHostState.showSnackbar(it)
+                securityModeViewModel.consumeMessage()
+            }
+        }
+
         val destinationProvider = entryProvider<NavRoute> {
             entry<OnboardingRoute> {
                 OnboardingScreen(
@@ -190,6 +201,7 @@ fun SecureVaultApp() {
                     selectedCategory = vaultState.selectedCategory,
                     favoritesOnly = vaultState.favoritesOnly,
                     query = vaultState.query,
+                    securityModeEnabled = securityModeState.enabled,
                     vaultVisitNonce = vaultVisitNonce,
                     isLoading = vaultState.isLoading,
                     hasLoadedAtLeastOnce = vaultState.hasLoadedAtLeastOnce,
@@ -223,10 +235,21 @@ fun SecureVaultApp() {
                     onThemeChange = { settingsViewModel.updateTheme(it) },
                     onBiometricChange = { settingsViewModel.updateBiometricEnabled(it) },
                     onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
+                    onOpenSecurityMode = { navigator.navigate(SecurityModeRoute) },
                     onLock = {
                         settingsViewModel.lockNow()
                         navigator.resetToAuth(LoginRoute)
                     }
+                )
+            }
+
+            entry<SecurityModeRoute> {
+                SecurityModeScreen(
+                    enabled = securityModeState.enabled,
+                    isLoading = securityModeState.isLoading,
+                    message = securityModeState.message,
+                    onEnabledChange = { securityModeViewModel.updateEnabled(it) },
+                    onBack = { navigator.goBack() },
                 )
             }
 
@@ -237,6 +260,7 @@ fun SecureVaultApp() {
                 if (detailEntry != null) {
                     PasswordDetailScreen(
                         entry = detailEntry,
+                        securityModeEnabled = securityModeState.enabled,
                         onBack = { navigator.goBack() },
                         onEdit = { navigator.navigate(AddEditRoute(detailEntry.id)) },
                         onDelete = { detailViewModel.delete() },
@@ -250,6 +274,7 @@ fun SecureVaultApp() {
                 LaunchedEffect(key.entryId) { addEditViewModel.loadEntry(key.entryId) }
                 AddEditPasswordScreen(
                     entry = addEditState.entry,
+                    securityModeEnabled = securityModeState.enabled,
                     onSave = { updated -> addEditViewModel.save(updated) },
                     onCancel = { navigator.goBack() },
                     onGeneratePassword = { generatorViewModel.generateWithPreset(PasswordPreset.Strong) }

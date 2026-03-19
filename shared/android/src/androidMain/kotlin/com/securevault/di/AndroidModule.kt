@@ -12,6 +12,7 @@ import com.securevault.security.BiometricAuth
 import com.securevault.security.ScreenSecurity
 import com.securevault.security.SecureClipboard
 import com.securevault.security.PlatformKeyStore
+import com.securevault.security.SecurityModeManager
 import com.securevault.security.SessionManager
 import com.securevault.security.KeyManager
 import org.koin.dsl.module
@@ -19,13 +20,14 @@ import org.koin.dsl.module
 fun createAndroidModule(context: Context) = module {
     single { createSqlDriver() }
     single { SecureVaultDatabase(get()) }
-    single<PasswordRepository> { PasswordRepositoryImpl(get()) }
     single<ConfigRepository> { ConfigRepositoryImpl(get()) }
 
     single { PlatformKeyStore() }
     single { BiometricAuth() }
     single { ScreenSecurity() }
     single { SecureClipboard() }
+    single { SecurityModeManager(get(), get()) }
+    single<PasswordRepository> { PasswordRepositoryImpl(get(), get()) }
     single { Argon2Kdf() }
     single { SessionManager() }
     factory { KeyManager(get(), get(), get(), get()) }
