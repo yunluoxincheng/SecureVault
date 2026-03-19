@@ -22,9 +22,11 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -44,19 +46,28 @@ import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.MyAppDialog
 import com.securevault.ui.components.MyAppDivider
 import com.securevault.ui.components.MyAppIconAction
+import com.securevault.ui.components.MyAppInput
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.theme.SecurityModeColor
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
+import com.securevault.viewmodel.SensitiveAction
 import kotlinx.coroutines.delay
 
 @Composable
 fun PasswordDetailScreen(
     entry: PasswordEntry,
     securityModeEnabled: Boolean = false,
+    isLoading: Boolean = false,
+    pendingVerificationAction: SensitiveAction? = null,
+    verifiedAction: SensitiveAction? = null,
     onBack: () -> Unit,
     onEdit: () -> Unit,
     onDelete: () -> Unit,
+    onRequestSensitiveActionVerification: (SensitiveAction) -> Unit = {},
+    onVerifySensitiveActionWithPassword: (String) -> Unit = {},
+    onDismissSensitiveActionVerification: () -> Unit = {},
+    onConsumeVerifiedAction: () -> Unit = {},
     onCopyUsername: () -> Unit,
     onCopyPassword: () -> Unit
 ) {
@@ -64,6 +75,7 @@ fun PasswordDetailScreen(
     var showPassword by remember { mutableStateOf(false) }
     var showDeleteConfirm by remember { mutableStateOf(false) }
     var passwordCopied by remember { mutableStateOf(false) }
+    var masterPassword by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
     LaunchedEffect(passwordCopied) {
@@ -71,6 +83,78 @@ fun PasswordDetailScreen(
             delay(1500)
             passwordCopied = false
         }
+    }
+
+    LaunchedEffect(verifiedAction) {
+        when (verifiedAction) {
+            SensitiveAction.Edit -> {
+                onConsumeVerifiedAction()
+                onEdit()
+            }
+
+            SensitiveAction.Delete -> {
+                onConsumeVerifiedAction()
+                showDeleteConfirm = true
+            }
+
+            null -> Unit
+        }
+    }
+
+    if (pendingVerificationAction != null) {
+        AlertDialog(
+            onDismissRequest = {
+                masterPassword = ""
+                onDismissSensitiveActionVerification()
+            },
+            title = {
+                Text(
+                    text = "验证主密码",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                ) {
+                    Text(
+                        text = "安全模式条目在编辑或删除前需要验证",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    MyAppInput(
+                        value = masterPassword,
+                        onValueChange = { masterPassword = it },
+                        label = "主密码",
+                        isPassword = true,
+                        enabled = !isLoading,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onVerifySensitiveActionWithPassword(masterPassword)
+                        masterPassword = ""
+                    },
+                    enabled = masterPassword.isNotBlank() && !isLoading,
+                ) {
+                    Text("验证")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        masterPassword = ""
+                        onDismissSensitiveActionVerification()
+                    },
+                    enabled = !isLoading,
+                ) {
+                    Text("取消")
+                }
+            },
+        )
     }
 
     val copyIconTint by animateColorAsState(
@@ -222,39 +306,53 @@ fun PasswordDetailScreen(
             )
         }
 
-        Column(
-            modifier = Modifier
-                .fillMaxWidth()
-                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
-                .widthIn(max = MaterialTheme.layout.pageMaxWidth)
-                .align(Alignment.BottomCenter)
-        ) {
-            MyAppDivider(
-                horizontalInset = 0.dp,
-                color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
-            )
-            Row(
+        if (!securityModeEnabled) {
+            Column(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(
-                        horizontal = MaterialTheme.layout.pageHorizontalPadding,
-                        vertical = MaterialTheme.spacing.md,
-                    ),
-                horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.96f))
+                    .widthIn(max = MaterialTheme.layout.pageMaxWidth)
+                    .align(Alignment.BottomCenter)
             ) {
-                MyAppButton(
-                    text = "删除",
-                    onClick = { showDeleteConfirm = true },
-                    modifier = Modifier.weight(1f),
-                    leadingIcon = Icons.Default.Delete,
-                    variant = MyAppButtonVariant.Secondary,
+                MyAppDivider(
+                    horizontalInset = 0.dp,
+                    color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = 0.7f),
                 )
-                MyAppButton(
-                    text = "编辑",
-                    onClick = onEdit,
-                    modifier = Modifier.weight(1f),
-                    leadingIcon = Icons.Default.Edit,
-                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(
+                            horizontal = MaterialTheme.layout.pageHorizontalPadding,
+                            vertical = MaterialTheme.spacing.md,
+                        ),
+                    horizontalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                ) {
+                    MyAppButton(
+                        text = "删除",
+                        onClick = {
+                            if (entry.securityMode) {
+                                onRequestSensitiveActionVerification(SensitiveAction.Delete)
+                            } else {
+                                showDeleteConfirm = true
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Delete,
+                        variant = MyAppButtonVariant.Secondary,
+                    )
+                    MyAppButton(
+                        text = "编辑",
+                        onClick = {
+                            if (entry.securityMode) {
+                                onRequestSensitiveActionVerification(SensitiveAction.Edit)
+                            } else {
+                                onEdit()
+                            }
+                        },
+                        modifier = Modifier.weight(1f),
+                        leadingIcon = Icons.Default.Edit,
+                    )
+                }
             }
         }
     }

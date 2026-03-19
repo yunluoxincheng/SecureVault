@@ -16,10 +16,10 @@ val appModule = module {
     factory { AuthFlowViewModel(get()) }
 
     factory { VaultViewModel(get(), get()) }
-    factory { PasswordDetailViewModel(get(), get(), get(), get()) }
+    factory { PasswordDetailViewModel(get(), get(), get(), get(), get(), get()) }
     factory { AddEditPasswordViewModel(get(), get()) }
     factory { UnlockViewModel(get(), get(), get()) }
     factory { SettingsViewModel(get(), get(), get(), get()) }
-    factory { SecurityModeViewModel(get()) }
+    factory { SecurityModeViewModel(get(), get(), get(), get()) }
     factory { GeneratorViewModel(get(), get()) }
 }

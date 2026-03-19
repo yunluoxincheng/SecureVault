@@ -247,8 +247,11 @@ fun SecureVaultApp() {
                 SecurityModeScreen(
                     enabled = securityModeState.enabled,
                     isLoading = securityModeState.isLoading,
+                    showPasswordVerificationDialog = securityModeState.showPasswordVerificationDialog,
                     message = securityModeState.message,
                     onEnabledChange = { securityModeViewModel.updateEnabled(it) },
+                    onConfirmDisableWithPassword = { securityModeViewModel.confirmDisableWithPassword(it) },
+                    onDismissPasswordDialog = { securityModeViewModel.dismissPasswordVerificationDialog() },
                     onBack = { navigator.goBack() },
                 )
             }
@@ -261,9 +264,22 @@ fun SecureVaultApp() {
                     PasswordDetailScreen(
                         entry = detailEntry,
                         securityModeEnabled = securityModeState.enabled,
+                        isLoading = detailState.isLoading,
+                        pendingVerificationAction = detailState.pendingVerificationAction,
+                        verifiedAction = detailState.verifiedAction,
                         onBack = { navigator.goBack() },
                         onEdit = { navigator.navigate(AddEditRoute(detailEntry.id)) },
                         onDelete = { detailViewModel.delete() },
+                        onRequestSensitiveActionVerification = {
+                            detailViewModel.requestSensitiveActionVerification(it)
+                        },
+                        onVerifySensitiveActionWithPassword = {
+                            detailViewModel.verifySensitiveActionWithPassword(it)
+                        },
+                        onDismissSensitiveActionVerification = {
+                            detailViewModel.dismissSensitiveActionVerification()
+                        },
+                        onConsumeVerifiedAction = { detailViewModel.consumeVerifiedAction() },
                         onCopyUsername = { detailViewModel.copyUsername() },
                         onCopyPassword = { detailViewModel.copyPassword() },
                     )

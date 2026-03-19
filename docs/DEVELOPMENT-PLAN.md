@@ -180,6 +180,11 @@
 - [x] 已新增 Android 回归用例 `PasswordCardSecuritySemanticsTest`，覆盖“全局安全模式条目/条目安全模式”语义断言。
 - [x] 相关变更已通过编译校验：`./gradlew.bat :composeApp:assembleAndroidMain --console=plain`、`./gradlew.bat :androidApp:assembleDebugAndroidTest --console=plain`。
 
+### 交互规则补充（2026-03-19）
+
+- [x] 全局安全模式开关新增“关闭前验证”网关：关闭时优先生物识别，未启用生物识别则回退主密码验证；开启时可直接生效。
+- [x] 详情页操作策略细化：全局安全模式开启时隐藏编辑/删除按钮；条目安全模式下保留按钮，但执行编辑/删除前必须先通过验证。
+
 #### Week 9: 导出/导入
 
 - [ ] 实现 `ExportManager` (普通导出 + 安全模式导出)
