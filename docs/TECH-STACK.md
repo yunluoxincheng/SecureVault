@@ -1,7 +1,7 @@
 # SecureVault 技术选型文档
 
 > 当前实现基线（As-Is）+ 目标版本（To-Be）
-> 更新时间：2026-03-18
+> 更新时间：2026-03-19
 
 ---
 
@@ -115,8 +115,9 @@ argon2kt = "1.6.0"
 
 ### 7.1 导航
 
-- 当前仓库尚未引入 Navigation 3 依赖。
-- 保持现有结构，待 UI 路由复杂度提升后再统一接入官方导航方案。
+- 当前实现使用 Compose Navigation 3（KMP 适配）：`navigation3-ui` + `NavigationState`/`Navigator` + `NavDisplay`。
+- 路由已从字符串迁移为类型安全 `NavKey`（`NavRoute` / `MainTabRoute`）。
+- Navigation 2（`navigation-compose`）及相关兼容代码已完成清理。
 
 ### 7.2 数据层
 

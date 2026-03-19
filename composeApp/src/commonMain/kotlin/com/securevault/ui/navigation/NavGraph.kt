@@ -14,20 +14,16 @@ import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.navigation.NavDestination.Companion.hierarchy
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.currentBackStackEntryAsState
-import androidx.navigation.compose.rememberNavController
-import com.securevault.ui.animation.NavTransitions
+import androidx.navigation3.runtime.entryProvider
+import androidx.navigation3.runtime.rememberDecoratedNavEntries
+import androidx.navigation3.runtime.rememberSaveableStateHolderNavEntryDecorator
+import androidx.navigation3.ui.NavDisplay
 import com.securevault.ui.components.SkeletonList
 import com.securevault.ui.components.SvToastHost
 import com.securevault.ui.screens.AddEditPasswordScreen
@@ -51,23 +47,10 @@ import com.securevault.viewmodel.UnlockViewModel
 import com.securevault.viewmodel.VaultViewModel
 import org.koin.compose.koinInject
 
-private object Route {
-    const val Onboarding = "onboarding"
-    const val Register = "register"
-    const val Login = "login"
-
-    const val Vault = "vault"
-    const val Generator = "generator"
-    const val Settings = "settings"
-
-    const val Detail = "detail"
-    const val AddEdit = "add-edit"
-}
-
-private val mainTabRoutes = setOf(Route.Vault, Route.Generator, Route.Settings)
+private val mainTabRoutes = setOf(VaultRoute, GeneratorRoute, SettingsRoute)
 
 private data class BottomTab(
-    val route: String,
+    val route: MainTabRoute,
     val label: String,
     val icon: @Composable () -> Unit
 )
@@ -104,45 +87,44 @@ fun SecureVaultApp() {
         }
 
         val startRoute = when (authState.startDestination) {
-            AuthStartDestination.Onboarding -> Route.Onboarding
-            AuthStartDestination.Register -> Route.Register
-            AuthStartDestination.Login -> Route.Login
+            AuthStartDestination.Onboarding -> OnboardingRoute
+            AuthStartDestination.Register -> RegisterRoute
+            AuthStartDestination.Login -> LoginRoute
         }
-
-        val navController = rememberNavController()
-        val selectedEntryId = remember { mutableStateOf<Long?>(null) }
+        val navigationState = rememberNavigationState(
+            authStartRoute = startRoute,
+            mainTabs = mainTabRoutes,
+        )
+        val navigator = remember(navigationState) { Navigator(navigationState) }
         var vaultVisitNonce by remember { mutableIntStateOf(0) }
 
         val bottomTabs = remember {
             listOf(
-                BottomTab(Route.Vault, "密码库") { Icon(Icons.Default.Lock, contentDescription = null) },
-                BottomTab(Route.Generator, "生成器") { Icon(Icons.Default.Key, contentDescription = null) },
-                BottomTab(Route.Settings, "设置") { Icon(Icons.Default.Settings, contentDescription = null) },
+                BottomTab(VaultRoute, "密码库") { Icon(Icons.Default.Lock, contentDescription = null) },
+                BottomTab(GeneratorRoute, "生成器") { Icon(Icons.Default.Key, contentDescription = null) },
+                BottomTab(SettingsRoute, "设置") { Icon(Icons.Default.Settings, contentDescription = null) },
             )
         }
 
-        val backStackEntry by navController.currentBackStackEntryAsState()
-        val showBottomBar = backStackEntry
-            ?.destination
-            ?.hierarchy
-            ?.any { it.route in mainTabRoutes } == true
-
-        LaunchedEffect(backStackEntry?.destination?.route) {
-            val isVaultDestination = backStackEntry
-                ?.destination
-                ?.hierarchy
-                ?.any { it.route == Route.Vault } == true
-            if (isVaultDestination) {
-                vaultVisitNonce += 1
+        LaunchedEffect(startRoute) {
+            if (navigationState.currentSurface == NavigationSurface.Auth) {
+                navigationState.resetAuthStack(startRoute)
             }
+        }
+
+        val currentRoute = navigationState.activeBackStack.lastOrNull()
+        val showBottomBar = navigationState.currentSurface == NavigationSurface.Main
+
+        LaunchedEffect(navigationState.currentSurface, navigationState.currentTab, currentRoute) {
+            val isAtVaultRoot = navigationState.currentSurface == NavigationSurface.Main &&
+                navigationState.currentTab == VaultRoute &&
+                currentRoute == VaultRoute
+            if (isAtVaultRoot) vaultVisitNonce += 1
         }
 
         LaunchedEffect(unlockState.isUnlocked) {
             if (unlockState.isUnlocked) {
-                navController.navigate(Route.Vault) {
-                    popUpTo(navController.graph.findStartDestination().id) { inclusive = true }
-                    launchSingleTop = true
-                }
+                navigator.resetToMainRoot(VaultRoute)
                 unlockViewModel.consumeUnlockEvent()
                 vaultViewModel.loadEntries()
                 authFlowViewModel.markVaultSetupCompleted()
@@ -151,7 +133,7 @@ fun SecureVaultApp() {
 
         LaunchedEffect(addEditState.saveSuccess) {
             if (addEditState.saveSuccess) {
-                navController.popBackStack(Route.Vault, false)
+                navigator.resetToMainRoot(VaultRoute)
                 addEditViewModel.consumeSaveResult()
                 vaultViewModel.loadEntries()
                 snackbarHostState.showSnackbar("已保存")
@@ -160,7 +142,7 @@ fun SecureVaultApp() {
 
         LaunchedEffect(detailState.deleted) {
             if (detailState.deleted) {
-                navController.popBackStack(Route.Vault, false)
+                navigator.resetToMainRoot(VaultRoute)
                 vaultViewModel.loadEntries()
             }
         }
@@ -169,21 +151,123 @@ fun SecureVaultApp() {
             detailState.message?.let { snackbarHostState.showSnackbar(it) }
         }
 
+        val destinationProvider = entryProvider<NavRoute> {
+            entry<OnboardingRoute> {
+                OnboardingScreen(
+                    onFinish = {
+                        authFlowViewModel.completeOnboarding()
+                        navigator.resetToAuth(RegisterRoute)
+                    }
+                )
+            }
+
+            entry<RegisterRoute> {
+                RegisterScreen(
+                    isLoading = unlockState.isLoading,
+                    errorMessage = unlockState.errorMessage,
+                    onRegister = { password -> unlockViewModel.setupVault(password) },
+                    onGoLogin = { navigator.resetToAuth(LoginRoute) },
+                )
+            }
+
+            entry<LoginRoute> {
+                LoginScreen(
+                    biometricAvailable = unlockState.biometricAvailable && settingsState.biometricEnabled,
+                    isLoading = unlockState.isLoading,
+                    errorMessage = unlockState.errorMessage,
+                    onLogin = { password -> unlockViewModel.unlockWithPassword(password) },
+                    onBiometricLogin = { unlockViewModel.unlockWithBiometric() },
+                    onGoRegister = { navigator.navigate(RegisterRoute) },
+                )
+            }
+
+            entry<VaultRoute> {
+                LaunchedEffect(Unit) { vaultViewModel.loadEntries() }
+                VaultScreen(
+                    entries = vaultState.entries,
+                    categories = vaultState.categories,
+                    selectedCategory = vaultState.selectedCategory,
+                    favoritesOnly = vaultState.favoritesOnly,
+                    query = vaultState.query,
+                    vaultVisitNonce = vaultVisitNonce,
+                    isLoading = vaultState.isLoading,
+                    onQueryChange = { vaultViewModel.updateQuery(it) },
+                    onCategoryChange = { vaultViewModel.updateCategory(it) },
+                    onFavoritesOnlyChange = { vaultViewModel.updateFavoritesOnly(it) },
+                    onEntryClick = { entry -> navigator.navigate(DetailRoute(entry.id)) },
+                    onAddClick = { navigator.navigate(AddEditRoute(null)) },
+                )
+            }
+
+            entry<GeneratorRoute> {
+                GeneratorScreen(
+                    uiState = generatorState,
+                    onGeneratePreset = { preset -> generatorViewModel.generateWithPreset(preset) },
+                    onGenerateCustom = { config -> generatorViewModel.generateWithConfig(config) },
+                    onCopyGenerated = { generatorViewModel.copyGeneratedPassword() }
+                )
+            }
+
+            entry<SettingsRoute> {
+                SettingsScreen(
+                    currentTheme = settingsState.themeMode,
+                    biometricEnabled = settingsState.biometricEnabled,
+                    screenshotAllowed = settingsState.screenshotAllowed,
+                    errorMessage = settingsState.errorMessage,
+                    onThemeChange = { settingsViewModel.updateTheme(it) },
+                    onBiometricChange = { settingsViewModel.updateBiometricEnabled(it) },
+                    onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
+                    onLock = {
+                        settingsViewModel.lockNow()
+                        navigator.resetToAuth(LoginRoute)
+                    }
+                )
+            }
+
+            entry<DetailRoute> { key ->
+                val id = key.entryId ?: return@entry
+                LaunchedEffect(id) { detailViewModel.load(id) }
+                val detailEntry = detailState.entry
+                if (detailEntry != null) {
+                    PasswordDetailScreen(
+                        entry = detailEntry,
+                        onBack = { navigator.goBack() },
+                        onEdit = { navigator.navigate(AddEditRoute(detailEntry.id)) },
+                        onDelete = { detailViewModel.delete() },
+                        onCopyUsername = { detailViewModel.copyUsername() },
+                        onCopyPassword = { detailViewModel.copyPassword() },
+                    )
+                }
+            }
+
+            entry<AddEditRoute> { key ->
+                LaunchedEffect(key.entryId) { addEditViewModel.loadEntry(key.entryId) }
+                AddEditPasswordScreen(
+                    entry = addEditState.entry,
+                    onSave = { updated -> addEditViewModel.save(updated) },
+                    onCancel = { navigator.goBack() },
+                    onGeneratePassword = { generatorViewModel.generateWithPreset(PasswordPreset.Strong) }
+                )
+            }
+        }
+
+        val navEntries = rememberDecoratedNavEntries(
+            backStack = navigationState.activeBackStack,
+            entryDecorators = listOf(rememberSaveableStateHolderNavEntryDecorator()),
+            entryProvider = destinationProvider,
+        )
+
         Scaffold(
             bottomBar = {
                 if (showBottomBar) {
                     NavigationBar {
-                        val destination = backStackEntry?.destination
                         bottomTabs.forEach { tab ->
-                            val isSelected = destination?.hierarchy?.any { it.route == tab.route } == true
+                            val isSelected = navigationState.currentTab == tab.route
                             NavigationBarItem(
                                 selected = isSelected,
                                 onClick = {
                                     if (isSelected) return@NavigationBarItem
-                                    navController.navigate(tab.route) {
-                                        popUpTo(Route.Vault)
-                                        launchSingleTop = true
-                                    }
+                                    navigator.navigate(tab.route)
                                 },
                                 icon = tab.icon,
                                 label = { Text(tab.label) },
@@ -194,161 +278,11 @@ fun SecureVaultApp() {
             },
             snackbarHost = { SvToastHost(snackbarHostState) },
         ) { paddingValues ->
-            NavHost(
-                navController = navController,
-                startDestination = startRoute,
+            NavDisplay(
+                entries = navEntries,
+                onBack = { navigator.goBack() },
                 modifier = Modifier.padding(paddingValues),
-                enterTransition = { NavTransitions.enterForward },
-                exitTransition = { NavTransitions.exitForward },
-                popEnterTransition = { NavTransitions.enterBackward },
-                popExitTransition = { NavTransitions.exitBackward },
-            ) {
-                composable(
-                    Route.Onboarding,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    OnboardingScreen(
-                        onFinish = {
-                            authFlowViewModel.completeOnboarding()
-                            navController.navigate(Route.Register) {
-                                popUpTo(Route.Onboarding) { inclusive = true }
-                            }
-                        }
-                    )
-                }
-
-                composable(
-                    Route.Register,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    RegisterScreen(
-                        isLoading = unlockState.isLoading,
-                        errorMessage = unlockState.errorMessage,
-                        onRegister = { password -> unlockViewModel.setupVault(password) },
-                        onGoLogin = {
-                            navController.navigateToLoginFromRegister(
-                                loginRoute = Route.Login,
-                                registerRoute = Route.Register
-                            )
-                        }
-                    )
-                }
-
-                composable(
-                    Route.Login,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    LoginScreen(
-                        biometricAvailable = unlockState.biometricAvailable && settingsState.biometricEnabled,
-                        isLoading = unlockState.isLoading,
-                        errorMessage = unlockState.errorMessage,
-                        onLogin = { password -> unlockViewModel.unlockWithPassword(password) },
-                        onBiometricLogin = { unlockViewModel.unlockWithBiometric() },
-                        onGoRegister = {
-                            navController.navigate(Route.Register) { launchSingleTop = true }
-                        }
-                    )
-                }
-
-                composable(
-                    Route.Vault,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    LaunchedEffect(Unit) { vaultViewModel.loadEntries() }
-                    VaultScreen(
-                        entries = vaultState.entries,
-                        categories = vaultState.categories,
-                        selectedCategory = vaultState.selectedCategory,
-                        favoritesOnly = vaultState.favoritesOnly,
-                        query = vaultState.query,
-                        vaultVisitNonce = vaultVisitNonce,
-                        isLoading = vaultState.isLoading,
-                        onQueryChange = { vaultViewModel.updateQuery(it) },
-                        onCategoryChange = { vaultViewModel.updateCategory(it) },
-                        onFavoritesOnlyChange = { vaultViewModel.updateFavoritesOnly(it) },
-                        onEntryClick = { entry ->
-                            selectedEntryId.value = entry.id
-                            navController.navigate(Route.Detail)
-                        },
-                        onAddClick = {
-                            selectedEntryId.value = null
-                            navController.navigate(Route.AddEdit)
-                        }
-                    )
-                }
-
-                composable(
-                    Route.Generator,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    GeneratorScreen(
-                        uiState = generatorState,
-                        onGeneratePreset = { preset -> generatorViewModel.generateWithPreset(preset) },
-                        onGenerateCustom = { config -> generatorViewModel.generateWithConfig(config) },
-                        onCopyGenerated = { generatorViewModel.copyGeneratedPassword() }
-                    )
-                }
-
-                composable(
-                    Route.Settings,
-                    enterTransition = { NavTransitions.enterTab },
-                    exitTransition = { NavTransitions.exitTab },
-                ) {
-                    SettingsScreen(
-                        currentTheme = settingsState.themeMode,
-                        biometricEnabled = settingsState.biometricEnabled,
-                        screenshotAllowed = settingsState.screenshotAllowed,
-                        errorMessage = settingsState.errorMessage,
-                        onThemeChange = { settingsViewModel.updateTheme(it) },
-                        onBiometricChange = { settingsViewModel.updateBiometricEnabled(it) },
-                        onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
-                        onLock = {
-                            settingsViewModel.lockNow()
-                            navController.navigateToLoginAfterLock(
-                                loginRoute = Route.Login,
-                                vaultRoute = Route.Vault
-                            )
-                        }
-                    )
-                }
-
-                composable(Route.Detail) {
-                    val id = selectedEntryId.value ?: return@composable
-                    LaunchedEffect(id) { detailViewModel.load(id) }
-
-                    val detailEntry = detailState.entry
-                    if (detailEntry != null) {
-                        PasswordDetailScreen(
-                            entry = detailEntry,
-                            onBack = { navController.popBackStack() },
-                            onEdit = {
-                                selectedEntryId.value = detailEntry.id
-                                navController.navigate(Route.AddEdit)
-                            },
-                            onDelete = { detailViewModel.delete() },
-                            onCopyUsername = { detailViewModel.copyUsername() },
-                            onCopyPassword = {
-                                detailViewModel.copyPassword()
-                            }
-                        )
-                    }
-                }
-
-                composable(Route.AddEdit) {
-                    LaunchedEffect(selectedEntryId.value) { addEditViewModel.loadEntry(selectedEntryId.value) }
-                    AddEditPasswordScreen(
-                        entry = addEditState.entry,
-                        onSave = { updated -> addEditViewModel.save(updated) },
-                        onCancel = { navController.popBackStack() },
-                        onGeneratePassword = { generatorViewModel.generateWithPreset(PasswordPreset.Strong) }
-                    )
-                }
-            }
+            )
         }
     }
 }

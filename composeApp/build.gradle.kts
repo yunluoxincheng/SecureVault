@@ -39,7 +39,7 @@ kotlin {
                 api(libs.kotlinx.coroutines.core)
                 api(libs.koin.compose)
                 api(libs.koin.compose.viewmodel)
-                api(libs.navigation.compose)
+                implementation(libs.navigation3.ui)
             }
         }
 

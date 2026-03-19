@@ -879,3 +879,67 @@ fun SecureVaultScreenShell(
 ```
 
 That pattern should be the default until there is a strong product reason to do something else.
+
+## Implementation Architecture Diagram (Current)
+
+This diagram reflects the current UI/UX implementation layering in SecureVault:
+
+```mermaid
+flowchart TB
+    subgraph P[Platform Entry]
+        A1[androidApp]
+        A2[desktopApp]
+        A3[iOS Host]
+    end
+
+    subgraph U[UI Layer - composeApp]
+        U1[Screens\nLogin/Register/Vault/Generator/Settings/Detail/AddEdit]
+        U2[MyApp Components\nMyAppButton/MyAppInput/MyAppCard/MyAppTopBar/MyAppListItem]
+        U3[Domain Components\nPasswordCard/DetailRow/PasswordStrengthBar/OptionSwitchRow/CountStepperRow]
+        U4[Preview System\nAndroid @Preview Light/Dark + state coverage]
+    end
+
+    subgraph N[Navigation Layer]
+        N1[NavDisplay + typed NavKey routes]
+        N2[NavigationState + Navigator]
+        N3[Bottom Tabs\nVault / Generator / Settings]
+        N4[NavTransitions\nforward/back/tab motion]
+    end
+
+    subgraph S[State + DI Layer]
+        S1[Koin injection\nkoinInject + appModule]
+        S2[ViewModel cluster\nAuth/Unlock/Vault/Detail/AddEdit/Settings/Generator]
+        S3[StateFlow -> collectAsState]
+        S4[Snackbar + one-shot event consumption]
+    end
+
+    subgraph D[Design System Layer]
+        D1[AppTheme]
+        D2[Material3 ColorScheme + Typography + Shapes]
+        D3[Custom Tokens\nSpacing/Elevation/Radius/Layout]
+        D4[AnimationTokens]
+        D5[Android Dynamic Color + System Bars]
+    end
+
+    subgraph C[Shared Domain Layer - shared/common]
+        C1[UseCase / Repository]
+        C2[Security + password domain logic]
+        C3[SQLDelight data access]
+    end
+
+    P --> U
+    U --> N
+    U --> D
+    N --> S
+    U --> S
+    S --> C
+    D --> U2
+    D --> U3
+    D --> N4
+    S2 --> S3
+    S1 --> S2
+    C1 --> C3
+
+    classDef accent fill:#dff3e8,stroke:#1b6b4f,color:#0f3b2c,stroke-width:1.2px;
+    class U,D,N,S accent;
+```

@@ -48,7 +48,7 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 | DI | Koin 4.2.x |
 | 异步 | Kotlin Coroutines + Flow |
 | 加密 | libsodium (KMP) + argon2kt (Android) |
-| 导航 | Compose Navigation 3 |
+| 导航 | Compose Navigation 3（`NavDisplay` + 类型安全 `NavKey`） |
 
 ## 安全架构
 
