@@ -72,7 +72,7 @@
 - [x] 清理中间兼容代码（字符串 route 与 `NavController` 扩展）
 - [x] 更新文档中的 To-Be -> As-Is
 
-## 3. 文件级改动清单（已落地）
+## 3. 文件级改动清单（迁移阶段 -> 当前收敛）
 
 - `gradle/libs.versions.toml`
   - 新增 Navigation 3 版本与库别名（当前仅启用 `navigation3-ui`）
@@ -81,12 +81,11 @@
 - `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/NavGraph.kt`
   - `NavHost` -> `NavDisplay`
   - 字符串路由 -> `NavKey`
-- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/NavigationRoutes.kt`（新增）
-  - 统一定义 `NavRoute` / `MainTabRoute` 与具体路由 key
+- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/NavigationRoutes.kt`（迁移阶段曾新增，当前实现已收敛）
+- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/NavigationState.kt`（迁移阶段曾新增，当前实现已收敛）
+- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/Navigator.kt`（迁移阶段曾新增，当前实现已收敛）
 - `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/LoginNavigationActions.kt`
-  - 已删除，语义迁移到 `Navigator`
-- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/NavigationState.kt`（新增）
-- `composeApp/src/commonMain/kotlin/com/securevault/ui/navigation/Navigator.kt`（新增）
+  - 迁移阶段已删除，语义并入新的导航实现
 
 ## 4. 风险与回滚
 

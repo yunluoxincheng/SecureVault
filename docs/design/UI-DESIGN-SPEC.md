@@ -291,6 +291,7 @@ Rules:
 | `smallStatusIconSize` | `16.dp` | Favorite star and status icons |
 | `pageHorizontalPadding` | `16.dp` | Main content edge padding |
 | `pageMaxWidth` | `720.dp` | Standard centered content width |
+| `authFormMaxWidth` | `480.dp` | Auth form max width |
 | `pageTopPadding` | `16.dp` | General top content spacing |
 | `sectionSpacing` | `24.dp` | Major vertical sections |
 | `contentSpacing` | `16.dp` | Default stacked spacing |
@@ -302,6 +303,13 @@ Rules:
 | `topBarSideWidth` | `48.dp` | Reserved side action width in top bar |
 | `badgeHorizontalPadding` | `6.dp` | Badge horizontal inset |
 | `badgeVerticalPadding` | `2.dp` | Badge vertical inset |
+| `inlineIndicatorSize` | `8.dp` | Onboarding indicator base size |
+| `inlineIndicatorSelectedWidth` | `24.dp` | Onboarding selected indicator width |
+| `onboardingActionWidth` | `120.dp` | Onboarding next button width |
+| `onboardingIllustrationSize` | `100.dp` | Onboarding icon container size |
+| `onboardingIllustrationIconSize` | `52.dp` | Onboarding icon size |
+| `stepperValueMinWidth` | `32.dp` | Generator stepper value width |
+| `sliderTouchHeight` | `28.dp` | Generator slider touch zone height |
 | `fabContentClearance` | `88.dp` | Extra list bottom space when FAB exists |
 | `bottomBarActionInset` | `96.dp` | Bottom sticky action clearance |
 | `fabElevation` | `8.dp` | FAB resting elevation |
@@ -651,18 +659,19 @@ Motion must feel fast, polished, and quiet.
 
 ### Use the Shared Tokens
 
-Use `AnimationTokens` and `NavTransitions` instead of ad hoc numbers.
+Use `AnimationTokens` (and Navigation 3 native transitions) instead of ad hoc numbers.
 
 | Token | Value | Use |
 |------|------|------|
-| `pageEnterDuration` | `280` ms | Screen entry |
-| `pageExitDuration` | `220` ms | Screen exit |
-| `cardAppearDuration` | `220` ms | Item entrance |
-| `dialogDuration` | `240` ms | Dialog reveal |
-| `crossFadeDuration` | `160` ms | Small state swaps |
-| `copyFeedbackDuration` | `260` ms | Copy icon tint change |
-| `strengthBarDuration` | `360` ms | Strength transitions |
-| `unlockDuration` | `500` ms | Reserved for unlock success flows |
+| `pageEnterDuration` | `220` ms | Screen entry |
+| `pageExitDuration` | `180` ms | Screen exit |
+| `cardAppearDuration` | `200` ms | Item entrance |
+| `dialogDuration` | `220` ms | Dialog reveal |
+| `crossFadeDuration` | `180` ms | Small state swaps |
+| `copyFeedbackDuration` | `180` ms | Copy icon tint change |
+| `strengthBarDuration` | `220` ms | Strength transitions |
+| `unlockDuration` | `220` ms | Reserved for unlock success flows |
+| `shimmerDuration` | `1000` ms | Skeleton shimmer cycle |
 | `staggerItemDelay` | `36` ms | Staggered item entrance |
 | `itemEntranceOffsetPx` | `16` px | List item vertical offset |
 
@@ -903,7 +912,7 @@ flowchart TB
         N1[NavDisplay + typed NavKey routes]
         N2[NavigationState + Navigator]
         N3[Bottom Tabs\nVault / Generator / Settings]
-        N4[NavTransitions\nforward/back/tab motion]
+        N4[Navigation3 Native Transitions\nconsistent subtle defaults]
     end
 
     subgraph S[State + DI Layer]
@@ -935,7 +944,6 @@ flowchart TB
     S --> C
     D --> U2
     D --> U3
-    D --> N4
     S2 --> S3
     S1 --> S2
     C1 --> C3
