@@ -86,11 +86,13 @@ class VaultViewModel(
     }
 
     fun updateCategory(category: String?) {
+        if (_uiState.value.selectedCategory == category) return
         _uiState.update { it.copy(selectedCategory = category) }
         loadEntries()
     }
 
     fun updateFavoritesOnly(enabled: Boolean) {
+        if (_uiState.value.favoritesOnly == enabled) return
         _uiState.update { it.copy(favoritesOnly = enabled) }
         loadEntries()
     }

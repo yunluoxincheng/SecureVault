@@ -34,11 +34,19 @@ fun PasswordCard(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
     index: Int = 0,
+    animateEntrance: Boolean = true,
+    animationResetKey: Any? = Unit,
+    onEntranceAnimationStarted: (() -> Unit)? = null,
 ) {
     MyAppCard(
         onClick = onClick,
         modifier = modifier
-            .animateItemEntrance(index),
+            .animateItemEntrance(
+                index = index,
+                enabled = animateEntrance,
+                resetKey = animationResetKey,
+                onAnimationStarted = onEntranceAnimationStarted,
+            ),
         variant = MyAppCardVariant.Elevated,
     ) {
         MyAppListItem(

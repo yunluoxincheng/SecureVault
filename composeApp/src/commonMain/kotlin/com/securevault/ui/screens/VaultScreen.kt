@@ -41,6 +41,7 @@ fun VaultScreen(
     selectedCategory: String?,
     favoritesOnly: Boolean,
     query: String,
+    vaultVisitNonce: Int = 0,
     isLoading: Boolean = false,
     onQueryChange: (String) -> Unit,
     onCategoryChange: (String?) -> Unit,
@@ -48,6 +49,16 @@ fun VaultScreen(
     onEntryClick: (PasswordEntry) -> Unit,
     onAddClick: () -> Unit
 ) {
+    val animationResetKey = vaultListAnimationResetKey(
+        vaultVisitNonce = vaultVisitNonce,
+        selectedCategory = selectedCategory,
+        favoritesOnly = favoritesOnly,
+    )
+    val showLoadingSkeleton = shouldShowVaultLoadingSkeleton(
+        isLoading = isLoading,
+        entries = entries,
+    )
+
     Box(modifier = Modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -97,7 +108,7 @@ fun VaultScreen(
                 }
             }
 
-            if (isLoading) {
+            if (showLoadingSkeleton) {
                 SkeletonList(
                     count = 6,
                     modifier = Modifier.padding(top = MaterialTheme.spacing.sm),
@@ -117,11 +128,13 @@ fun VaultScreen(
                         bottom = MaterialTheme.layout.fabContentClearance,
                     ),
                 ) {
-                    itemsIndexed(entries, key = { _, e -> e.id ?: e.hashCode().toLong() }) { index, entry ->
+                    itemsIndexed(entries, key = { _, e -> vaultEntryKey(e) }) { index, entry ->
                         PasswordCard(
                             entry = entry,
                             onClick = { onEntryClick(entry) },
                             index = index,
+                            animateEntrance = true,
+                            animationResetKey = animationResetKey,
                         )
                     }
                 }
@@ -143,6 +156,25 @@ fun VaultScreen(
             Icon(Icons.Default.Add, contentDescription = "添加密码")
         }
     }
+}
+
+internal fun vaultListAnimationResetKey(
+    vaultVisitNonce: Int,
+    selectedCategory: String?,
+    favoritesOnly: Boolean,
+): String {
+    return "$vaultVisitNonce|${selectedCategory.orEmpty()}|$favoritesOnly"
+}
+
+internal fun shouldShowVaultLoadingSkeleton(
+    isLoading: Boolean,
+    entries: List<PasswordEntry>,
+): Boolean {
+    return isLoading && entries.isEmpty()
+}
+
+private fun vaultEntryKey(entry: PasswordEntry): Long {
+    return entry.id ?: -entry.createdAt
 }
 
 @Composable

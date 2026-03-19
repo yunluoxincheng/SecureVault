@@ -15,9 +15,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -109,6 +111,7 @@ fun SecureVaultApp() {
 
         val navController = rememberNavController()
         val selectedEntryId = remember { mutableStateOf<Long?>(null) }
+        var vaultVisitNonce by remember { mutableIntStateOf(0) }
 
         val bottomTabs = remember {
             listOf(
@@ -123,6 +126,16 @@ fun SecureVaultApp() {
             ?.destination
             ?.hierarchy
             ?.any { it.route in mainTabRoutes } == true
+
+        LaunchedEffect(backStackEntry?.destination?.route) {
+            val isVaultDestination = backStackEntry
+                ?.destination
+                ?.hierarchy
+                ?.any { it.route == Route.Vault } == true
+            if (isVaultDestination) {
+                vaultVisitNonce += 1
+            }
+        }
 
         LaunchedEffect(unlockState.isUnlocked) {
             if (unlockState.isUnlocked) {
@@ -162,9 +175,11 @@ fun SecureVaultApp() {
                     NavigationBar {
                         val destination = backStackEntry?.destination
                         bottomTabs.forEach { tab ->
+                            val isSelected = destination?.hierarchy?.any { it.route == tab.route } == true
                             NavigationBarItem(
-                                selected = destination?.hierarchy?.any { it.route == tab.route } == true,
+                                selected = isSelected,
                                 onClick = {
+                                    if (isSelected) return@NavigationBarItem
                                     navController.navigate(tab.route) {
                                         popUpTo(Route.Vault)
                                         launchSingleTop = true
@@ -250,6 +265,7 @@ fun SecureVaultApp() {
                         selectedCategory = vaultState.selectedCategory,
                         favoritesOnly = vaultState.favoritesOnly,
                         query = vaultState.query,
+                        vaultVisitNonce = vaultVisitNonce,
                         isLoading = vaultState.isLoading,
                         onQueryChange = { vaultViewModel.updateQuery(it) },
                         onCategoryChange = { vaultViewModel.updateCategory(it) },
