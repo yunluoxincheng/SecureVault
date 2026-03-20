@@ -19,11 +19,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material.icons.filled.Password
-import androidx.compose.material.icons.filled.Shield
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -32,17 +27,17 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.style.TextAlign
 import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
+import com.securevault.ui.icons.LOGO_SCREEN_SCALE
+import com.securevault.ui.icons.SecureVaultLogoIcon
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 import kotlinx.coroutines.launch
 
 private data class OnboardingPage(
-    val icon: ImageVector,
     val title: String,
     val description: String,
 )
@@ -53,17 +48,14 @@ fun OnboardingScreen(
 ) {
     val pages = listOf(
         OnboardingPage(
-            icon = Icons.Default.Shield,
             title = "欢迎使用 SecureVault",
             description = "离线优先的本地密码管理器，你的数据只属于你",
         ),
         OnboardingPage(
-            icon = Icons.Default.Lock,
             title = "军事级加密保护",
             description = "密码使用 XChaCha20-Poly1305 加密\n主密码不会上传至任何服务器",
         ),
         OnboardingPage(
-            icon = Icons.Default.Password,
             title = "安全便捷兼得",
             description = "支持安全剪贴板自动清除与生物识别\n让安全不再是负担",
         ),
@@ -173,20 +165,10 @@ private fun OnboardingPageContent(page: OnboardingPage) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center,
     ) {
-        Box(
-            modifier = Modifier
-                .size(MaterialTheme.layout.onboardingIllustrationSize)
-                .clip(CircleShape)
-                .background(MaterialTheme.colorScheme.primaryContainer),
-            contentAlignment = Alignment.Center,
-        ) {
-            Icon(
-                imageVector = page.icon,
-                contentDescription = null,
-                modifier = Modifier.size(MaterialTheme.layout.onboardingIllustrationIconSize),
-                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-            )
-        }
+        SecureVaultLogoIcon(
+            contentDescription = null,
+            modifier = Modifier.size(MaterialTheme.layout.heroIconSize * LOGO_SCREEN_SCALE),
+        )
         Spacer(modifier = Modifier.height(MaterialTheme.spacing.xl))
         Text(
             text = page.title,

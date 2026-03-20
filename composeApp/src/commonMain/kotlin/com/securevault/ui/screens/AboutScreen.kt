@@ -7,11 +7,9 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -22,6 +20,8 @@ import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.MyAppTopBar
+import com.securevault.ui.icons.LOGO_SCREEN_SCALE
+import com.securevault.ui.icons.SecureVaultLogoIcon
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
@@ -56,10 +56,9 @@ fun AboutScreen(
                         horizontalAlignment = Alignment.CenterHorizontally,
                         verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
                     ) {
-                        Icon(
-                            imageVector = Icons.Default.Lock,
+                        SecureVaultLogoIcon(
                             contentDescription = "应用图标",
-                            tint = MaterialTheme.colorScheme.primary,
+                            modifier = Modifier.size(MaterialTheme.layout.heroIconSize * LOGO_SCREEN_SCALE),
                         )
                         Text(
                             text = "SecureVault",

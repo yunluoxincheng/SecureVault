@@ -96,6 +96,13 @@ Authentication flow should remain separate from the main vault flow:
 - `Register`
 - `Login`
 
+### Auth Brand Icon Rule
+
+- `Onboarding`、`Login`、`About` 页面应使用统一品牌图标组件 `SecureVaultLogoIcon`。
+- 图标来源为 `composeApp/src/commonMain/kotlin/com/securevault/ui/icons/SecureVaultLogo.kt` 中的 `SecureVaultLogo`，避免在页面内重复定义图形路径。
+- 页面展示尺寸应通过统一倍率常量 `LOGO_SCREEN_SCALE` 控制，不在单页硬编码独立放大比例。
+- `Onboarding` 品牌图标使用无额外背景容器样式，与 `Login`、`About` 保持一致视觉语言。
+
 Core structural pattern:
 
 - Top bar at the top of the content column

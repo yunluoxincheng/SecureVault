@@ -20,7 +20,6 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -35,6 +34,8 @@ import com.securevault.ui.animation.AnimationTokens
 import com.securevault.ui.components.MyAppButton
 import com.securevault.ui.components.MyAppButtonVariant
 import com.securevault.ui.components.MyAppInput
+import com.securevault.ui.icons.LOGO_SCREEN_SCALE
+import com.securevault.ui.icons.SecureVaultLogoIcon
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
@@ -82,11 +83,9 @@ fun LoginScreen(
                     ),
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    Icon(
-                        imageVector = Icons.Default.Lock,
+                    SecureVaultLogoIcon(
                         contentDescription = null,
-                        modifier = Modifier.size(MaterialTheme.layout.heroIconSize),
-                        tint = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.size(MaterialTheme.layout.heroIconSize * LOGO_SCREEN_SCALE),
                     )
                     Spacer(modifier = Modifier.height(MaterialTheme.spacing.sm))
                     Text(

@@ -38,6 +38,14 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 	- `compose.uiTooling`（Android Studio 预览渲染运行支持）
 - 若预览不显示：先执行 `Sync Project with Gradle Files`，再在 Preview 面板点击 `Build & Refresh`。
 
+## 应用图标与品牌 Logo（Android + Compose）
+
+- Android 应用图标资源位于 `androidApp/src/main/res/mipmap-*` 与 `androidApp/src/main/res/mipmap-anydpi-v26`。
+- Android 12+ 启动页图标通过 `android:windowSplashScreenAnimatedIcon` 指向 `@drawable/securevault_icon`。
+- 启动页背景通过 `@color/ic_launcher_background` 统一配置，避免多处重复定义。
+- Compose 页面中的品牌图标统一使用 `composeApp/src/commonMain/kotlin/com/securevault/ui/icons/SecureVaultLogo.kt` 中的 `SecureVaultLogoIcon`。
+- 登录页、关于页、引导页已统一接入该图标组件，并使用统一倍率常量 `LOGO_SCREEN_SCALE` 控制展示尺寸。
+
 ## 技术栈
 
 | 组件 | 技术 |
