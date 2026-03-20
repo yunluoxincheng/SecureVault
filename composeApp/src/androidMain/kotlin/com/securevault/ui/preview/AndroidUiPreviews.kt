@@ -33,6 +33,7 @@ import com.securevault.ui.screens.LoginScreen
 import com.securevault.ui.screens.OnboardingScreen
 import com.securevault.ui.screens.PasswordDetailScreen
 import com.securevault.ui.screens.RegisterScreen
+import com.securevault.ui.screens.SecuritySessionSettingsScreen
 import com.securevault.ui.screens.SettingsScreen
 import com.securevault.ui.screens.VaultScreen
 import com.securevault.ui.theme.AppTheme
@@ -489,16 +490,27 @@ private fun BaseSettingsScreenPreview() {
     PreviewContainer {
         SettingsScreen(
             currentTheme = ThemeMode.System,
+            onThemeChange = {},
+            onOpenSecuritySessionSettings = {},
+            onBack = {},
+        )
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun BaseSecuritySessionSettingsScreenPreview() {
+    PreviewContainer {
+        SecuritySessionSettingsScreen(
             biometricEnabled = true,
             screenshotAllowed = false,
             sessionTimeoutMs = 300_000L,
             errorMessage = null,
-            onThemeChange = {},
             onBiometricChange = {},
             onScreenshotAllowedChange = {},
             onSessionTimeoutChange = {},
             onBack = {},
-            onLock = {}
+            onLock = {},
         )
     }
 }
@@ -651,16 +663,27 @@ private fun ErrorSettingsScreenPreview() {
     PreviewContainer {
         SettingsScreen(
             currentTheme = ThemeMode.System,
-            biometricEnabled = true,
+            onThemeChange = {},
+            onOpenSecuritySessionSettings = {},
+            onBack = {},
+        )
+    }
+}
+
+@LightDarkPreview
+@Composable
+private fun ErrorSecuritySessionSettingsScreenPreview() {
+    PreviewContainer {
+        SecuritySessionSettingsScreen(
+            biometricEnabled = false,
             screenshotAllowed = false,
             sessionTimeoutMs = 300_000L,
             errorMessage = "系统暂不支持生物识别",
-            onThemeChange = {},
             onBiometricChange = {},
             onScreenshotAllowedChange = {},
             onSessionTimeoutChange = {},
             onBack = {},
-            onLock = {}
+            onLock = {},
         )
     }
 }

@@ -649,8 +649,9 @@ Required hierarchy:
 
 Rules:
 
-- Theme selection uses grouped radio rows.
-- Security settings live together in a single mental cluster.
+- Theme selection uses compact selector trigger; options are shown in a centered popup card.
+- Security and session controls are grouped into a secondary page (`SecuritySessionSettingsScreen`) to keep main settings scalable.
+- Popup option list should not render divider lines between each option.
 - `Lock now` may use `Danger` because it is an immediate high-salience security action, not a destructive data action.
 
 ## Motion Rules

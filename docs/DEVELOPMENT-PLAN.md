@@ -158,6 +158,9 @@
 - [x] 自动锁定触发链路已调整为“仅后台记录 + 回前台检查 / 严格立即后台直接锁定”，避免应用前台误触发。
 - [x] 已修复锁定后未跳登录的根因：`KeyManager` 在各平台 DI 中统一为单例。
 - [x] 已补充会话相关回归覆盖：`SessionManagerTest` 与 Android 生命周期用例 `SessionLifecycleLockTest`。
+- [x] 设置页完成信息架构重构：主设置页仅保留高频外观项与入口，新增二级页 `SecuritySessionSettingsScreen` 承载安全与会话相关开关。
+- [x] 新增复用选择器组件 `MyAppDropdownSelector`，用于主题与会话超时的紧凑选择交互，减少设置页纵向占用。
+- [x] 选择器交互从下拉改为居中弹窗卡片（对齐现有动效 token），并优化选中态高亮与选项分隔样式。
 
 ---
 

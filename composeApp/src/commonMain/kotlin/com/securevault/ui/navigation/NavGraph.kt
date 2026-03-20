@@ -31,6 +31,7 @@ import com.securevault.ui.screens.LoginScreen
 import com.securevault.ui.screens.OnboardingScreen
 import com.securevault.ui.screens.PasswordDetailScreen
 import com.securevault.ui.screens.RegisterScreen
+import com.securevault.ui.screens.SecuritySessionSettingsScreen
 import com.securevault.ui.screens.SecurityModeScreen
 import com.securevault.ui.screens.SettingsScreen
 import com.securevault.ui.screens.VaultScreen
@@ -248,15 +249,22 @@ fun SecureVaultApp() {
             entry<SettingsRoute> {
                 SettingsScreen(
                     currentTheme = settingsState.themeMode,
+                    onThemeChange = { settingsViewModel.updateTheme(it) },
+                    onOpenSecuritySessionSettings = { navigator.navigate(SecuritySessionSettingsRoute) },
+                )
+            }
+
+            entry<SecuritySessionSettingsRoute> {
+                SecuritySessionSettingsScreen(
                     biometricEnabled = settingsState.biometricEnabled,
                     screenshotAllowed = settingsState.screenshotAllowed,
                     sessionTimeoutMs = settingsState.sessionTimeoutMs,
                     errorMessage = settingsState.errorMessage,
-                    onThemeChange = { settingsViewModel.updateTheme(it) },
                     onBiometricChange = { settingsViewModel.updateBiometricEnabled(it) },
                     onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
                     onSessionTimeoutChange = { settingsViewModel.updateSessionTimeout(it) },
                     onOpenSecurityMode = { navigator.navigate(SecurityModeRoute) },
+                    onBack = { navigator.goBack() },
                     onLock = {
                         settingsViewModel.lockNow()
                         navigator.resetToAuth(LoginRoute)
