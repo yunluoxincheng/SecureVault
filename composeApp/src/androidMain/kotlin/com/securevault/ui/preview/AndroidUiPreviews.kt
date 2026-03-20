@@ -489,9 +489,11 @@ private fun BaseRegisterScreenPreview() {
 private fun BaseSettingsScreenPreview() {
     PreviewContainer {
         SettingsScreen(
-            currentTheme = ThemeMode.System,
-            onThemeChange = {},
-            onOpenSecuritySessionSettings = {},
+            onOpenAccountSecuritySettings = {},
+            onOpenAppearanceSettings = {},
+            onOpenAutofillSettings = {},
+            onOpenVaultSettings = {},
+            onOpenAboutSettings = {},
             onBack = {},
         )
     }
@@ -662,9 +664,11 @@ private fun ErrorRegisterScreenPreview() {
 private fun ErrorSettingsScreenPreview() {
     PreviewContainer {
         SettingsScreen(
-            currentTheme = ThemeMode.System,
-            onThemeChange = {},
-            onOpenSecuritySessionSettings = {},
+            onOpenAccountSecuritySettings = {},
+            onOpenAppearanceSettings = {},
+            onOpenAutofillSettings = {},
+            onOpenVaultSettings = {},
+            onOpenAboutSettings = {},
             onBack = {},
         )
     }

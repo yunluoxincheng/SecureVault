@@ -276,6 +276,22 @@ Rules:
 - Most content should stay between `0.dp` and `3.dp`.
 - A password manager should feel stable and grounded, not floaty.
 
+### Motion
+
+Entrance animation for list and card content should use the shared `animateItemEntrance` helper with global defaults from `AnimationTokens`.
+
+| Token | Value | Use |
+|------|------|------|
+| `cardAppearDuration` | `280ms` | 单个卡片/条目入场时长 |
+| `staggerItemDelay` | `72ms` | 相邻条目错峰入场间隔 |
+| `itemEntranceOffsetPx` | `16px` | 初始纵向位移 |
+
+Rules:
+
+- New screens should prefer `animateItemEntrance(index = ...)` and rely on global defaults.
+- Avoid per-screen hardcoded motion speed unless there is a clear interaction reason.
+- If speed needs product-wide adjustment, update `AnimationTokens` instead of scattering local constants.
+
 ### Layout Tokens
 
 | Token | Value | Use |

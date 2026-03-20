@@ -8,14 +8,14 @@ import androidx.compose.animation.core.tween
 object AnimationTokens {
     const val pageEnterDuration = 220
     const val pageExitDuration = 180
-    const val cardAppearDuration = 200
+    const val cardAppearDuration = 280
     const val dialogDuration = 220
     const val crossFadeDuration = 180
     const val copyFeedbackDuration = 180
     const val strengthBarDuration = 220
     const val unlockDuration = 220
     const val shimmerDuration = 1000
-    const val staggerItemDelay = 36
+    const val staggerItemDelay = 72
     const val itemEntranceOffsetPx = 16
 
     val easeOut = CubicBezierEasing(0f, 0f, 0.2f, 1f)

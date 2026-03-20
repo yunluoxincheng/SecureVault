@@ -102,6 +102,7 @@ val DarkColorScheme: ColorScheme = darkColorScheme(
 @Composable
 fun AppTheme(
     themeMode: ThemeMode,
+    dynamicColorEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     val isDark = when (themeMode) {
@@ -125,7 +126,7 @@ fun AppTheme(
         LocalLayoutTokens provides LayoutTokens(),
     ) {
         MaterialTheme(
-            colorScheme = dynamicScheme ?: fallbackScheme,
+            colorScheme = if (dynamicColorEnabled) dynamicScheme ?: fallbackScheme else fallbackScheme,
             typography = SecureVaultTypography,
             shapes = SecureVaultShapes,
             content = content
@@ -136,10 +137,12 @@ fun AppTheme(
 @Composable
 fun SecureVaultTheme(
     themeMode: ThemeMode,
+    dynamicColorEnabled: Boolean = true,
     content: @Composable () -> Unit
 ) {
     AppTheme(
         themeMode = themeMode,
+        dynamicColorEnabled = dynamicColorEnabled,
         content = content
     )
 }

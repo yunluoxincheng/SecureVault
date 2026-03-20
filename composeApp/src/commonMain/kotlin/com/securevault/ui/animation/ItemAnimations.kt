@@ -16,6 +16,7 @@ import kotlinx.coroutines.delay
 fun Modifier.animateItemEntrance(
     index: Int = 0,
     durationMillis: Int = AnimationTokens.cardAppearDuration,
+    staggerDelayMillis: Int = AnimationTokens.staggerItemDelay,
     initialOffsetPx: Int = AnimationTokens.itemEntranceOffsetPx,
     alphaEasing: Easing = AnimationTokens.easeOut,
     translationEasing: Easing = AnimationTokens.easeOut,
@@ -34,7 +35,7 @@ fun Modifier.animateItemEntrance(
         if (animationStarted) return@LaunchedEffect
 
         animationStarted = true
-        delay((index * AnimationTokens.staggerItemDelay).toLong())
+        delay((index * staggerDelayMillis).toLong())
         visible = true
         onAnimationStarted?.invoke()
     }

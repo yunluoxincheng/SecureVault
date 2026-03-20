@@ -24,7 +24,6 @@ import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.MyAppDropdownOption
 import com.securevault.ui.components.MyAppDropdownSelector
-import com.securevault.ui.components.MyAppDivider
 import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.SettingsSwitchRow
@@ -58,7 +57,7 @@ fun SecuritySessionSettingsScreen(
             contentPadding = PaddingValues(bottom = MaterialTheme.spacing.xl),
         ) {
             item {
-                MyAppTopBar(title = "安全与会话", onBack = onBack)
+                MyAppTopBar(title = "账户安全", onBack = onBack)
             }
 
             item {
@@ -68,30 +67,41 @@ fun SecuritySessionSettingsScreen(
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .padding(horizontal = MaterialTheme.spacing.xs)
-                        .animateItemEntrance(0),
+                        .animateItemEntrance(index = 0),
                 )
             }
 
             item {
-                MyAppCard(
-                    modifier = Modifier.fillMaxWidth().animateItemEntrance(1),
-                    variant = MyAppCardVariant.Filled,
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
                 ) {
-                    Column {
+                    MyAppCard(
+                        modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 1),
+                        variant = MyAppCardVariant.Filled,
+                    ) {
                         SettingsSwitchRow(
                             label = "生物识别解锁",
                             description = "使用指纹或面容 ID 快速解锁",
                             checked = biometricEnabled,
                             onCheckedChange = onBiometricChange,
                         )
-                        MyAppDivider()
+                    }
+                    MyAppCard(
+                        modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 2),
+                        variant = MyAppCardVariant.Filled,
+                    ) {
                         SettingsSwitchRow(
                             label = "允许应用内截图",
                             description = "关闭可防止密码出现在截图或应用切换界面",
                             checked = screenshotAllowed,
                             onCheckedChange = onScreenshotAllowedChange,
                         )
-                        MyAppDivider()
+                    }
+                    MyAppCard(
+                        modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 3),
+                        variant = MyAppCardVariant.Filled,
+                    ) {
                         MyAppDropdownSelector(
                             label = "会话超时",
                             selectedText = SessionTimeoutOptions
@@ -104,10 +114,12 @@ fun SecuritySessionSettingsScreen(
                             onSelect = onSessionTimeoutChange,
                             supportingText = "点击选择",
                         )
-                        if (onOpenSecurityMode != null) {
-                            MyAppDivider()
-                        }
-                        if (onOpenSecurityMode != null) {
+                    }
+                    if (onOpenSecurityMode != null) {
+                        MyAppCard(
+                            modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 4),
+                            variant = MyAppCardVariant.Filled,
+                        ) {
                             MyAppListItem(
                                 headline = "安全模式",
                                 supportingText = "配置安全模式开关与使用说明",
@@ -131,7 +143,9 @@ fun SecuritySessionSettingsScreen(
                         text = errorMessage,
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.error,
-                        modifier = Modifier.padding(horizontal = MaterialTheme.spacing.xs),
+                        modifier = Modifier
+                            .padding(horizontal = MaterialTheme.spacing.xs)
+                            .animateItemEntrance(index = 5),
                     )
                 }
             }
@@ -140,7 +154,7 @@ fun SecuritySessionSettingsScreen(
                 MyAppButton(
                     text = "立即锁定",
                     onClick = onLock,
-                    modifier = Modifier.fillMaxWidth().animateItemEntrance(2),
+                    modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 6),
                     leadingIcon = Icons.Default.Lock,
                     variant = MyAppButtonVariant.Danger,
                 )

@@ -14,6 +14,10 @@ data object VaultRoute : MainTabRoute
 data object GeneratorRoute : MainTabRoute
 data object SettingsRoute : MainTabRoute
 data object SecuritySessionSettingsRoute : NavRoute
+data object AppearanceSettingsRoute : NavRoute
+data object AutofillSettingsRoute : NavRoute
+data object VaultSettingsRoute : NavRoute
+data object AboutRoute : NavRoute
 data object SecurityModeRoute : NavRoute
 
 data class DetailRoute(val entryId: Long?) : NavRoute

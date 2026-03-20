@@ -17,8 +17,16 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
+enum class AppLanguage {
+    System,
+    ZhCN,
+    EnUS,
+}
+
 data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.System,
+    val appLanguage: AppLanguage = AppLanguage.System,
+    val dynamicColorEnabled: Boolean = true,
     val biometricEnabled: Boolean = true,
     val screenshotAllowed: Boolean = false,
     val sessionTimeoutMs: Long = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS,
@@ -46,11 +54,13 @@ class SettingsViewModel(
         scope.launch {
             runCatching {
                 val theme = configRepository.get(THEME_KEY)?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
+                val language = configRepository.get(APP_LANGUAGE_KEY)?.let { runCatching { AppLanguage.valueOf(it) }.getOrNull() }
+                val dynamicColorEnabled = configRepository.get(DYNAMIC_COLOR_ENABLED_KEY)?.toBooleanStrictOrNull()
                 val biometric = configRepository.get(VaultConfigKeys.BiometricEnabled)?.toBooleanStrictOrNull()
                 val screenshotAllowed = configRepository.get(VaultConfigKeys.ScreenshotAllowed)?.toBooleanStrictOrNull()
                 val sessionTimeoutMs = configRepository.get(VaultConfigKeys.SessionLockTimeoutMs)?.toLongOrNull()
-                Quadruple(theme, biometric, screenshotAllowed, sessionTimeoutMs)
-            }.onSuccess { (theme, biometric, screenshotAllowed, sessionTimeoutMs) ->
+                Sextuple(theme, language, dynamicColorEnabled, biometric, screenshotAllowed, sessionTimeoutMs)
+            }.onSuccess { (theme, language, dynamicColorEnabled, biometric, screenshotAllowed, sessionTimeoutMs) ->
                 val allowScreenshot = screenshotAllowed ?: false
                 val timeoutMs = normalizeSessionTimeout(sessionTimeoutMs)
 
@@ -65,6 +75,8 @@ class SettingsViewModel(
                 _uiState.update {
                     it.copy(
                         themeMode = theme ?: ThemeMode.System,
+                        appLanguage = language ?: AppLanguage.System,
+                        dynamicColorEnabled = dynamicColorEnabled ?: true,
                         biometricEnabled = biometric ?: false,
                         screenshotAllowed = allowScreenshot,
                         sessionTimeoutMs = timeoutMs,
@@ -81,6 +93,29 @@ class SettingsViewModel(
     fun updateTheme(mode: ThemeMode) {
         _uiState.update { it.copy(themeMode = mode) }
         scope.launch { configRepository.set(THEME_KEY, mode.name) }
+    }
+
+    fun updateAppLanguage(language: AppLanguage) {
+        _uiState.update {
+            it.copy(
+                appLanguage = language,
+                infoMessage = if (language == AppLanguage.System) {
+                    "语言已切换为跟随系统"
+                } else {
+                    "语言偏好已保存"
+                }
+            )
+        }
+        scope.launch {
+            configRepository.set(APP_LANGUAGE_KEY, language.name)
+        }
+    }
+
+    fun updateDynamicColorEnabled(enabled: Boolean) {
+        _uiState.update { it.copy(dynamicColorEnabled = enabled) }
+        scope.launch {
+            configRepository.set(DYNAMIC_COLOR_ENABLED_KEY, enabled.toString())
+        }
     }
 
     fun updateBiometricEnabled(enabled: Boolean) {
@@ -170,6 +205,8 @@ class SettingsViewModel(
 
     companion object {
         const val THEME_KEY = "theme_mode"
+        const val APP_LANGUAGE_KEY = "app_language"
+        const val DYNAMIC_COLOR_ENABLED_KEY = "dynamic_color_enabled"
         const val DEFAULT_SESSION_TIMEOUT_MS = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS
         const val IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS = CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS
         private const val LEGACY_IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS = 1_000L
@@ -197,9 +234,11 @@ class SettingsViewModel(
     }
 }
 
-private data class Quadruple<A, B, C, D>(
+private data class Sextuple<A, B, C, D, E, F>(
     val first: A,
     val second: B,
     val third: C,
     val fourth: D,
+    val fifth: E,
+    val sixth: F,
 )

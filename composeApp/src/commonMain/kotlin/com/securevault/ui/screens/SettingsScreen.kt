@@ -13,25 +13,23 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
-import com.securevault.ui.components.MyAppDropdownOption
-import com.securevault.ui.components.MyAppDropdownSelector
 import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.MyAppTopBar
-import com.securevault.ui.theme.ThemeMode
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
 
 @Composable
 fun SettingsScreen(
-    currentTheme: ThemeMode,
-    onThemeChange: (ThemeMode) -> Unit,
-    onOpenSecuritySessionSettings: () -> Unit,
+    onOpenAccountSecuritySettings: () -> Unit,
+    onOpenAppearanceSettings: () -> Unit,
+    onOpenAutofillSettings: () -> Unit,
+    onOpenVaultSettings: () -> Unit,
+    onOpenAboutSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
     Box(
@@ -50,72 +48,77 @@ fun SettingsScreen(
                 MyAppTopBar(title = "设置", onBack = onBack)
             }
 
-        item {
-            Text(
-                text = "外观",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.spacing.xs)
-                    .animateItemEntrance(0),
-            )
-        }
-
-        item {
-            MyAppCard(
-                modifier = Modifier.fillMaxWidth().animateItemEntrance(1),
-                variant = MyAppCardVariant.Filled,
-            ) {
-                MyAppDropdownSelector(
-                    label = "主题模式",
-                    selectedText = currentTheme.displayLabel(),
-                    options = ThemeMode.entries.map { mode ->
-                        MyAppDropdownOption(mode, mode.displayLabel())
-                    },
-                    onSelect = onThemeChange,
-                    supportingText = "点击选择",
-                )
+            item {
+                Column(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
+                ) {
+                    SettingEntryItem(
+                        title = "账户安全",
+                        description = "控制安全和会话相关设置",
+                        onClick = onOpenAccountSecuritySettings,
+                        contentDescription = "进入账户安全设置",
+                        animationIndex = 0,
+                    )
+                    SettingEntryItem(
+                        title = "外观",
+                        description = "控制主题跟随、语言和动态颜色",
+                        onClick = onOpenAppearanceSettings,
+                        contentDescription = "进入外观设置",
+                        animationIndex = 1,
+                    )
+                    SettingEntryItem(
+                        title = "自动填充",
+                        description = "管理自动填充相关偏好",
+                        onClick = onOpenAutofillSettings,
+                        contentDescription = "进入自动填充设置",
+                        animationIndex = 2,
+                    )
+                    SettingEntryItem(
+                        title = "密码库",
+                        description = "管理密码库相关偏好",
+                        onClick = onOpenVaultSettings,
+                        contentDescription = "进入密码库设置",
+                        animationIndex = 3,
+                    )
+                    SettingEntryItem(
+                        title = "关于页面",
+                        description = "查看应用版本和相关协议",
+                        onClick = onOpenAboutSettings,
+                        contentDescription = "进入关于页面",
+                        animationIndex = 4,
+                    )
+                }
             }
-        }
-
-        item {
-            Text(
-                text = "安全",
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier
-                    .padding(horizontal = MaterialTheme.spacing.xs)
-                    .animateItemEntrance(2),
-            )
-        }
-
-        item {
-            MyAppCard(
-                modifier = Modifier.fillMaxWidth().animateItemEntrance(3),
-                variant = MyAppCardVariant.Filled,
-            ) {
-                MyAppListItem(
-                    headline = "安全与会话",
-                    supportingText = "管理开关、会话超时与立即锁定",
-                    onClick = onOpenSecuritySessionSettings,
-                    trailing = {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
-                            contentDescription = "进入安全与会话设置",
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    },
-                )
-            }
-        }
         }
     }
 }
 
-private fun ThemeMode.displayLabel(): String {
-    return when (this) {
-        ThemeMode.System -> "跟随系统"
-        ThemeMode.Light -> "浅色模式"
-        ThemeMode.Dark -> "深色模式"
+@Composable
+private fun SettingEntryItem(
+    title: String,
+    description: String,
+    onClick: () -> Unit,
+    contentDescription: String,
+    animationIndex: Int,
+) {
+    MyAppCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .animateItemEntrance(index = animationIndex),
+        variant = MyAppCardVariant.Filled,
+    ) {
+        MyAppListItem(
+            headline = title,
+            supportingText = description,
+            onClick = onClick,
+            trailing = {
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                    contentDescription = contentDescription,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+            },
+        )
     }
 }

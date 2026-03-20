@@ -26,6 +26,9 @@ import com.securevault.ui.components.MyAppBottomBarItem
 import com.securevault.ui.components.SkeletonList
 import com.securevault.ui.components.SvToastHost
 import com.securevault.ui.screens.AddEditPasswordScreen
+import com.securevault.ui.screens.AboutScreen
+import com.securevault.ui.screens.AppearanceSettingsScreen
+import com.securevault.ui.screens.AutofillSettingsScreen
 import com.securevault.ui.screens.GeneratorScreen
 import com.securevault.ui.screens.LoginScreen
 import com.securevault.ui.screens.OnboardingScreen
@@ -34,6 +37,7 @@ import com.securevault.ui.screens.RegisterScreen
 import com.securevault.ui.screens.SecuritySessionSettingsScreen
 import com.securevault.ui.screens.SecurityModeScreen
 import com.securevault.ui.screens.SettingsScreen
+import com.securevault.ui.screens.VaultSettingsScreen
 import com.securevault.ui.screens.VaultScreen
 import com.securevault.ui.theme.AppTheme
 import com.securevault.ui.theme.spacing
@@ -52,6 +56,7 @@ import com.securevault.viewmodel.VaultViewModel
 import org.koin.compose.koinInject
 
 private val mainTabRoutes = setOf(VaultRoute, GeneratorRoute, SettingsRoute)
+private const val APP_VERSION = "1.0.0"
 
 private data class BottomTab(
     val route: MainTabRoute,
@@ -83,7 +88,10 @@ fun SecureVaultApp() {
 
     val snackbarHostState = remember { SnackbarHostState() }
 
-    AppTheme(themeMode = settingsState.themeMode) {
+    AppTheme(
+        themeMode = settingsState.themeMode,
+        dynamicColorEnabled = settingsState.dynamicColorEnabled,
+    ) {
         if (authState.isLoading) {
             Scaffold { paddingValues ->
                 SkeletonList(
@@ -248,9 +256,42 @@ fun SecureVaultApp() {
 
             entry<SettingsRoute> {
                 SettingsScreen(
+                    onOpenAccountSecuritySettings = { navigator.navigate(SecuritySessionSettingsRoute) },
+                    onOpenAppearanceSettings = { navigator.navigate(AppearanceSettingsRoute) },
+                    onOpenAutofillSettings = { navigator.navigate(AutofillSettingsRoute) },
+                    onOpenVaultSettings = { navigator.navigate(VaultSettingsRoute) },
+                    onOpenAboutSettings = { navigator.navigate(AboutRoute) },
+                )
+            }
+
+            entry<AppearanceSettingsRoute> {
+                AppearanceSettingsScreen(
                     currentTheme = settingsState.themeMode,
+                    currentLanguage = settingsState.appLanguage,
+                    dynamicColorEnabled = settingsState.dynamicColorEnabled,
                     onThemeChange = { settingsViewModel.updateTheme(it) },
-                    onOpenSecuritySessionSettings = { navigator.navigate(SecuritySessionSettingsRoute) },
+                    onLanguageChange = { settingsViewModel.updateAppLanguage(it) },
+                    onDynamicColorChange = { settingsViewModel.updateDynamicColorEnabled(it) },
+                    onBack = { navigator.goBack() },
+                )
+            }
+
+            entry<AutofillSettingsRoute> {
+                AutofillSettingsScreen(
+                    onBack = { navigator.goBack() },
+                )
+            }
+
+            entry<VaultSettingsRoute> {
+                VaultSettingsScreen(
+                    onBack = { navigator.goBack() },
+                )
+            }
+
+            entry<AboutRoute> {
+                AboutScreen(
+                    appVersion = APP_VERSION,
+                    onBack = { navigator.goBack() },
                 )
             }
 

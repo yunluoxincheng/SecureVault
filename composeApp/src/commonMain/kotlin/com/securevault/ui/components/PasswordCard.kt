@@ -53,7 +53,7 @@ fun PasswordCard(
                 resetKey = animationResetKey,
                 onAnimationStarted = onEntranceAnimationStarted,
             ),
-        variant = MyAppCardVariant.Elevated,
+        variant = MyAppCardVariant.Filled,
     ) {
         MyAppListItem(
             headline = entry.title,
