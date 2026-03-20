@@ -34,8 +34,8 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 - 预览代码位置：`composeApp/src/androidMain/kotlin/com/securevault/ui/preview/AndroidUiPreviews.kt`
 - 预览覆盖范围：基础态、加载态、错误态、空态、边界态（含 Light/Dark 多预览）
 - 关键依赖：
-	- `compose.components.uiToolingPreview`（`@Preview` 注解）
-	- `compose.uiTooling`（Android Studio 预览渲染运行支持）
+ 	- `compose.components.uiToolingPreview`（`@Preview` 注解）
+ 	- `compose.uiTooling`（Android Studio 预览渲染运行支持）
 - 若预览不显示：先执行 `Sync Project with Gradle Files`，再在 Preview 面板点击 `Build & Refresh`。
 
 ## 应用图标与品牌 Logo（Android + Compose）
@@ -95,17 +95,21 @@ SecureVault/
 |------|------|
 | [技术选型](docs/TECH-STACK.md) | 最终技术栈选型和理由 |
 | [系统架构](docs/design/ARCHITECTURE.md) | 分层架构、模块职责、数据流 |
+| [Navigation3 迁移计划](docs/design/NAVIGATION3-MIGRATION-PLAN.md) | 导航方案迁移步骤、风险与回归验证记录 |
 | [UI 设计规范](docs/design/UI-DESIGN-SPEC.md) | 颜色、字体、间距、组件、动效、响应式布局 |
 | [测试策略与性能基准](docs/design/TESTING-AND-PERFORMANCE.md) | 测试分层、覆盖率目标、性能指标 |
 | [加密算法参考](docs/reference/CRYPTO-ALGORITHMS.md) | 从 SafeVault 提取的加密算法设计 |
 | [安全架构参考](docs/reference/SECURITY-ARCHITECTURE.md) | 三层密钥体系和安全组件设计 |
 | [自动填充设计](docs/reference/AUTOFILL-DESIGN.md) | 跨平台自动填充服务设计 |
 | [开发计划](docs/DEVELOPMENT-PLAN.md) | 7 阶段 18 周开发计划 |
+| [软件需求规格说明书（SRS）](docs/SRS.md) | 需求基线、状态模型、功能与安全需求、验收标准 |
+| [需求追踪矩阵（RTM）](docs/RTM.md) | 需求到测试用例的可追踪关系与覆盖汇总 |
+| [系统测试生命周期（STLC）](docs/STLC.md) | 测试策略、阶段活动、风险与退出准则 |
+| [系统级测试用例（SLTC）](docs/SLTC.md) | 165 条系统级测试用例与覆盖明细 |
 
 ## 前身项目
 
 SecureVault 的设计经验和算法验证来自 [SafeVault](../SafeVault)（Android 原生密码管理器）。SecureVault 继承了其经过验证的：
-
 
 - 三层密钥体系
 - Argon2id 自适应密钥派生
