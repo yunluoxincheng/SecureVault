@@ -152,6 +152,13 @@
 - [x] 已在 `composeApp` 的 `androidMain` 依赖补充 `compose.uiTooling`，解决 Android Studio 预览无法渲染问题。
 - [x] 变更已通过模块级验证：`./gradlew.bat :composeApp:assembleAndroidMain --console=plain`。
 
+### 增量更新（2026-03-20）
+
+- [x] 设置页已新增“会话超时”策略：后台后严格立即锁定、1/5/15/30 分钟、永不自动锁定。
+- [x] 自动锁定触发链路已调整为“仅后台记录 + 回前台检查 / 严格立即后台直接锁定”，避免应用前台误触发。
+- [x] 已修复锁定后未跳登录的根因：`KeyManager` 在各平台 DI 中统一为单例。
+- [x] 已补充会话相关回归覆盖：`SessionManagerTest` 与 Android 生命周期用例 `SessionLifecycleLockTest`。
+
 ---
 
 ## Phase 3: 安全模式（2 周）

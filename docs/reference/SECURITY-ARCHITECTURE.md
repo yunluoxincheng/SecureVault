@@ -121,18 +121,22 @@ class SessionManager(
         lastAccessTime = currentTimeMillis()
     }
 
-    fun onAppBackgrounded() {
+    fun onAppBackground() {
+        val timeout = configRepository.getAutoLockTimeout()
+        if (timeout == -1L) {
+            lock() // 严格立即：进入后台即锁定
+            return
+        }
         lastBackgroundTime = currentTimeMillis()
     }
 
-    fun onAppForegrounded() {
+    fun onAppForeground() {
         val timeout = configRepository.getAutoLockTimeout()
         val elapsed = currentTimeMillis() - lastBackgroundTime
 
         when {
-            timeout == 0L -> lock()                    // 立即锁定
             timeout == Long.MAX_VALUE -> { /* 永不锁定 */ }
-            elapsed >= timeout -> lock()               // 超时锁定
+            timeout >= 0L && elapsed >= timeout -> lock() // 后台超时锁定
         }
     }
 
@@ -150,12 +154,14 @@ class SessionLockedException : Exception("Vault session is locked")
 
 | 模式 | 超时值 | 说明 |
 |------|-------|------|
-| 立即锁定 | 0 ms | 切到后台立即锁定 |
+| 后台后严格立即锁定 | -1 | 进入后台即锁定（不等待阈值） |
 | 1 分钟 | 60,000 ms | 适合高安全需求 |
-| 5 分钟 | 300,000 ms | **默认值**，平衡安全与便利 |
+| 5 分钟 | 300,000 ms | 平衡安全与便利 |
 | 15 分钟 | 900,000 ms | 适合桌面使用 |
 | 30 分钟 | 1,800,000 ms | 低安全需求场景 |
-| 永不锁定 | `Long.MAX_VALUE` | 不推荐 |
+| 永不自动锁定 | `Long.MAX_VALUE` | 不推荐 |
+
+> 兼容说明：历史配置中的 `1000 ms`（旧“立即”近似值）在当前实现中会按“严格立即”语义处理。
 
 ---
 
@@ -529,7 +535,7 @@ class SecurityModeManager(
 | 敏感数据自动清零 | `SensitiveData` + `MemorySanitizer` | `security/` |
 | 剪贴板自动清除 | 30 秒超时 | `SecureClipboard` |
 | 屏幕截图防护 | `FLAG_SECURE` (Android) | `ScreenSecurity` |
-| 会话超时锁定 | 可配置 0~30 分钟 | `SessionManager` |
+| 会话超时锁定 | 可配置：严格立即 / 1/5/15/30 分钟 / 永不自动锁定 | `SessionManager` |
 | 生物识别保护 | 平台 KeyStore 硬件绑定 | `PlatformKeyStore` |
 | 生物识别防暴力 | 3 次失败后锁定 30 秒 | `BiometricState` |
 | 安全填充 | 256 字节块随机填充 | `SecurePadding` |

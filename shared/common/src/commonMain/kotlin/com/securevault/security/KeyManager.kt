@@ -153,6 +153,33 @@ class KeyManager(
         _state.value = KeyManagerState.Locked
     }
 
+    fun setSessionLockTimeout(timeoutMs: Long) {
+        sessionManager.setLockTimeout(timeoutMs)
+    }
+
+    fun onAppBackground() {
+        val locked = sessionManager.onAppBackground()
+        if (locked) {
+            _state.value = KeyManagerState.Locked
+        }
+    }
+
+    fun onAppForeground(): Boolean {
+        val locked = sessionManager.onAppForeground()
+        if (locked) {
+            _state.value = KeyManagerState.Locked
+        }
+        return locked
+    }
+
+    fun checkAutoLock(): Boolean {
+        val locked = sessionManager.checkAutoLock()
+        if (locked) {
+            _state.value = KeyManagerState.Locked
+        }
+        return locked
+    }
+
     fun canUnlockWithBiometric(): Boolean {
         return platformKeyStore.hasDeviceKey()
     }

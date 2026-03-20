@@ -2,6 +2,7 @@ package com.securevault.viewmodel
 
 import com.securevault.data.ConfigRepository
 import com.securevault.data.VaultConfigKeys
+import com.securevault.crypto.CryptoConstants
 import com.securevault.security.BiometricAuth
 import com.securevault.security.BiometricResult
 import com.securevault.security.KeyManager
@@ -20,6 +21,8 @@ data class SettingsUiState(
     val themeMode: ThemeMode = ThemeMode.System,
     val biometricEnabled: Boolean = true,
     val screenshotAllowed: Boolean = false,
+    val sessionTimeoutMs: Long = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS,
+    val infoMessage: String? = null,
     val errorMessage: String? = null
 )
 
@@ -45,9 +48,14 @@ class SettingsViewModel(
                 val theme = configRepository.get(THEME_KEY)?.let { runCatching { ThemeMode.valueOf(it) }.getOrNull() }
                 val biometric = configRepository.get(VaultConfigKeys.BiometricEnabled)?.toBooleanStrictOrNull()
                 val screenshotAllowed = configRepository.get(VaultConfigKeys.ScreenshotAllowed)?.toBooleanStrictOrNull()
-                Triple(theme, biometric, screenshotAllowed)
-            }.onSuccess { (theme, biometric, screenshotAllowed) ->
+                val sessionTimeoutMs = configRepository.get(VaultConfigKeys.SessionLockTimeoutMs)?.toLongOrNull()
+                Quadruple(theme, biometric, screenshotAllowed, sessionTimeoutMs)
+            }.onSuccess { (theme, biometric, screenshotAllowed, sessionTimeoutMs) ->
                 val allowScreenshot = screenshotAllowed ?: false
+                val timeoutMs = normalizeSessionTimeout(sessionTimeoutMs)
+
+                keyManager.setSessionLockTimeout(timeoutMs)
+
                 if (allowScreenshot) {
                     screenSecurity.disableScreenshotProtection()
                 } else {
@@ -59,6 +67,8 @@ class SettingsViewModel(
                         themeMode = theme ?: ThemeMode.System,
                         biometricEnabled = biometric ?: false,
                         screenshotAllowed = allowScreenshot,
+                        sessionTimeoutMs = timeoutMs,
+                        infoMessage = null,
                         errorMessage = null
                     )
                 }
@@ -133,11 +143,63 @@ class SettingsViewModel(
         }
     }
 
+    fun updateSessionTimeout(timeoutMs: Long) {
+        val normalizedTimeout = normalizeSessionTimeout(timeoutMs)
+        val currentTimeout = _uiState.value.sessionTimeoutMs
+        if (currentTimeout == normalizedTimeout) return
+
+        _uiState.update {
+            it.copy(
+                sessionTimeoutMs = normalizedTimeout,
+                infoMessage = "会话超时已生效：${sessionTimeoutLabel(normalizedTimeout)}"
+            )
+        }
+        keyManager.setSessionLockTimeout(normalizedTimeout)
+        scope.launch {
+            configRepository.set(VaultConfigKeys.SessionLockTimeoutMs, normalizedTimeout.toString())
+        }
+    }
+
+    fun consumeInfoMessage() {
+        _uiState.update { it.copy(infoMessage = null) }
+    }
+
     fun lockNow() {
         keyManager.lock()
     }
 
-    private companion object {
+    companion object {
         const val THEME_KEY = "theme_mode"
+        const val DEFAULT_SESSION_TIMEOUT_MS = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS
+        const val IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS = CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS
+        private const val LEGACY_IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS = 1_000L
+        val SUPPORTED_SESSION_TIMEOUTS_MS = setOf(0L, IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS, 60_000L, 300_000L, 900_000L, 1_800_000L)
+
+        fun normalizeSessionTimeout(timeoutMs: Long?): Long {
+            val value = timeoutMs ?: DEFAULT_SESSION_TIMEOUT_MS
+            if (value == LEGACY_IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS) {
+                return IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS
+            }
+            return if (value in SUPPORTED_SESSION_TIMEOUTS_MS) value else DEFAULT_SESSION_TIMEOUT_MS
+        }
+
+        fun sessionTimeoutLabel(timeoutMs: Long): String {
+            return when (timeoutMs) {
+                IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS -> "后台后立即锁定"
+                60_000L -> "1 分钟"
+                300_000L -> "5 分钟"
+                900_000L -> "15 分钟"
+                1_800_000L -> "30 分钟"
+                0L -> "永不自动锁定"
+                else -> "5 分钟"
+            }
+        }
     }
 }
+
+private data class Quadruple<A, B, C, D>(
+    val first: A,
+    val second: B,
+    val third: C,
+    val fourth: D,
+)

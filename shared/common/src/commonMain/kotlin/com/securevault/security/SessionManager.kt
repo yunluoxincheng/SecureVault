@@ -54,6 +54,7 @@ class SessionManager {
     private var dataKey: SensitiveData<ByteArray>? = null
     private var isUnlocked = false
     private var lastActivityTime = System.currentTimeMillis()
+    private var backgroundEnteredAtMs: Long? = null
     private var lockTimeoutMs = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS
 
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Locked)
@@ -64,6 +65,7 @@ class SessionManager {
         this.dataKey = SensitiveData.ofByteArray(dataKey)
         this.isUnlocked = true
         this.lastActivityTime = System.currentTimeMillis()
+        this.backgroundEnteredAtMs = null
         _sessionState.value = SessionState.Unlocked
     }
 
@@ -71,6 +73,7 @@ class SessionManager {
         dataKey?.close()
         dataKey = null
         isUnlocked = false
+        backgroundEnteredAtMs = null
         _sessionState.value = SessionState.Locked
     }
 
@@ -93,6 +96,42 @@ class SessionManager {
 
     fun setLockTimeout(timeoutMs: Long) {
         lockTimeoutMs = timeoutMs
+    }
+
+    fun onAppBackground(): Boolean {
+        if (!isUnlocked) return false
+
+        if (lockTimeoutMs == CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS) {
+            lock()
+            return true
+        }
+
+        backgroundEnteredAtMs = System.currentTimeMillis()
+        return false
+    }
+
+    fun onAppForeground(): Boolean {
+        if (!isUnlocked) {
+            backgroundEnteredAtMs = null
+            return false
+        }
+
+        val enteredAt = backgroundEnteredAtMs ?: return false
+        backgroundEnteredAtMs = null
+
+        if (lockTimeoutMs <= 0) {
+            lastActivityTime = System.currentTimeMillis()
+            return false
+        }
+
+        val elapsedInBackground = System.currentTimeMillis() - enteredAt
+        if (elapsedInBackground >= lockTimeoutMs) {
+            lock()
+            return true
+        }
+
+        lastActivityTime = System.currentTimeMillis()
+        return false
     }
 
     fun checkAutoLock(): Boolean {

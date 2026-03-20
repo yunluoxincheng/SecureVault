@@ -37,6 +37,8 @@ import com.securevault.ui.screens.VaultScreen
 import com.securevault.ui.theme.AppTheme
 import com.securevault.ui.theme.spacing
 import com.securevault.util.PasswordPreset
+import com.securevault.security.KeyManager
+import com.securevault.security.KeyManagerState
 import com.securevault.viewmodel.AddEditPasswordViewModel
 import com.securevault.viewmodel.AuthFlowViewModel
 import com.securevault.viewmodel.AuthStartDestination
@@ -59,6 +61,7 @@ private data class BottomTab(
 @Composable
 fun SecureVaultApp() {
     val authFlowViewModel: AuthFlowViewModel = koinInject()
+    val keyManager: KeyManager = koinInject()
     val unlockViewModel: UnlockViewModel = koinInject()
     val vaultViewModel: VaultViewModel = koinInject()
     val detailViewModel: PasswordDetailViewModel = koinInject()
@@ -75,6 +78,7 @@ fun SecureVaultApp() {
     val settingsState by settingsViewModel.uiState.collectAsState()
     val securityModeState by securityModeViewModel.uiState.collectAsState()
     val generatorState by generatorViewModel.uiState.collectAsState()
+    val keyManagerState by keyManager.state.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -136,6 +140,14 @@ fun SecureVaultApp() {
             }
         }
 
+        LaunchedEffect(keyManagerState, navigationState.currentSurface) {
+            val shouldForceLogin = navigationState.currentSurface == NavigationSurface.Main &&
+                keyManagerState is KeyManagerState.Locked
+            if (shouldForceLogin) {
+                navigator.resetToAuth(LoginRoute)
+            }
+        }
+
         LaunchedEffect(addEditState.saveSuccess) {
             if (addEditState.saveSuccess) {
                 navigator.resetToMainRoot(VaultRoute)
@@ -160,6 +172,13 @@ fun SecureVaultApp() {
             securityModeState.message?.let {
                 snackbarHostState.showSnackbar(it)
                 securityModeViewModel.consumeMessage()
+            }
+        }
+
+        LaunchedEffect(settingsState.infoMessage) {
+            settingsState.infoMessage?.let {
+                snackbarHostState.showSnackbar(it)
+                settingsViewModel.consumeInfoMessage()
             }
         }
 
@@ -231,10 +250,12 @@ fun SecureVaultApp() {
                     currentTheme = settingsState.themeMode,
                     biometricEnabled = settingsState.biometricEnabled,
                     screenshotAllowed = settingsState.screenshotAllowed,
+                    sessionTimeoutMs = settingsState.sessionTimeoutMs,
                     errorMessage = settingsState.errorMessage,
                     onThemeChange = { settingsViewModel.updateTheme(it) },
                     onBiometricChange = { settingsViewModel.updateBiometricEnabled(it) },
                     onScreenshotAllowedChange = { settingsViewModel.updateScreenshotAllowed(it) },
+                    onSessionTimeoutChange = { settingsViewModel.updateSessionTimeout(it) },
                     onOpenSecurityMode = { navigator.navigate(SecurityModeRoute) },
                     onLock = {
                         settingsViewModel.lockNow()

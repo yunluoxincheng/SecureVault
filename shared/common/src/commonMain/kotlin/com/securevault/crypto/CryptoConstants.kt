@@ -34,5 +34,6 @@ object CryptoConstants {
 
     object Session {
         const val DEFAULT_LOCK_TIMEOUT_MS = 300_000L
+        const val IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS = -1L
     }
 }

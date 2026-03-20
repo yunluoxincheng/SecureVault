@@ -112,9 +112,14 @@ class SessionManagerTest {
     @Test fun get_data_key_when_locked_throws()
     @Test fun lock_clears_data_key()
     @Test fun auto_lock_immediate()
+    @Test fun on_app_background_when_immediate_timeout_enabled_locks_immediately()
     @Test fun auto_lock_after_timeout()
     @Test fun auto_lock_never()
     @Test fun extend_session_resets_timer()
+}
+
+class SessionLifecycleLockTest {
+    @Test fun background_then_foreground_locks_session_when_policy_matches()
 }
 
 class KeyManagerTest {

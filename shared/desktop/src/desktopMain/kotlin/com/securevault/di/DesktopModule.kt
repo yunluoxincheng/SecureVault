@@ -29,5 +29,5 @@ val desktopModule = module {
     single<PasswordRepository> { PasswordRepositoryImpl(get(), get()) }
     single { Argon2Kdf() }
     single { SessionManager() }
-    factory { KeyManager(get(), get(), get(), get()) }
+    single { KeyManager(get(), get(), get(), get()) }
 }

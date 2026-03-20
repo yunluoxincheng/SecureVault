@@ -70,4 +70,55 @@ class SessionManagerTest {
         manager.unlock(ByteArray(32))
         manager.requireUnlocked()
     }
+
+    @Test
+    fun checkAutoLock_whenTimeoutExceeded_locksSession() {
+        val manager = SessionManager()
+        manager.unlock(ByteArray(32))
+        manager.setLockTimeout(1)
+
+        val start = System.currentTimeMillis()
+        while (System.currentTimeMillis() - start < 5) {
+            // busy wait for commonTest portability
+        }
+
+        assertTrue(manager.checkAutoLock())
+        assertFalse(manager.isUnlocked())
+    }
+
+    @Test
+    fun checkAutoLock_whenDisabled_doesNotLock() {
+        val manager = SessionManager()
+        manager.unlock(ByteArray(32))
+        manager.setLockTimeout(0)
+
+        assertFalse(manager.checkAutoLock())
+        assertTrue(manager.isUnlocked())
+    }
+
+    @Test
+    fun onAppForeground_whenBackgroundTimeoutExceeded_locksSession() {
+        val manager = SessionManager()
+        manager.unlock(ByteArray(32))
+        manager.setLockTimeout(1)
+
+        manager.onAppBackground()
+        val start = System.currentTimeMillis()
+        while (System.currentTimeMillis() - start < 5) {
+            // busy wait for commonTest portability
+        }
+
+        assertTrue(manager.onAppForeground())
+        assertFalse(manager.isUnlocked())
+    }
+
+    @Test
+    fun onAppBackground_whenImmediateTimeoutEnabled_locksImmediately() {
+        val manager = SessionManager()
+        manager.unlock(ByteArray(32))
+        manager.setLockTimeout(com.securevault.crypto.CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS)
+
+        assertTrue(manager.onAppBackground())
+        assertFalse(manager.isUnlocked())
+    }
 }

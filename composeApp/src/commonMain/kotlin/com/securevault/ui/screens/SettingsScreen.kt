@@ -30,16 +30,19 @@ import com.securevault.ui.components.MyAppSelectionRow
 import com.securevault.ui.theme.ThemeMode
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
+import com.securevault.viewmodel.SettingsViewModel
 
 @Composable
 fun SettingsScreen(
     currentTheme: ThemeMode,
     biometricEnabled: Boolean,
     screenshotAllowed: Boolean,
+    sessionTimeoutMs: Long,
     errorMessage: String?,
     onThemeChange: (ThemeMode) -> Unit,
     onBiometricChange: (Boolean) -> Unit,
     onScreenshotAllowedChange: (Boolean) -> Unit,
+    onSessionTimeoutChange: (Long) -> Unit,
     onOpenSecurityMode: (() -> Unit)? = null,
     onBack: (() -> Unit)? = null,
     onLock: () -> Unit
@@ -125,8 +128,28 @@ fun SettingsScreen(
                         checked = screenshotAllowed,
                         onCheckedChange = onScreenshotAllowedChange,
                     )
+                    MyAppDivider()
+                    Column {
+                        Text(
+                            text = "会话超时",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            modifier = Modifier
+                                .padding(horizontal = MaterialTheme.spacing.md)
+                                .padding(top = MaterialTheme.spacing.md),
+                        )
+                        SessionTimeoutOptions.forEachIndexed { index, option ->
+                            MyAppSelectionRow(
+                                headline = option.label,
+                                selected = option.timeoutMs == sessionTimeoutMs,
+                                onClick = { onSessionTimeoutChange(option.timeoutMs) },
+                            )
+                            if (index < SessionTimeoutOptions.lastIndex || onOpenSecurityMode != null) {
+                                MyAppDivider()
+                            }
+                        }
+                    }
                     if (onOpenSecurityMode != null) {
-                        MyAppDivider()
                         MyAppListItem(
                             headline = "安全模式",
                             supportingText = "配置安全模式开关与使用说明",
@@ -167,3 +190,17 @@ fun SettingsScreen(
         }
     }
 }
+
+private data class SessionTimeoutOption(
+    val timeoutMs: Long,
+    val label: String,
+)
+
+private val SessionTimeoutOptions = listOf(
+    SessionTimeoutOption(SettingsViewModel.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS, "后台后立即锁定"),
+    SessionTimeoutOption(60_000L, "1 分钟"),
+    SessionTimeoutOption(300_000L, "5 分钟"),
+    SessionTimeoutOption(900_000L, "15 分钟"),
+    SessionTimeoutOption(1_800_000L, "30 分钟"),
+    SessionTimeoutOption(0L, "永不自动锁定"),
+)

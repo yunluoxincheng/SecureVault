@@ -21,4 +21,5 @@ object VaultConfigKeys {
     const val EncryptedSecureModeKey = "encrypted_secure_mode_key"
     const val OnboardingCompleted = "onboarding_completed"
     const val VaultSetupCompleted = "vault_setup_completed"
+    const val SessionLockTimeoutMs = "session_lock_timeout_ms"
 }

@@ -491,10 +491,12 @@ private fun BaseSettingsScreenPreview() {
             currentTheme = ThemeMode.System,
             biometricEnabled = true,
             screenshotAllowed = false,
+            sessionTimeoutMs = 300_000L,
             errorMessage = null,
             onThemeChange = {},
             onBiometricChange = {},
             onScreenshotAllowedChange = {},
+            onSessionTimeoutChange = {},
             onBack = {},
             onLock = {}
         )
@@ -651,10 +653,12 @@ private fun ErrorSettingsScreenPreview() {
             currentTheme = ThemeMode.System,
             biometricEnabled = true,
             screenshotAllowed = false,
+            sessionTimeoutMs = 300_000L,
             errorMessage = "系统暂不支持生物识别",
             onThemeChange = {},
             onBiometricChange = {},
             onScreenshotAllowedChange = {},
+            onSessionTimeoutChange = {},
             onBack = {},
             onLock = {}
         )
