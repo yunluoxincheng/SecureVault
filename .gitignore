@@ -96,6 +96,7 @@ Thumbs.db
 
 # Local AI customization (keep .github tracked for shared instructions)
 .claude/
+.cursor/
 
 # Compose
 composeApp/composeResources/
