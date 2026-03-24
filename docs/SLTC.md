@@ -1,7 +1,9 @@
 # SecureVault — System-Level Test Cases (SLTC)
 
-> Based on SRS v1.0 | Date: 2026-03-21
+> Based on SRS v1.1 | Date: 2026-03-25
 > Author: System Test Lead (SLTC)
+
+**Document scope (2026-03-25):** Test case IDs are unchanged. For **test execution and exit criteria**, treat **Android** and **Windows Desktop** as **mandatory** environments. **iOS** stub cases and **macOS/Linux desktop** packaging checks are **optional / paused** unless [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md) is updated.
 
 ---
 

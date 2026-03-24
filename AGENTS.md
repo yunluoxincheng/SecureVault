@@ -4,7 +4,7 @@
 
 ## 1) 项目概览
 
-SecureVault 是离线优先的 Kotlin Multiplatform 密码管理器。
+SecureVault 是离线优先的 Kotlin Multiplatform 密码管理器。**当前执行范围：Android + Windows Desktop**；iOS、macOS/Linux 桌面发行与专项暂缓（见 `docs/PLATFORM-SCOPE.md`）。
 
 - 语言与构建：Kotlin 2.3.20、Gradle 9.3.x、AGP 9.0.x
 - UI：Compose Multiplatform 1.10.x
@@ -71,6 +71,7 @@ SecureVault 是离线优先的 Kotlin Multiplatform 密码管理器。
 
 ## 7) 参考文档
 
+- 平台范围：`docs/PLATFORM-SCOPE.md`
 - 架构：`docs/design/ARCHITECTURE.md`
 - 测试与性能：`docs/design/TESTING-AND-PERFORMANCE.md`
 - 安全架构：`docs/reference/SECURITY-ARCHITECTURE.md`

@@ -1,8 +1,10 @@
 # SecureVault — Software Requirements Specification (SRS)
 
 > Reverse-engineered from implemented MVP.
-> Revision: 1.0 | Date: 2026-03-21
+> Revision: 1.1 | Date: 2026-03-25
 > Roles: Security Architect · Senior Product Manager · System Test Lead
+
+**Document scope (2026-03-25):** The **active release and validation baseline** is **Android** and **Windows Desktop (JVM)**. **Paused:** iOS app and Apple ecosystem features; **macOS** and **Linux** desktop distribution and platform-specific hardening. See [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md). Requirements and tables that mention iOS or multi-OS desktop remain for traceability; they are not current-cycle acceptance targets unless reopened.
 
 ---
 
@@ -23,7 +25,7 @@
 
 ## 1.1 System Goals
 
-SecureVault is an offline-first, cross-platform password manager built with Kotlin Multiplatform. It targets Android, Desktop (JVM), and reserves an iOS stub for future activation. The system stores user credentials in an encrypted local database. No network communication occurs at any time.
+SecureVault is an offline-first password manager built with Kotlin Multiplatform. **Current engineering targets** are **Android** and **Desktop (JVM) on Windows** for development, validation, and release. **iOS** and **macOS/Linux desktop** work are **paused** (stubs or future work may remain in repo). The system stores user credentials in an encrypted local database. No network communication occurs at any time.
 
 **Primary goals:**
 
@@ -55,9 +57,10 @@ SecureVault is an offline-first, cross-platform password manager built with Kotl
 
 | Platform | Status | Biometric | Clipboard | Screenshot Protection | DeviceKey Storage |
 |----------|--------|-----------|-----------|----------------------|-------------------|
-| Android | Active | BiometricPrompt (BIOMETRIC_STRONG) | ClipboardManager | FLAG_SECURE | Android KeyStore (AES-256-GCM, hardware-backed) |
-| Desktop (JVM) | Active | Not available (stub returns NotAvailable) | java.awt.Toolkit clipboard | Not available (no-op) | Java Preferences with XOR obfuscation |
-| iOS | Stub only (not included in build) | Not available (stub) | Not available (no-op stub) | Not available (no-op) | Not implemented |
+| Android | **Active** (release baseline) | BiometricPrompt (BIOMETRIC_STRONG) | ClipboardManager | FLAG_SECURE | Android KeyStore (AES-256-GCM, hardware-backed) |
+| Desktop (JVM), Windows-focused | **Active** (release baseline; primary validation on Windows) | Not available (stub returns NotAvailable) | java.awt.Toolkit clipboard | Not available (no-op) | Java Preferences with XOR obfuscation |
+| Desktop macOS/Linux distribution | **Paused** (not a current release target) | — | — | — | — |
+| iOS | **Paused** / stub only (not included in build) | Not available (stub) | Not available (no-op stub) | Not available (no-op) | Not implemented |
 
 ---
 

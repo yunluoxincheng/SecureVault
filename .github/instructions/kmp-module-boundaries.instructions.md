@@ -19,4 +19,5 @@ name: "SecureVault KMP Module And Task Boundaries"
   - `./gradlew :shared:common:tasks --all`
   - `./gradlew tasks --all`
 - Do not use `iosApp:*` Gradle tasks in this workspace because `:iosApp` is not included in `settings.gradle.kts`.
+- **Platform scope:** active targets are Android and Windows Desktop; iOS and macOS/Linux desktop releases are paused — see `docs/PLATFORM-SCOPE.md`.
 - Avoid inventing non-existent root tasks (for example `ktlintCheck`, `format`, `buildHealth`) unless verified in current task list.

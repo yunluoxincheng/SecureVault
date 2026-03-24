@@ -1,9 +1,11 @@
 # SecureVault — Requirement Traceability Matrix (RTM)
 
-> Revision: 1.0 | Date: 2026-03-21
+> Revision: 1.1 | Date: 2026-03-25
 > Author: Senior QA Engineer
-> Input Documents: SRS v1.0, SLTC v1.0, STLC v1.0
+> Input Documents: SRS v1.1, SLTC v1.0, STLC v1.0
 > Classification: Security-Critical System
+
+**Document scope (2026-03-25):** Traceability in this matrix is unchanged. **Execution and release validation** focus on **Android** and **Windows Desktop**. Rows that exclusively concern **iOS stubs** or **macOS/Linux desktop distribution** are **informational** for the paused scope — see [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md).
 
 ---
 

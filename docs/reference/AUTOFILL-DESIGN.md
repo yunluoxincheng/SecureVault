@@ -1,6 +1,6 @@
 # 自动填充服务设计参考
 
-> 从 SafeVault 提取的 AutofillService 设计经验，覆盖 Android、iOS 和 Desktop 三个平台。
+> 从 SafeVault 提取的自动填充设计经验。**当前实现与验收范围：Android**；Desktop 为剪贴板/快捷键路线（规划）；**iOS Credential Provider 暂缓**（见 [PLATFORM-SCOPE.md](../PLATFORM-SCOPE.md)）。下文 iOS 章节保留作架构参考。
 
 ---
 

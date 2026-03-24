@@ -547,5 +547,5 @@ class SecurityModeManager(
 | 平台 | 安全特性 |
 |------|---------|
 | **Android** | AndroidKeyStore (TEE/StrongBox), FLAG_SECURE, BiometricPrompt STRONG |
-| **iOS** | Keychain + Secure Enclave, LAContext, 应用审核确保安全 |
-| **Desktop** | DPAPI (Win) / Keychain (macOS) / libsecret (Linux), 进程内存保护 |
+| **iOS** | Keychain + Secure Enclave, LAContext（**平台能力暂缓专项**） |
+| **Desktop** | **当前周期以 Windows/DPAPI 为优先方向**；macOS Keychain / Linux libsecret 随桌面发行恢复再强化；进程内存保护 |

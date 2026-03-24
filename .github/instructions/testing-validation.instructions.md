@@ -15,3 +15,4 @@ name: "SecureVault Testing And Validation Strategy"
 - Do not claim validation is complete unless at least one relevant task was executed successfully.
 - If tests fail for unrelated pre-existing reasons, report them separately and do not silently broaden scope to unrelated fixes.
 - Keep validation recommendations consistent with repository-verified tasks and current module boundaries.
+- **Platform scope:** prioritize **Android** and **Windows Desktop** validation; iOS and macOS/Linux desktop releases are paused — see `docs/PLATFORM-SCOPE.md`.

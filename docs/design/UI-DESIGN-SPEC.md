@@ -73,7 +73,7 @@ Rule: prefer `MyApp*` components for all new work. Legacy `Sv*` components shoul
 
 ### 5. Cross-Platform Consistency
 
-- The same task should look and behave similarly on Android, iOS, and Desktop.
+- The same task should look and behave similarly on **Android** and **Desktop**; **iOS** is out of current scope (see [PLATFORM-SCOPE.md](../PLATFORM-SCOPE.md)).
 - Platform adaptation is welcome, but only when it improves usability without fragmenting the design system.
 
 ### 6. Accessibility Is Non-Negotiable

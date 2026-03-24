@@ -112,7 +112,7 @@ actual class Argon2Kdf {
     }
 }
 
-// iOS/Desktop actual (libsodium)
+// iOS/Desktop actual (libsodium)；iOS 发版与专项暂缓，见 docs/PLATFORM-SCOPE.md
 actual class Argon2Kdf {
     actual fun deriveKey(
         password: CharArray,

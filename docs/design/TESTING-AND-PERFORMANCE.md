@@ -6,6 +6,7 @@
 
 ## 相关文档
 
+- [平台范围说明](../PLATFORM-SCOPE.md)
 - [软件需求规格说明书（SRS）](../SRS.md)
 - [需求追踪矩阵（RTM）](../RTM.md)
 - [系统测试生命周期（STLC）](../STLC.md)
@@ -27,7 +28,7 @@
 | 层级 | 占比 | 执行环境 | 频率 |
 |------|------|---------|------|
 | **单元测试** | ~70% | `commonTest` (JVM) | 每次提交 |
-| **集成测试** | ~20% | 各平台（Android Emulator, iOS Simulator, Desktop JVM） | 每次 PR |
+| **集成测试** | ~20% | **Android Emulator、Windows Desktop JVM**（iOS/macOS/Linux 桌面暂缓） | 每次 PR |
 | **E2E 测试** | ~10% | 真机/模拟器 | 每次发版 |
 
 ### 1.2 KMP 测试工具链
@@ -41,7 +42,7 @@
 | **Robolectric** | Android 组件单元测试 | Android (JVM) |
 | **Compose UI Test** | Compose UI 测试 | Android / Desktop |
 | **Espresso** | Android 集成测试 | Android |
-| **XCTest** | iOS 测试 | iOS |
+| **XCTest** | iOS 测试 | **暂缓**（非当前周期必用） |
 
 ---
 
@@ -203,7 +204,7 @@ class ExportVaultUseCaseTest {
 | 首次设置 → 添加密码 → 锁定 → 解锁 → 查看 | KeyManager → SessionManager → Repository → Cipher | 全平台 |
 | 主密码解锁 → 搜索 → 复制 → 剪贴板清除 | SessionManager → Repository → Clipboard | 全平台 |
 | 安全模式开启 → 添加 → 使用(复制) → 导出 → 导入 | SecurityMode → Repository → Export | 全平台 |
-| 生物识别注册 → 锁定 → 生物识别解锁 | KeyManager → PlatformKeyStore → BiometricAuth | Android/iOS |
+| 生物识别注册 → 锁定 → 生物识别解锁 | KeyManager → PlatformKeyStore → BiometricAuth | **Android**（iOS 暂缓） |
 | AutofillService: 填充请求 → 匹配 → 响应 | Parser → Matcher → Builder | Android |
 | AutofillService: 保存请求 → 去重 → 保存 | Parser → Detector → Repository | Android |
 
@@ -295,17 +296,16 @@ class CrossPlatformCryptoTest {
 
 ### 5.2 Argon2 性能基准矩阵
 
-需要在各平台各参数下测量，确认自适应配置合理：
+需要在**当前范围**内各参数下测量，确认自适应配置合理（见 [PLATFORM-SCOPE.md](../PLATFORM-SCOPE.md)）：
 
 | 平台 | 参数组 | 设备 | 目标耗时 |
 |------|-------|------|---------|
 | Android | 标准 (128MB/3/4) | Pixel 7 | < 1.5s |
 | Android | 标准 (128MB/3/4) | 中端 (6GB RAM) | < 2.5s |
 | Android | 降级 (64MB/2/2) | 低端 (4GB RAM) | < 3s |
-| iOS | 标准 (128MB/3/4) | iPhone 13+ | < 1.5s |
-| iOS | 降级 (64MB/2/2) | iPhone SE | < 3s |
-| Desktop | 标准 (128MB/3/4) | 8GB+ RAM | < 1s |
-| Desktop | 降级 (64MB/2/2) | 4GB RAM | < 2s |
+| iOS | — | — | **暂缓**（恢复排期后再测） |
+| Desktop（**Windows 主测**） | 标准 (128MB/3/4) | 8GB+ RAM | < 1s |
+| Desktop（**Windows 主测**） | 降级 (64MB/2/2) | 4GB RAM | < 2s |
 
 ### 5.3 内存基准
 

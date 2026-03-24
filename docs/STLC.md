@@ -1,9 +1,11 @@
 # SecureVault — Software Testing Life Cycle (STLC)
 
-> Revision: 1.0 | Date: 2026-03-21
+> Revision: 1.1 | Date: 2026-03-25
 > Author: Senior QA Engineer
 > Classification: Security-Critical System
-> Input Documents: SRS v1.0, SLTC v1.0
+> Input Documents: SRS v1.1, SLTC v1.0
+
+**Document scope (2026-03-25):** **In-scope platforms** for planning, execution, and release exit criteria: **Android** and **Windows Desktop (JVM)**. **Paused:** iOS functional/release testing; **macOS and Linux** desktop distribution and dedicated OS matrices. See [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md).
 
 ---
 
@@ -17,8 +19,9 @@ Identify every testable behavior in the SecureVault system, classify it by risk,
 
 | Input | Source | Purpose |
 |-------|--------|---------|
-| SRS v1.0 | `docs/SRS.md` | System behavior, state model, security objectives, acceptance criteria |
+| SRS v1.1 | `docs/SRS.md` | System behavior, state model, security objectives, acceptance criteria |
 | SLTC v1.0 | `docs/SLTC.md` | 165 system-level test cases across 11 modules |
+| PLATFORM-SCOPE | `docs/PLATFORM-SCOPE.md` | Active vs paused platforms |
 | Source code | `shared/common/`, `composeApp/`, `androidApp/`, `desktopApp/` | Ground truth for behavior when SRS is ambiguous |
 | Known Issues list | SRS §8.4 (KI-1 through KI-14) | Pre-existing defects that constrain test expectations |
 
@@ -63,7 +66,7 @@ Each SRS requirement is classified as **Testable**, **Partially Testable**, or *
 | Immutable String persistence in string pool (KI-3) | Cannot wipe `String` objects on JVM | Document as known issue. Code review gate: no new `password.toString()` calls. |
 | Desktop auto-lock (KI-6) | No lifecycle hooks exist in desktop `Main.kt` | Test as "expected failure" — verify it does NOT lock, file defect. |
 | Autofill (not implemented) | UI placeholder only | Verify placeholder renders. Mark autofill as out-of-scope for functional testing. |
-| iOS platform behavior | All implementations are stubs | Verify stubs return expected defaults (NotAvailable, no-op). No functional testing. |
+| iOS platform behavior | **Paused scope** — stubs only | Optional: verify stubs when iOS targets compile; **not** a release gate. |
 
 ## 1.4 Initial Risk List
 
@@ -104,7 +107,7 @@ Define the scope, strategy, resources, schedule, and risk mitigation approach fo
 
 | Category | Scope |
 |----------|-------|
-| Platforms | Android (API 26+), Desktop (JVM 17+) |
+| Platforms | Android (API 26+), Desktop (JVM 17+, **Windows primary**); macOS/Linux desktop release testing **paused** |
 | Modules | All 11 modules from SRS §4 |
 | Test Types | Unit, Integration, UI, Security, Performance, Cross-platform |
 | States | NOT_SETUP, LOCKED, UNLOCKED, UNLOCKED+SECURE_MODE |
@@ -115,7 +118,7 @@ Define the scope, strategy, resources, schedule, and risk mitigation approach fo
 
 | Item | Reason |
 |------|--------|
-| iOS functional testing | All iOS implementations are stubs. Only verify stubs return expected defaults. |
+| iOS functional testing | **Paused.** Not required for current release exit criteria. |
 | Autofill feature | Not implemented. Verify placeholder screen renders; no functional tests. |
 | Network security testing | System is offline-only. No network communication exists. |
 | Third-party library internals | libsodium, SQLDelight, Koin are assumed correct. Test integration boundaries only. |
@@ -162,7 +165,7 @@ Define the scope, strategy, resources, schedule, and risk mitigation approach fo
 | **Security — Memory** | Post-operation array inspection | Custom assertions (`isWiped()`) | KDF-006, KDF-007, MEM-001..MEM-011, SES-015 |
 | **Security — Attack Simulation** | Manual + scripted | adb, memory profiler, DB browser | SEC-001 through SEC-015 |
 | **Performance** | Load testing with N entries | Gradle + custom benchmark | Search decryption latency, Argon2 derivation time |
-| **Cross-platform** | Feature parity matrix | Run same test suite on Android + Desktop | XPLAT-001..XPLAT-005 |
+| **Cross-platform** | Feature parity matrix | Run same test suite on **Android + Windows Desktop** | XPLAT-001..XPLAT-005 |
 
 ### 2.3.3 Security Testing Strategy (Per-Phase)
 
@@ -194,7 +197,7 @@ Security testing is not a phase — it runs in every phase:
 |----------|---------|---------------|
 | Android physical device (Pixel 6+) | Biometric, KeyStore hardware-backed, FLAG_SECURE | API 33+, fingerprint enrolled, developer options ON |
 | Android emulator (API 26) | Minimum SDK boundary testing | No biometric, software KeyStore |
-| Desktop (JVM 17, Windows/macOS) | Desktop-specific tests | Java Preferences accessible, clipboard access |
+| Desktop (JVM 17, **Windows required**; macOS/Linux paused for release) | Desktop-specific tests | Java Preferences accessible (Windows regedit), clipboard access |
 | CI server | Automated test execution | `./gradlew shared:common:allTests`, `./gradlew desktopApp:jvmTest`, `./gradlew androidApp:testDebugUnitTest` |
 | SQLite DB browser | Raw database inspection for security tests | Access to debug-build database files |
 | Memory profiler (Android Studio Profiler / VisualVM) | Memory wipe verification for attack simulation | Heap dump capability |
@@ -300,7 +303,7 @@ Design deterministic, executable test cases for every testable requirement, incl
 | Error path coverage | >= 1 test per error condition in SRS §3 | E-ADD-1..4, E-RET-1..4, E-DEL-1..6 mapped |
 | Security scenario coverage | 100% of AC-28 through AC-34 attack scenarios | SEC-001..SEC-015 |
 | Module function coverage | >= 3 tests per public function | SLTC verified |
-| Platform coverage | Android + Desktop for every platform-dependent module | XPLAT-* tests |
+| Platform coverage | **Android + Windows Desktop** for every platform-dependent module (paused OS excluded) | XPLAT-* tests |
 
 ### 3.4.2 Security-Specific Coverage Requirements
 
@@ -359,13 +362,13 @@ Establish all required platforms, tools, configurations, and offline conditions 
 
 | Component | Specification |
 |-----------|---------------|
-| **OS** | Windows 10/11 or macOS 12+ |
+| **OS** | **Windows 10/11** (primary). macOS/Linux desktop validation **paused**. |
 | **JVM** | OpenJDK 17+ |
 | **Build command** | `./gradlew desktopApp:run` (launch) |
 | **Test command** | `./gradlew desktopApp:jvmTest` |
 | **Common module tests** | `./gradlew shared:common:desktopTest` |
 | **DB inspection** | SQLite file in app data directory |
-| **Java Preferences inspection** | Windows: `regedit` → `HKEY_CURRENT_USER\Software\JavaSoft\Prefs`; macOS: `~/Library/Preferences/com.apple.java.util.prefs.plist` |
+| **Java Preferences inspection** | **Windows:** `regedit` → `HKEY_CURRENT_USER\Software\JavaSoft\Prefs`. (macOS plist path **out of current cycle** while macOS desktop is paused.) |
 | **Memory profiler** | VisualVM or IntelliJ Profiler → heap dump |
 | **Clipboard verification** | Programmatic: `Toolkit.getDefaultToolkit().systemClipboard.getData(DataFlavor.stringFlavor)` |
 
@@ -373,8 +376,8 @@ Establish all required platforms, tools, configurations, and offline conditions 
 
 | Component | Specification |
 |-----------|---------------|
-| Status | **Stub only.** Not included in `settings.gradle.kts`. |
-| Testing | Verify stub classes return expected defaults (`NotAvailable`, `false`, no-op). Run via `shared:common:iosTest` if target is enabled. |
+| Status | **Paused / stub only.** Not included in `settings.gradle.kts`. |
+| Testing | **Not a current release gate.** Optional stub checks if iOS targets are enabled locally. |
 
 ### 4.2.4 CI Environment
 
@@ -403,7 +406,7 @@ SecureVault is offline-first. Testing must verify that **no network access is re
 | Setup | Purpose | How |
 |-------|---------|-----|
 | Raw DB access (debug build) | Read encrypted columns, verify no plaintext leakage | Debug build does not encrypt SQLite file. Pull via `adb` or file manager. |
-| Java Preferences access (Desktop) | Verify XOR key extraction attack (SEC-010) | Read via regedit (Windows) or plist (macOS) |
+| Java Preferences access (Desktop) | Verify XOR key extraction attack (SEC-010) | **Windows:** regedit. (macOS plist **paused** scope.) |
 | Heap dump capability | Verify memory wipe (SEC-005, AC-30) | Android Studio Profiler or VisualVM. Capture heap dump while UNLOCKED, search for DataKey bytes. |
 | Mock biometric | Test biometric flows in emulator | `adb emu finger touch 1` to simulate fingerprint success; `adb emu finger touch 99999` for failure |
 | Tampered DB fixture | Test tamper detection and config downgrade | Pre-modified SQLite file with bit-flipped ciphertext, altered Argon2 params |
@@ -413,7 +416,7 @@ SecureVault is offline-first. Testing must verify that **no network access is re
 
 Every item must be verified GREEN before test execution begins.
 
-| # | Check | Android Physical | Android Emulator (API 26) | Android Emulator (API 34) | Desktop (Windows) | Desktop (macOS) |
+| # | Check | Android Physical | Android Emulator (API 26) | Android Emulator (API 34) | Desktop (Windows) | Desktop (macOS/Linux, paused) |
 |---|-------|:---:|:---:|:---:|:---:|:---:|
 | 1 | Device/machine available and powered on | ☐ | ☐ | ☐ | ☐ | ☐ |
 | 2 | Correct OS/API version confirmed | ☐ | ☐ | ☐ | ☐ | ☐ |
@@ -506,7 +509,7 @@ Every defect must include:
 | Title | One-sentence description |
 | Test Case ID | Links to SLTC test ID(s) |
 | Severity | S1 / S2 / S3 / S4 |
-| Platform | Android Physical / Android Emulator / Desktop Windows / Desktop macOS |
+| Platform | Android Physical / Android Emulator / Desktop Windows (**macOS/Linux paused**) |
 | State | System state when defect occurred |
 | Preconditions | Exact setup steps |
 | Steps to Reproduce | Numbered, deterministic steps |
@@ -533,7 +536,7 @@ Every defect must include:
 | Crypto module change | Full Wave 1 + Wave 2 + Wave 4 (all security tests) |
 | Session/KeyManager change | Wave 1 (SES-*, KDF-*) + Wave 2 (FLOW-SETUP-*, FLOW-UNLOCK-*) + STATE-* |
 | UI change | Affected FLOW-* tests + FLOW-RET-005/007 (Secure Mode masking) |
-| Pre-release | Full regression: all 165 test cases on all platforms |
+| Pre-release | Full regression: all 165 test cases on **Android + Windows Desktop** (paused platforms excluded) |
 
 ### 5.4.2 Regression Test Set (Smoke)
 
@@ -633,7 +636,7 @@ Determine if testing is complete, assess residual risk, report metrics, and docu
 | # | Criterion | Measurement |
 |---|-----------|-------------|
 | EC-1 | All 165 SLTC test cases executed on Android | Execution report shows 0 "Not Executed" |
-| EC-2 | All 165 SLTC test cases executed on Desktop | Same as EC-1 for Desktop |
+| EC-2 | All 165 SLTC test cases executed on **Windows Desktop** | Same as EC-1 for Desktop (macOS/Linux paused) |
 | EC-3 | 100% of CRITICAL security tests pass | SEC-002 through SEC-006, SEC-013, SEC-015, ENC-009..ENC-012, KDF-006, KDF-007, SES-015, SMM-004..SMM-007 = all PASS |
 | EC-4 | Zero open S1 (Blocker) defects | Defect log confirms |
 | EC-5 | Zero open S2 (Critical) defects in security modules | Crypto, KeyManager, SessionManager, SecurityModeManager, SecureClipboard |
@@ -700,7 +703,7 @@ Determine if testing is complete, assess residual risk, report metrics, and docu
 
 1. SCOPE
    Modules tested: 11/11
-   Platforms tested: Android, Desktop
+   Platforms tested: Android, Windows Desktop (macOS/Linux desktop paused)
    Test types: Unit, Integration, UI, Security, Performance, Cross-platform
 
 2. EXECUTION SUMMARY

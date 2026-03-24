@@ -1,6 +1,6 @@
 # SecureVault
 
-离线优先的全平台密码管理器。
+离线优先的密码管理器；**当前产品与技术范围：Android + Windows Desktop**（iOS、macOS/Linux 桌面暂缓，见 [平台范围说明](docs/PLATFORM-SCOPE.md)）。
 
 ## 项目定位
 
@@ -9,19 +9,21 @@ SecureVault 是一款注重安全性和隐私的密码管理应用，**完全离
 ## 核心功能
 
 1. **密码库** — 加密存储密码，支持搜索、分类、收藏
-2. **自动填充** — 系统级自动填充（Android AutofillService / iOS CredentialProvider）
+2. **自动填充** — Android：`AutofillService`；桌面：剪贴板/快捷键（规划）；iOS Credential Provider **暂缓**
 3. **智能保存** — 自动检测新密码并提示保存或更新已有记录
 4. **安全模式** — 密码不可查看，仅可通过剪贴板或自动填充使用，支持加密导出
 
 ## 目标平台
 
-| 平台 | 最低版本 | 自动填充 |
-|------|---------|---------|
-| Android | API 29 (Android 10) | AutofillService |
-| iOS | iOS 15 | CredentialProvider |
-| Windows | Windows 10 | 全局快捷键 + 剪贴板 |
-| macOS | macOS 13 | 全局快捷键 + 剪贴板 |
-| Linux | Ubuntu 20.04+ | 全局快捷键 + 剪贴板 |
+| 平台 | 最低版本 | 自动填充 | 当前状态 |
+|------|---------|---------|----------|
+| Android | API 29 (Android 10) | AutofillService | **活跃** |
+| Windows | Windows 10 | 全局快捷键 + 剪贴板（规划） | **活跃**（开发与验证主环境） |
+| iOS | — | CredentialProvider（规划） | **暂缓** |
+| macOS | — | 全局快捷键 + 剪贴板（规划） | **暂缓** |
+| Linux | — | 全局快捷键 + 剪贴板（规划） | **暂缓** |
+
+说明：详见 [docs/PLATFORM-SCOPE.md](docs/PLATFORM-SCOPE.md)。
 
 ## Android 构建基线
 
@@ -101,7 +103,8 @@ SecureVault/
 | [加密算法参考](docs/reference/CRYPTO-ALGORITHMS.md) | 从 SafeVault 提取的加密算法设计 |
 | [安全架构参考](docs/reference/SECURITY-ARCHITECTURE.md) | 三层密钥体系和安全组件设计 |
 | [自动填充设计](docs/reference/AUTOFILL-DESIGN.md) | 跨平台自动填充服务设计 |
-| [开发计划](docs/DEVELOPMENT-PLAN.md) | 7 阶段 18 周开发计划 |
+| [平台范围说明](docs/PLATFORM-SCOPE.md) | Android + Windows Desktop 为当前范围；iOS/macOS/Linux 暂缓 |
+| [开发计划](docs/DEVELOPMENT-PLAN.md) | 分阶段开发计划（v1.1 已按平台范围调整） |
 | [软件需求规格说明书（SRS）](docs/SRS.md) | 需求基线、状态模型、功能与安全需求、验收标准 |
 | [需求追踪矩阵（RTM）](docs/RTM.md) | 需求到测试用例的可追踪关系与覆盖汇总 |
 | [系统测试生命周期（STLC）](docs/STLC.md) | 测试策略、阶段活动、风险与退出准则 |

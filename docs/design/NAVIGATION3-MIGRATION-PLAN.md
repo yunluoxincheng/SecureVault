@@ -48,7 +48,7 @@
 - [x] 底栏：Vault/Generator/Settings 切换与返回行为
 - [x] 明细流：Vault -> Detail -> AddEdit -> Save -> 回到 Vault 并刷新
 - [x] 锁定后：Settings -> Lock -> Login
-- [x] iOS/Desktop 基本导航可用（Desktop 已验证；iOS 需在 Mac 端补充最终 smoke）
+- [x] Desktop 基本导航已验证（Windows）。**iOS smoke 暂缓**（见 [PLATFORM-SCOPE.md](../PLATFORM-SCOPE.md)）。
 
 建议命令：
 
@@ -64,7 +64,7 @@
 - `:composeApp:desktopTest` ✅（新增 `NavigatorRegressionTest` 覆盖 5 条关键路径）
 - `:androidApp:assembleDebug` ✅
 - `:shared:common:desktopTest` ✅
-- `:shared:common:allTests` ⚠️ 当前仓库基线存在 iOS 编译错误（`compileKotlinIosX64` / `compileKotlinIosSimulatorArm64`），与本次 Navigation3 回归改动无关
+- `:shared:common:allTests` ⚠️ 若启用 iOS 目标可能出现编译问题；**当前平台范围以 Android + Windows Desktop 为准**（见 PLATFORM-SCOPE.md），与 Navigation3 回归改动无必然关系
 
 ### Phase 4: 全量切换与清理
 

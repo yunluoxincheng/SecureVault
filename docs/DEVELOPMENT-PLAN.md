@@ -1,15 +1,25 @@
 # SecureVault 开发计划
 
-> 版本 1.0 — 2026-03-18
+> 版本 1.1 — 2026-03-25（平台范围调整，见下文）
 
 ---
 
 ## 相关文档
 
+- **[平台范围决策说明](PLATFORM-SCOPE.md)**（Android + Windows Desktop 为当前目标；iOS / macOS / Linux 桌面暂缓）
 - [软件需求规格说明书（SRS）](SRS.md)
 - [需求追踪矩阵（RTM）](RTM.md)
 - [系统测试生命周期（STLC）](STLC.md)
 - [系统级测试用例（SLTC）](SLTC.md)
+
+## 平台范围决策（2026-03-25）
+
+因在 **Windows** 上主力开发，为降低调试成本与并行平台复杂度，**当前执行范围**收窄为：
+
+- **活跃**：**Android**；**Desktop（JVM）** 且以 **Windows 10/11** 为主要开发、验证与发布环境。
+- **暂缓（不计入当前排期与里程碑）**：**iOS**（含系统自动填充与扩展）；**macOS**、**Linux** 桌面的独立发行、打包与平台专属强化。
+
+详细原因、与仓库模块的关系、以及未来恢复条件见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md)。下文各 Phase 编号保留，**Phase 5** 标记为暂缓；**Phase 6** 聚焦 Windows 桌面；**Phase 7** 的测试与发布默认指 **Android + Windows Desktop**。
 
 ## 总览
 
@@ -19,10 +29,11 @@
 | Phase 2 | Android MVP | 3 周 | Android 端密码 CRUD + 解锁可用 |
 | Phase 3 | 安全模式 | 2 周 | 安全模式 + 导出/导入完成 |
 | Phase 4 | Android 自动填充 | 2 周 | AutofillService 可用 |
-| Phase 5 | iOS 支持 | 3 周 | iOS 端功能对齐 Android |
-| Phase 6 | Desktop 支持 | 2 周 | Desktop 应用可用 |
-| Phase 7 | 优化与测试 | 2 周 | 全平台测试通过，准备发布 |
-| **总计** | | **~18 周** | |
+| Phase 5 | **暂缓** — iOS 与 Apple 生态 | — | 见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md) |
+| Phase 6 | Windows Desktop 支持 | 2 周 | Windows 上 Desktop 应用可用；macOS/Linux 发行暂缓 |
+| Phase 7 | 优化与测试 | 2 周 | Android + Windows Desktop 测试与发布准备 |
+| **总计（当前执行范围）** | | **~15 周** | 不含暂缓的 iOS 与 macOS/Linux 桌面专项 |
+| **暂缓范围** | iOS；macOS/Linux 桌面发行与专项 | — | 恢复时更新 PLATFORM-SCOPE 与本计划版本 |
 
 ---
 
@@ -266,9 +277,11 @@
 
 ---
 
-## Phase 5: iOS 支持（3 周）
+## Phase 5: iOS 支持（暂缓）
 
-### 目标
+> **状态：暂缓。** 不在当前排期内执行。恢复条件见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md)。
+
+### 目标（恢复排期后）
 
 iOS 端功能对齐 Android。
 
@@ -309,11 +322,11 @@ iOS 端功能对齐 Android。
 
 ---
 
-## Phase 6: Desktop 支持（2 周）
+## Phase 6: Desktop 支持（2 周）— Windows 优先
 
 ### 目标
 
-Desktop 端（Windows、macOS、Linux）基本可用。
+在 **Windows** 上达到与当前架构一致的 Desktop 可用性（JVM / Compose Desktop）。**macOS、Linux** 的独立打包、libsecret/Keychain 等专项暂缓，见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md)。
 
 ### 任务清单
 
@@ -321,9 +334,9 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 - [ ] 实现 Desktop `PlatformKeyStore` actual
 
-  - Windows: DPAPI
-  - macOS: Keychain
-  - Linux: libsecret
+  - Windows: DPAPI（**当前周期优先**）
+  - macOS: Keychain（暂缓专项验收）
+  - Linux: libsecret（暂缓专项验收）
 - [ ] 实现 Desktop `Argon2Kdf` actual (libsodium)
 - [ ] 实现 Desktop `SecureClipboard` actual
 
@@ -337,11 +350,11 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 - [ ] 实现系统托盘图标（最小化到托盘）
 
 - [ ] 测试所有功能（解锁、CRUD、安全模式、导出/导入）
-- [ ] 打包安装包（Windows .msi/.exe, macOS .dmg, Linux .deb/.AppImage）
+- [ ] 打包安装包（**当前周期**：Windows .msi/.exe；macOS .dmg / Linux .deb/.AppImage 暂缓）
 
 ### 验收标准
 
-- [ ] Windows/macOS/Linux 上可正常运行
+- [ ] **Windows** 上可正常运行（macOS/Linux 暂缓为发布目标）
 - [ ] 全局快捷键快速填充
 - [ ] 密钥存储使用系统安全方案
 
@@ -353,7 +366,7 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 ### 目标
 
-全平台质量保证和性能优化。
+**Android + Windows Desktop** 的质量保证与性能优化（全平台指二者；iOS 与 macOS/Linux 桌面不在本阶段验收范围内）。
 
 ### 任务清单
 
@@ -361,9 +374,9 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 - [ ] 共享模块单元测试（加密、安全、存储、用例）
 - [ ] Android 集成测试（AutofillService、生物识别）
-- [ ] iOS 集成测试（CredentialProvider、Face ID）
-- [ ] Desktop 集成测试
-- [ ] 性能测试：Argon2 在各平台的耗时
+- [ ] **暂缓** iOS 集成测试（CredentialProvider、Face ID）
+- [ ] Desktop 集成测试（**以 Windows 为主**）
+- [ ] 性能测试：Argon2 在 Android 与 Windows Desktop 的耗时
 - [ ] 安全审计：密钥管理、内存安全、加密正确性
 
 #### Week 18: 优化与发布准备
@@ -377,7 +390,7 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 ### 验收标准
 
-- [ ] 所有平台测试通过
+- [ ] **Android 与 Windows Desktop** 相关测试通过（暂缓平台不要求）
 - [ ] Argon2 解锁耗时 < 3 秒
 - [ ] 密码列表滚动流畅（60fps）
 - [ ] 无安全漏洞（加密审计通过）
@@ -388,11 +401,11 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 | 风险 | 概率 | 影响 | 缓解措施 |
 |------|------|------|---------|
-| Compose iOS 性能不足 | 中 | 高 | 预留原生 SwiftUI 回退方案 |
-| libsodium KMP 绑定不稳定 | 低 | 高 | 备选 BouncyCastle (JVM) + CommonCrypto (iOS) |
-| iOS CredentialProvider 限制 | 中 | 中 | 研究 App Group 数据共享机制 |
-| Desktop 自动填充体验差 | 高 | 低 | 浏览器扩展作为后续优化 |
-| Kotlin/Native 内存管理 | 中 | 中 | 测试覆盖 + 使用 `autoreleasepool` |
+| Compose iOS 性能不足 | 中 | 高 | **暂缓 iOS 排期**；恢复时再评估 SwiftUI 回退 |
+| libsodium KMP 绑定不稳定 | 低 | 高 | 备选 BouncyCastle (JVM)；iOS 恢复后评估 CommonCrypto |
+| iOS CredentialProvider 限制 | 中 | 中 | **随 iOS 暂缓**；恢复时专项研究 App Group |
+| Desktop 自动填充体验差 | 高 | 低 | 剪贴板/快捷键为主；浏览器扩展作为后续优化 |
+| Kotlin/Native 内存管理 | 中 | 中 | **随 iOS 暂缓**；恢复时加强 K/N 测试与 `autoreleasepool` |
 
 ---
 
@@ -409,10 +422,13 @@ Desktop 端（Windows、macOS、Linux）基本可用。
 
 **应该有 (Should-have):**
 
-- iOS 支持
-- Desktop 支持
+- Desktop 支持（**当前：Windows 验证**；macOS/Linux 暂缓）
 - 导出/导入
 - 密码生成器
+
+**暂缓（原 Should-have 中延后）：**
+
+- iOS 支持（见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md)）
 
 **可以有 (Nice-to-have):**
 

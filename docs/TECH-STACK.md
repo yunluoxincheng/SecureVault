@@ -1,12 +1,13 @@
 # SecureVault 技术选型文档
 
 > 当前实现基线（As-Is）+ 目标版本（To-Be）
-> 更新时间：2026-03-19
+> 更新时间：2026-03-25
 
 ---
 
 ## 相关文档
 
+- [平台范围说明](PLATFORM-SCOPE.md)
 - [软件需求规格说明书（SRS）](SRS.md)
 - [需求追踪矩阵（RTM）](RTM.md)
 - [系统测试生命周期（STLC）](STLC.md)
@@ -34,11 +35,13 @@
 
 | 平台 | 最低版本 | 当前状态 |
 |------|---------|----------|
-| Android | API 29 (Android 10) | 已支持 |
-| iOS | iOS 15 | 已配置 KMP 目标 |
-| Windows | Windows 10 | 已配置 Desktop 目标 |
-| macOS | macOS 12+ | 已配置 Desktop 目标 |
-| Linux | Ubuntu 20.04+ | 已配置 Desktop 目标 |
+| Android | API 29 (Android 10) | **活跃**（主力） |
+| Windows | Windows 10 | **活跃**（Desktop JVM 主验证环境） |
+| iOS | iOS 15 | **暂缓**（KMP 目标可仍存在，不验收发版） |
+| macOS | macOS 12+ | **暂缓**（Desktop 多 OS 发行与专项） |
+| Linux | Ubuntu 20.04+ | **暂缓**（同上） |
+
+范围说明见 [PLATFORM-SCOPE.md](PLATFORM-SCOPE.md)。
 
 ### Android SDK 基线（当前实现）
 
@@ -55,13 +58,13 @@
 |------|------------------|---------------|------|
 | 核心加密 | libsodium bindings (ionspin) | 保持 | 跨平台统一加密原语 |
 | AEAD | XChaCha20-Poly1305（libsodium SecretBox） | 保持 | 使用随机 nonce |
-| Argon2 KDF | Android/Desktop: libsodium pwhash；iOS: libsodium pwhash | Android 可评估 argon2kt | 统一接口 expect/actual |
-| 密钥存储 | Android: AndroidKeyStore；iOS/Desktop: 应用层加密存储 | iOS/Desktop 迁移系统密钥存储 | 平台能力逐步完善 |
+| Argon2 KDF | Android/Desktop: libsodium pwhash；iOS: libsodium pwhash（暂缓验收） | Android 可评估 argon2kt | 统一接口 expect/actual |
+| 密钥存储 | Android: AndroidKeyStore；Desktop: 应用层存储（已知弱点）；iOS: 暂缓 | Desktop 优先 Windows/DPAPI 方向；iOS 恢复后 Keychain | 见 PLATFORM-SCOPE |
 | 安全随机 | 平台安全随机 + libsodium random | 保持 | 生成 nonce、salt、key |
 
 ### Argon2 策略说明
 
-- 当前实现优先保证跨平台一致性，Android、Desktop、iOS 都可用。
+- 当前实现优先保证 **Android 与 Windows Desktop** 一致性；iOS 暂缓专项验收。
 - Android 后续可单独评估 `argon2kt`，作为性能优化项，而非当前基线依赖。
 
 ---
@@ -71,8 +74,8 @@
 | 平台 | 自动填充 | 密钥存储 | 生物识别 |
 |------|---------|---------|---------|
 | Android | AutofillService（入口层） | AndroidKeyStore（已实现） | 当前共享层为占位实现 |
-| iOS | CredentialProvider（规划/入口） | 当前为应用层加密存储 | 已有 LAContext 实现 |
-| Desktop | 剪贴板/快捷键（规划） | 当前为应用层加密存储 | 占位实现 |
+| iOS | **暂缓** CredentialProvider | 存根/未纳入构建验收 | — |
+| Desktop（**Windows 活跃**） | 剪贴板/快捷键（规划） | 当前为应用层加密存储 | 占位实现；macOS/Linux 发行暂缓 |
 
 ---
 
@@ -139,7 +142,7 @@ argon2kt = "1.6.0"
 ### 7.4 安全基线
 
 - Android 已使用 AndroidKeyStore 包装设备密钥。
-- iOS/Desktop 当前为可用实现，后续升级到系统密钥存储（Keychain/DPAPI/libsecret）。
+- Desktop 当前为应用层存储（已知弱点）；**优先**演进到 Windows DPAPI；iOS Keychain / Linux libsecret 随平台恢复排期再强化。
 
 ---
 
