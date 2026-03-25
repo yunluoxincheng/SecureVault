@@ -215,24 +215,24 @@
 
 #### Week 9: 导出/导入
 
-- [ ] 实现 `ExportManager` (普通导出 + 安全模式导出)
-- [ ] 实现 `ImportManager` (导入 + 去重 + 冲突处理)
-- [ ] 实现 `ExportImportScreen` UI
-- [ ] 安全模式导出：DataKey 加密 ExportKey → ExportKey 加密数据
-- [ ] 安全模式导入：逆向解密流程
-- [ ] 普通导出：可选加密或明文
-- [ ] 文件选择器集成 (Android DocumentProvider)
+- [x] 实现 `ExportManager` (普通导出 + 安全模式导出)
+- [x] 实现 `ImportManager` (导入 + 去重 + 冲突处理)
+- [x] 实现 `ExportImportScreen` UI
+- [x] 安全模式导出：DataKey 加密 ExportKey → ExportKey 加密数据
+- [x] 安全模式导入：逆向解密流程
+- [x] 普通导出：可选加密或明文
+- [x] 文件选择器集成 (Android DocumentProvider)
 
-- [ ] 编写测试：导出→导入往返验证
+- [x] 编写测试：导出→导入往返验证
 
 ### 验收标准
 
-- [ ] 安全模式密码在 UI 中始终显示为 "••••••••"
+- [x] 安全模式密码在 UI 中始终显示为 "••••••••"
 
-- [ ] 安全模式密码可以复制到剪贴板
-- [ ] 安全模式导出文件只能在 App 内解密
-- [ ] 普通导出/导入往返数据完整
-- [ ] 导入时正确处理重复记录
+- [x] 安全模式密码可以复制到剪贴板
+- [x] 安全模式导出文件只能在 App 内解密
+- [x] 普通导出/导入往返数据完整
+- [x] 导入时正确处理重复记录
 
 ---
 

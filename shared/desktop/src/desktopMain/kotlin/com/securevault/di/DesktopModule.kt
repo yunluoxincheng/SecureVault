@@ -3,8 +3,12 @@ package com.securevault.di
 import com.securevault.crypto.Argon2Kdf
 import com.securevault.data.ConfigRepository
 import com.securevault.data.ConfigRepositoryImpl
+import com.securevault.data.DesktopVaultFileGateway
+import com.securevault.data.ExportManager
+import com.securevault.data.ImportManager
 import com.securevault.data.PasswordRepository
 import com.securevault.data.PasswordRepositoryImpl
+import com.securevault.data.VaultFileGateway
 import com.securevault.data.createSqlDriver
 import com.securevault.db.SecureVaultDatabase
 import com.securevault.security.BiometricAuth
@@ -27,6 +31,9 @@ val desktopModule = module {
     single { SecureClipboard() }
     single { SecurityModeManager(get(), get()) }
     single<PasswordRepository> { PasswordRepositoryImpl(get(), get()) }
+    single<VaultFileGateway> { DesktopVaultFileGateway() }
+    single { ExportManager(get(), get()) }
+    single { ImportManager(get(), get()) }
     single { Argon2Kdf() }
     single { SessionManager() }
     single { KeyManager(get(), get(), get(), get()) }

@@ -1,60 +1,57 @@
 package com.securevault
 
-import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
 import androidx.compose.material3.MaterialTheme
-import androidx.test.core.app.ActivityScenario
-import androidx.test.espresso.Espresso.onView
-import androidx.test.espresso.assertion.ViewAssertions.matches
-import androidx.test.espresso.matcher.ViewMatchers.isDisplayed
-import androidx.test.espresso.matcher.ViewMatchers.withContentDescription
+import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import com.securevault.data.PasswordEntry
 import com.securevault.ui.components.PasswordCard
+import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
 class PasswordCardSecuritySemanticsTest {
 
+    @get:Rule
+    val composeRule = createAndroidComposeRule<DebugTestActivity>()
+
+    private companion object {
+        const val GLOBAL_SECURITY_DESC = "\u5168\u5c40\u5b89\u5168\u6a21\u5f0f\u6761\u76ee"
+        const val ENTRY_SECURITY_DESC = "\u6761\u76ee\u5b89\u5168\u6a21\u5f0f"
+    }
+
     @Test
     fun globalSecurityMode_shouldExposeGlobalSemantics() {
-        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
-            scenario.onActivity { activity ->
-                activity.setContent {
-                    MaterialTheme {
-                        PasswordCard(
-                            entry = sampleEntry(securityMode = false),
-                            securityModeEnabled = true,
-                            onClick = {},
-                            animateEntrance = false,
-                        )
-                    }
-                }
+        composeRule.setContent {
+            MaterialTheme {
+                PasswordCard(
+                    entry = sampleEntry(securityMode = false),
+                    securityModeEnabled = true,
+                    onClick = {},
+                    animateEntrance = false,
+                )
             }
-
-            onView(withContentDescription("全局安全模式条目")).check(matches(isDisplayed()))
         }
+
+        composeRule.onNodeWithContentDescription(GLOBAL_SECURITY_DESC).assertIsDisplayed()
     }
 
     @Test
     fun entrySecurityMode_shouldExposeEntrySemantics() {
-        ActivityScenario.launch(ComponentActivity::class.java).use { scenario ->
-            scenario.onActivity { activity ->
-                activity.setContent {
-                    MaterialTheme {
-                        PasswordCard(
-                            entry = sampleEntry(securityMode = true),
-                            securityModeEnabled = false,
-                            onClick = {},
-                            animateEntrance = false,
-                        )
-                    }
-                }
+        composeRule.setContent {
+            MaterialTheme {
+                PasswordCard(
+                    entry = sampleEntry(securityMode = true),
+                    securityModeEnabled = false,
+                    onClick = {},
+                    animateEntrance = false,
+                )
             }
-
-            onView(withContentDescription("条目安全模式")).check(matches(isDisplayed()))
         }
+
+        composeRule.onNodeWithContentDescription(ENTRY_SECURITY_DESC).assertIsDisplayed()
     }
 
     private fun sampleEntry(securityMode: Boolean): PasswordEntry {

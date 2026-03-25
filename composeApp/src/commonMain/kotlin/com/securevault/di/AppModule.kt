@@ -3,6 +3,7 @@ package com.securevault.di
 import com.securevault.util.PasswordGenerator
 import com.securevault.viewmodel.AddEditPasswordViewModel
 import com.securevault.viewmodel.AuthFlowViewModel
+import com.securevault.viewmodel.ExportImportViewModel
 import com.securevault.viewmodel.GeneratorViewModel
 import com.securevault.viewmodel.PasswordDetailViewModel
 import com.securevault.viewmodel.SecurityModeViewModel
@@ -22,4 +23,5 @@ val appModule = module {
     factory { SettingsViewModel(get(), get(), get(), get()) }
     factory { SecurityModeViewModel(get(), get(), get(), get()) }
     factory { GeneratorViewModel(get(), get()) }
+    factory { ExportImportViewModel(get(), get(), get()) }
 }

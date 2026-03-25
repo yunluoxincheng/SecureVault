@@ -17,6 +17,7 @@ kotlin {
         val androidMain by getting {
             dependencies {
                 api(project(":shared:common"))
+                implementation("androidx.activity:activity-ktx:1.9.3")
             }
         }
     }

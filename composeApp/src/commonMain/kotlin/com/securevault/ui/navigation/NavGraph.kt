@@ -47,6 +47,7 @@ import com.securevault.security.KeyManagerState
 import com.securevault.viewmodel.AddEditPasswordViewModel
 import com.securevault.viewmodel.AuthFlowViewModel
 import com.securevault.viewmodel.AuthStartDestination
+import com.securevault.viewmodel.ExportImportViewModel
 import com.securevault.viewmodel.GeneratorViewModel
 import com.securevault.viewmodel.PasswordDetailViewModel
 import com.securevault.viewmodel.SettingsViewModel
@@ -75,6 +76,7 @@ fun SecureVaultApp() {
     val settingsViewModel: SettingsViewModel = koinInject()
     val securityModeViewModel: SecurityModeViewModel = koinInject()
     val generatorViewModel: GeneratorViewModel = koinInject()
+    val exportImportViewModel: ExportImportViewModel = koinInject()
 
     val authState by authFlowViewModel.uiState.collectAsState()
     val unlockState by unlockViewModel.uiState.collectAsState()
@@ -84,6 +86,7 @@ fun SecureVaultApp() {
     val settingsState by settingsViewModel.uiState.collectAsState()
     val securityModeState by securityModeViewModel.uiState.collectAsState()
     val generatorState by generatorViewModel.uiState.collectAsState()
+    val exportImportState by exportImportViewModel.uiState.collectAsState()
     val keyManagerState by keyManager.state.collectAsState()
 
     val snackbarHostState = remember { SnackbarHostState() }
@@ -191,6 +194,13 @@ fun SecureVaultApp() {
             }
         }
 
+        LaunchedEffect(exportImportState.message) {
+            exportImportState.message?.let {
+                snackbarHostState.showSnackbar(it)
+                exportImportViewModel.consumeMessage()
+            }
+        }
+
         val destinationProvider = entryProvider<NavRoute> {
             entry<OnboardingRoute> {
                 OnboardingScreen(
@@ -284,6 +294,16 @@ fun SecureVaultApp() {
 
             entry<VaultSettingsRoute> {
                 VaultSettingsScreen(
+                    exportMode = exportImportState.exportMode,
+                    importConflictStrategy = exportImportState.importConflictStrategy,
+                    isExporting = exportImportState.isExporting,
+                    isImporting = exportImportState.isImporting,
+                    onExportModeChange = { exportImportViewModel.updateExportMode(it) },
+                    onImportConflictStrategyChange = {
+                        exportImportViewModel.updateImportConflictStrategy(it)
+                    },
+                    onExportClick = { exportImportViewModel.exportVault() },
+                    onImportClick = { exportImportViewModel.importVault() },
                     onBack = { navigator.goBack() },
                 )
             }
