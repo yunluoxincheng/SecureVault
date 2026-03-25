@@ -549,3 +549,24 @@ class SecurityModeManager(
 | **Android** | AndroidKeyStore (TEE/StrongBox), FLAG_SECURE, BiometricPrompt STRONG |
 | **iOS** | Keychain + Secure Enclave, LAContext（**平台能力暂缓专项**） |
 | **Desktop** | **当前周期以 Windows/DPAPI 为优先方向**；macOS Keychain / Linux libsecret 随桌面发行恢复再强化；进程内存保护 |
+
+---
+
+## 七、导出/导入与同源约束（2026-03-25）
+
+### 7.1 导出加密链路
+
+- `Encrypted` 与 `SecureMode` 导出都依赖当前会话中的 `DataKey`。
+- `SecureMode` 在此基础上再引入一次性 `ExportKey`（`DataKey` 先加密 `ExportKey`，再由 `ExportKey` 加密导出数据）。
+
+### 7.2 用户数据迁移文件包含什么
+
+- 用户数据迁移文件用于恢复“解密能力”，内容是：`salt`、Argon2 参数、`encryptedDataKeyPassword` 等密钥恢复材料。
+- 文件不包含 `DataKey` 明文。
+- 导入迁移文件后，仍需用户输入正确主密码才能恢复同一套 `DataKey`。
+
+### 7.3 相同主密码是否可互导
+
+- 不能仅凭“主密码相同”互相导入。
+- 原因：每个保险库初始化时的盐值和密钥材料不同，派生与解封结果不同。
+- 当前实现增加了 `keyBinding` 同源校验，不同源的用户数据与加密导出文件会被拒绝导入，并返回可读错误。

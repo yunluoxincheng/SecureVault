@@ -63,6 +63,7 @@ object AdaptiveArgon2Config {
 ```
 
 **设计要点（来自 SafeVault 经验）：**
+
 - 参数在首次运行时计算并持久化，避免每次解锁时重新计算
 - 低端设备（< 128MB 可用内存）使用降级参数，但仍保证安全底线
 - 密码使用 `CharArray`（非 `String`），用完立即擦除
@@ -212,10 +213,19 @@ class AesGcmCipher {
 ```
 
 **设计要点（来自 SafeVault 经验）：**
+
 - 每次加密都生成新的随机 IV，绝不复用
 - 存储格式包含版本号前缀，方便未来升级
 - 字段级加密：每个字段（title, username, password, url, notes）独立加密
 - SafeVault v1 无 padding，v2 增加了安全填充（`SecurePadding`）
+
+### 2.4 主密码与 DataKey 的职责边界（SecureVault 当前实现）
+
+- 主密码不会直接用于加密每条密码数据。
+- 主密码经 Argon2id 派生为 `PasswordKey`，用于解封 `encryptedDataKeyPassword`。
+- 实际加密/解密密码条目、以及加密导出内容使用的是 `DataKey`。
+- 用户数据迁移导出文件保存的是“可恢复材料”（`salt`、Argon2 参数、`encryptedDataKeyPassword`），不是 `DataKey` 明文。
+- 因此“同主密码”不等于“可互相导入”：若两端不是同一套用户数据上下文，导入会失败。
 
 ---
 
@@ -278,6 +288,7 @@ object SecurePadding {
 ```
 
 **设计要点（来自 SafeVault 经验）：**
+
 - 256 字节块大小对密码字段来说足够大
 - 随机填充而非零填充，避免填充模式泄露信息
 - 最后一字节编码方案简单高效，0 表示 256 字节填充
@@ -358,6 +369,7 @@ object MemorySanitizer {
 ```
 
 **设计要点（来自 SafeVault 经验）：**
+
 - 默认 3 轮覆写（2 轮随机 + 1 轮零填充）
 - 零填充放在最后，确保最终状态可验证
 - `CharArray` 和 `ByteArray` 分别处理
