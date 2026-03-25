@@ -63,7 +63,7 @@ class ExportImportViewModel(
                 it.copy(
                     isExporting = false,
                     message = result.getOrElse { error ->
-                        "导出失败：${error.message ?: "未知错误"}"
+                        ImportExportErrorMapper.passwordExport(error)
                     },
                 )
             }
@@ -88,7 +88,7 @@ class ExportImportViewModel(
                 it.copy(
                     isImporting = false,
                     message = result.getOrElse { error ->
-                        "导入失败：${error.message ?: "未知错误"}"
+                        ImportExportErrorMapper.passwordImport(error)
                     },
                 )
             }
@@ -116,7 +116,7 @@ class ExportImportViewModel(
                 it.copy(
                     isExportingUserData = false,
                     message = result.getOrElse { error ->
-                        "用户数据导出失败：${error.message ?: "未知错误"}"
+                        ImportExportErrorMapper.userDataExport(error)
                     },
                 )
             }

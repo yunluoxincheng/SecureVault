@@ -173,7 +173,9 @@ class UnlockViewModel(
                     it.copy(
                         isLoading = false,
                         showImportUserDataPasswordDialog = false,
-                        errorMessage = "选择用户数据失败：${result.exceptionOrNull()?.message ?: "未知错误"}",
+                        errorMessage = ImportExportErrorMapper.userDataSelect(
+                            result.exceptionOrNull() ?: IllegalStateException("选择失败")
+                        ),
                     )
                 }
             }
@@ -223,7 +225,9 @@ class UnlockViewModel(
                     it.copy(
                         isLoading = false,
                         showImportUserDataPasswordDialog = false,
-                        errorMessage = "导入用户数据失败：${result.exceptionOrNull()?.message ?: "未知错误"}",
+                        errorMessage = ImportExportErrorMapper.userDataImport(
+                            result.exceptionOrNull() ?: IllegalStateException("导入失败")
+                        ),
                     )
                 }
             }
