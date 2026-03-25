@@ -36,7 +36,7 @@ class GeneratorViewModelTest {
 
         val state = viewModel.uiState.value
         assertTrue(generated.isNotBlank())
-        assertEquals("已复制，30 秒后自动清除", state.infoMessage)
+        assertTrue(state.infoMessage?.contains("30 秒后自动清除") == true)
         assertNull(state.errorMessage)
     }
 }

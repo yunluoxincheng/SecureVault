@@ -5,6 +5,7 @@ import com.securevault.util.PasswordGeneratorConfig
 import com.securevault.util.PasswordPreset
 import com.securevault.util.PasswordStrengthCalculator
 import com.securevault.util.PasswordStrengthLevel
+import com.securevault.security.ClipboardSafetyNotice
 import com.securevault.security.SecureClipboard
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -59,6 +60,11 @@ class GeneratorViewModel(
 
         secureClipboard.copy(password, "Generated Password")
         secureClipboard.scheduleAutoClear()
-        _uiState.update { it.copy(infoMessage = "已复制，30 秒后自动清除", errorMessage = null) }
+        _uiState.update {
+            it.copy(
+                infoMessage = ClipboardSafetyNotice.withPasswordCopyHint("已复制，30 秒后自动清除"),
+                errorMessage = null
+            )
+        }
     }
 }

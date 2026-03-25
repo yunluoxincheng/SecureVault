@@ -6,6 +6,7 @@ import com.securevault.data.PasswordEntry
 import com.securevault.data.PasswordRepository
 import com.securevault.security.BiometricAuth
 import com.securevault.security.BiometricResult
+import com.securevault.security.ClipboardSafetyNotice
 import com.securevault.security.KeyManagerError
 import com.securevault.security.KeyManagerResult
 import com.securevault.security.KeyManager
@@ -207,12 +208,13 @@ class PasswordDetailViewModel(
                 }
             }.onSuccess {
                 _uiState.update {
+                    val baseMessage = if (entry.securityMode) {
+                        "密码已使用（已复制），将在 30 秒后清除"
+                    } else {
+                        "密码已复制，将在 30 秒后清除"
+                    }
                     it.copy(
-                        message = if (entry.securityMode) {
-                            "密码已使用（已复制），将在 30 秒后清除"
-                        } else {
-                            "密码已复制，将在 30 秒后清除"
-                        }
+                        message = ClipboardSafetyNotice.withPasswordCopyHint(baseMessage)
                     )
                 }
             }.onFailure { throwable ->
