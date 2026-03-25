@@ -217,6 +217,14 @@ fun SecureVaultApp() {
                     errorMessage = unlockState.errorMessage,
                     onRegister = { password -> unlockViewModel.setupVault(password) },
                     onGoLogin = { navigator.resetToAuth(LoginRoute) },
+                    onImportUserData = { unlockViewModel.startImportUserData() },
+                    showImportUserDataPasswordDialog = unlockState.showImportUserDataPasswordDialog,
+                    onConfirmImportUserDataPassword = { password ->
+                        unlockViewModel.confirmImportUserData(password)
+                    },
+                    onDismissImportUserDataPasswordDialog = {
+                        unlockViewModel.dismissImportUserDataDialog()
+                    },
                 )
             }
 
@@ -228,6 +236,14 @@ fun SecureVaultApp() {
                     onLogin = { password -> unlockViewModel.unlockWithPassword(password) },
                     onBiometricLogin = { unlockViewModel.unlockWithBiometric() },
                     onGoRegister = { navigator.navigate(RegisterRoute) },
+                    onImportUserData = { unlockViewModel.startImportUserData() },
+                    showImportUserDataPasswordDialog = unlockState.showImportUserDataPasswordDialog,
+                    onConfirmImportUserDataPassword = { password ->
+                        unlockViewModel.confirmImportUserData(password)
+                    },
+                    onDismissImportUserDataPasswordDialog = {
+                        unlockViewModel.dismissImportUserDataDialog()
+                    },
                 )
             }
 
@@ -298,12 +314,14 @@ fun SecureVaultApp() {
                     importConflictStrategy = exportImportState.importConflictStrategy,
                     isExporting = exportImportState.isExporting,
                     isImporting = exportImportState.isImporting,
+                    isExportingUserData = exportImportState.isExportingUserData,
                     onExportModeChange = { exportImportViewModel.updateExportMode(it) },
                     onImportConflictStrategyChange = {
                         exportImportViewModel.updateImportConflictStrategy(it)
                     },
                     onExportClick = { exportImportViewModel.exportVault() },
                     onImportClick = { exportImportViewModel.importVault() },
+                    onExportUserDataClick = { exportImportViewModel.exportUserData(it) },
                     onBack = { navigator.goBack() },
                 )
             }

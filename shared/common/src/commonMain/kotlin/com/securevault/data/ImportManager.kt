@@ -8,6 +8,7 @@ import kotlinx.serialization.json.Json
 class ImportManager(
     private val passwordRepository: PasswordRepository,
     private val keyManager: KeyManager,
+    private val configRepository: ConfigRepository? = null,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -19,6 +20,7 @@ class ImportManager(
             val dataKey = requireDataKey()
             try {
                 val envelope = parseEnvelope(envelopeJson)
+                validateKeyBinding(envelope)
                 val importedEntries = decodeEntriesFromEnvelope(envelope, dataKey)
                 val existingEntries = passwordRepository.getAll(dataKey)
                 val indexByFingerprint = existingEntries.associateBy { it.fingerprint() }.toMutableMap()
@@ -112,6 +114,17 @@ class ImportManager(
 
     private fun requireDataKey(): ByteArray {
         return keyManager.getDataKey() ?: error("会话已锁定，请先解锁后再导入")
+    }
+
+    private suspend fun validateKeyBinding(envelope: VaultExportEnvelope) {
+        val expectedBinding = envelope.keyBinding ?: return
+        val encryptedDataKeyPassword = configRepository
+            ?.get(VaultConfigKeys.EncryptedDataKeyPassword)
+            ?: error("当前设备缺少用户数据，请先导入用户数据后再导入加密密码库")
+        val currentBinding = computeBinding(encryptedDataKeyPassword)
+        require(expectedBinding == currentBinding) {
+            "当前用户数据与该密码导出文件不匹配，请导入与该文件同源的用户数据"
+        }
     }
 }
 

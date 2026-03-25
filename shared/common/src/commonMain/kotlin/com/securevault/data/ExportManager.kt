@@ -11,6 +11,7 @@ import kotlinx.serialization.json.Json
 class ExportManager(
     private val passwordRepository: PasswordRepository,
     private val keyManager: KeyManager,
+    private val configRepository: ConfigRepository? = null,
 ) {
     private val json = Json { ignoreUnknownKeys = true }
 
@@ -21,6 +22,7 @@ class ExportManager(
                 val entries = passwordRepository.getAll(dataKey).map { it.toExportEntry() }
                 val payloadJson = json.encodeToString(VaultExportPayload(entries))
                 val createdAt = System.currentTimeMillis()
+                val keyBinding = resolveKeyBinding()
 
                 val envelope = when (mode) {
                     VaultExportMode.Plaintext -> {
@@ -29,6 +31,7 @@ class ExportManager(
                             type = VaultExportType.Plain.toRawValue(),
                             createdAt = createdAt,
                             entryCount = entries.size,
+                            keyBinding = keyBinding,
                             plainData = payloadJson,
                         )
                     }
@@ -43,6 +46,7 @@ class ExportManager(
                             type = VaultExportType.Encrypted.toRawValue(),
                             createdAt = createdAt,
                             entryCount = entries.size,
+                            keyBinding = keyBinding,
                             encryptedData = encryptedData,
                         )
                     }
@@ -60,6 +64,7 @@ class ExportManager(
                                 type = VaultExportType.Secure.toRawValue(),
                                 createdAt = createdAt,
                                 entryCount = entries.size,
+                                keyBinding = keyBinding,
                                 encryptedKey = encryptedKey,
                                 encryptedData = encryptedData,
                             )
@@ -79,4 +84,20 @@ class ExportManager(
     private fun requireDataKey(): ByteArray {
         return keyManager.getDataKey() ?: error("会话已锁定，请先解锁后再导出")
     }
+
+    private suspend fun resolveKeyBinding(): String? {
+        val encryptedDataKeyPassword = configRepository
+            ?.get(VaultConfigKeys.EncryptedDataKeyPassword)
+            ?: return null
+        return computeBinding(encryptedDataKeyPassword)
+    }
+}
+
+internal fun computeBinding(raw: String): String {
+    var hash = 0xcbf29ce484222325uL
+    for (ch in raw) {
+        hash = hash xor ch.code.toULong()
+        hash *= 0x100000001b3uL
+    }
+    return hash.toString(16)
 }

@@ -22,6 +22,8 @@ import androidx.compose.material.icons.filled.Fingerprint
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -46,9 +48,14 @@ fun LoginScreen(
     errorMessage: String?,
     onLogin: (String) -> Unit,
     onBiometricLogin: () -> Unit,
-    onGoRegister: () -> Unit
+    onGoRegister: () -> Unit,
+    onImportUserData: () -> Unit = {},
+    showImportUserDataPasswordDialog: Boolean = false,
+    onConfirmImportUserDataPassword: (String) -> Unit = {},
+    onDismissImportUserDataPasswordDialog: () -> Unit = {},
 ) {
     var password by remember { mutableStateOf("") }
+    var importPassword by remember { mutableStateOf("") }
     var biometricAutoTriggered by remember { mutableStateOf(false) }
     var contentVisible by remember { mutableStateOf(false) }
 
@@ -59,6 +66,48 @@ fun LoginScreen(
             biometricAutoTriggered = true
             onBiometricLogin()
         }
+    }
+
+    if (showImportUserDataPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                importPassword = ""
+                onDismissImportUserDataPasswordDialog()
+            },
+            title = { Text("导入用户数据") },
+            text = {
+                MyAppInput(
+                    value = importPassword,
+                    onValueChange = { importPassword = it },
+                    label = "主密码",
+                    isPassword = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirmImportUserDataPassword(importPassword)
+                        importPassword = ""
+                    },
+                    enabled = importPassword.isNotBlank() && !isLoading,
+                ) {
+                    Text("导入")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        importPassword = ""
+                        onDismissImportUserDataPasswordDialog()
+                    },
+                    enabled = !isLoading,
+                ) {
+                    Text("取消")
+                }
+            },
+        )
     }
 
     Box(
@@ -169,6 +218,13 @@ fun LoginScreen(
                     MyAppButton(
                         text = "没有帐号？注册",
                         onClick = onGoRegister,
+                        enabled = !isLoading,
+                        variant = MyAppButtonVariant.Text,
+                    )
+
+                    MyAppButton(
+                        text = "导入用户数据",
+                        onClick = onImportUserData,
                         enabled = !isLoading,
                         variant = MyAppButtonVariant.Text,
                     )

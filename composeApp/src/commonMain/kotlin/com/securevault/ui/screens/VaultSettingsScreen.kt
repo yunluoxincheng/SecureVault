@@ -9,9 +9,15 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.securevault.data.VaultExportMode
 import com.securevault.data.VaultImportConflictStrategy
@@ -22,6 +28,7 @@ import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
 import com.securevault.ui.components.MyAppDropdownOption
 import com.securevault.ui.components.MyAppDropdownSelector
+import com.securevault.ui.components.MyAppInput
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
@@ -32,12 +39,74 @@ fun VaultSettingsScreen(
     importConflictStrategy: VaultImportConflictStrategy,
     isExporting: Boolean,
     isImporting: Boolean,
+    isExportingUserData: Boolean,
     onExportModeChange: (VaultExportMode) -> Unit,
     onImportConflictStrategyChange: (VaultImportConflictStrategy) -> Unit,
     onExportClick: () -> Unit,
     onImportClick: () -> Unit,
+    onExportUserDataClick: (String) -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
+    var showExportUserDataDialog by remember { mutableStateOf(false) }
+    var masterPassword by remember { mutableStateOf("") }
+
+    if (showExportUserDataDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                masterPassword = ""
+                showExportUserDataDialog = false
+            },
+            title = {
+                Text(
+                    text = "导出用户数据",
+                    style = MaterialTheme.typography.titleLarge,
+                )
+            },
+            text = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.sm),
+                ) {
+                    Text(
+                        text = "请输入主密码以加密导出用户数据。该数据可在新设备导入后恢复加密密码库解密能力。",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    MyAppInput(
+                        value = masterPassword,
+                        onValueChange = { masterPassword = it },
+                        label = "主密码",
+                        isPassword = true,
+                        enabled = !isExportingUserData,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onExportUserDataClick(masterPassword)
+                        masterPassword = ""
+                        showExportUserDataDialog = false
+                    },
+                    enabled = masterPassword.isNotBlank() && !isExportingUserData,
+                ) {
+                    Text("导出")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        masterPassword = ""
+                        showExportUserDataDialog = false
+                    },
+                    enabled = !isExportingUserData,
+                ) {
+                    Text("取消")
+                }
+            },
+        )
+    }
+
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = androidx.compose.ui.Alignment.TopCenter,
@@ -129,6 +198,39 @@ fun VaultSettingsScreen(
                             text = "安全模式导出采用 ExportKey 二次封装，导入时仅在已解锁会话内可解密。",
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            }
+
+            item {
+                MyAppCard(
+                    modifier = Modifier.fillMaxWidth().animateItemEntrance(2),
+                    variant = MyAppCardVariant.Filled,
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(MaterialTheme.spacing.md),
+                    ) {
+                        Text(
+                            text = "用户数据迁移",
+                            style = MaterialTheme.typography.titleSmall,
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+
+                        Text(
+                            text = "导出包含密钥恢复信息的用户数据文件。新设备在登录/创建页面导入并输入主密码后，即可解密加密导出的密码库。",
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+
+                        MyAppButton(
+                            text = "导出用户数据",
+                            onClick = { showExportUserDataDialog = true },
+                            variant = MyAppButtonVariant.Secondary,
+                            isLoading = isExportingUserData,
+                            enabled = !isExporting && !isImporting,
+                            modifier = Modifier.fillMaxWidth(),
                         )
                     }
                 }

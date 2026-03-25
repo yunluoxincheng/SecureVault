@@ -225,6 +225,16 @@
 
 - [x] 编写测试：导出→导入往返验证
 
+### 增量更新（2026-03-25）
+
+- [x] 已修复 Android 导入/导出入口在页面 `RESUMED` 状态下触发的 ActivityResult 注册异常（`LifecycleOwner ... register while RESUMED`）。
+- [x] 已新增 `UserDataTransferManager`：支持“用户数据”导出/导入（含密钥恢复信息），用于跨设备或重装后的恢复链路。
+- [x] 登录/注册页已接入“导入用户数据”能力，并调整为“两步流程”：先选择文件，再输入主密码确认导入。
+- [x] 设置页已新增“用户数据迁移”导出入口（主密码验证后导出）。
+- [x] 已修复导入按钮禁用状态问题，非加载态下可正常点击。
+- [x] 已在导出文件协议中增加 `keyBinding` 同源绑定校验；当用户数据与加密密码文件不匹配时，优先返回可读错误，避免直接暴露底层 MAC 校验失败。
+- [x] 已补充并通过相关验证：`UserDataTransferManagerTest`、`UserDataVaultImportIntegrationTest`，并完成 `:composeApp:compileKotlinDesktop` 与 `:androidApp:compileDebugKotlin` 编译通过。
+
 ### 验收标准
 
 - [x] 安全模式密码在 UI 中始终显示为 "••••••••"

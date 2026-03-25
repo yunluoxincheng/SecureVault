@@ -17,6 +17,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -37,13 +39,60 @@ fun RegisterScreen(
     isLoading: Boolean,
     errorMessage: String?,
     onRegister: (String) -> Unit,
-    onGoLogin: () -> Unit
+    onGoLogin: () -> Unit,
+    onImportUserData: () -> Unit = {},
+    showImportUserDataPasswordDialog: Boolean = false,
+    onConfirmImportUserDataPassword: (String) -> Unit = {},
+    onDismissImportUserDataPasswordDialog: () -> Unit = {},
 ) {
     var password by remember { mutableStateOf("") }
     var confirmPassword by remember { mutableStateOf("") }
+    var importPassword by remember { mutableStateOf("") }
     val valid = password.length >= 8 && password == confirmPassword
     val passwordHints = remember(password) { buildPasswordHints(password) }
     val scrollState = rememberScrollState()
+
+    if (showImportUserDataPasswordDialog) {
+        AlertDialog(
+            onDismissRequest = {
+                importPassword = ""
+                onDismissImportUserDataPasswordDialog()
+            },
+            title = { Text("导入用户数据") },
+            text = {
+                MyAppInput(
+                    value = importPassword,
+                    onValueChange = { importPassword = it },
+                    label = "主密码",
+                    isPassword = true,
+                    enabled = !isLoading,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        onConfirmImportUserDataPassword(importPassword)
+                        importPassword = ""
+                    },
+                    enabled = importPassword.isNotBlank() && !isLoading,
+                ) {
+                    Text("导入")
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        importPassword = ""
+                        onDismissImportUserDataPasswordDialog()
+                    },
+                    enabled = !isLoading,
+                ) {
+                    Text("取消")
+                }
+            },
+        )
+    }
 
     Box(
         modifier = Modifier
@@ -132,6 +181,14 @@ fun RegisterScreen(
             MyAppButton(
                 text = "已有帐号？登录",
                 onClick = onGoLogin,
+                modifier = Modifier.fillMaxWidth(),
+                enabled = !isLoading,
+                variant = MyAppButtonVariant.Text,
+            )
+
+            MyAppButton(
+                text = "已有用户数据？导入",
+                onClick = onImportUserData,
                 modifier = Modifier.fillMaxWidth(),
                 enabled = !isLoading,
                 variant = MyAppButtonVariant.Text,

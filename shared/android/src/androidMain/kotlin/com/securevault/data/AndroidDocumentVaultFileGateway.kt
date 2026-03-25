@@ -60,18 +60,19 @@ class AndroidDocumentVaultFileGateway : VaultFileGateway {
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
                 val key = "create_document_${System.nanoTime()}"
-                val launcher = activity.activityResultRegistry.register(
+                var launcher: androidx.activity.result.ActivityResultLauncher<String>? = null
+                launcher = activity.activityResultRegistry.register(
                     key,
-                    activity,
                     ActivityResultContracts.CreateDocument("application/json"),
                 ) { uri ->
+                    launcher?.unregister()
                     if (continuation.isActive) {
                         continuation.resume(uri)
                     }
                 }
 
                 continuation.invokeOnCancellation {
-                    launcher.unregister()
+                    launcher?.unregister()
                 }
 
                 launcher.launch(suggestedFileName)
@@ -83,18 +84,19 @@ class AndroidDocumentVaultFileGateway : VaultFileGateway {
         return withContext(Dispatchers.Main) {
             suspendCancellableCoroutine { continuation ->
                 val key = "open_document_${System.nanoTime()}"
-                val launcher = activity.activityResultRegistry.register(
+                var launcher: androidx.activity.result.ActivityResultLauncher<Array<String>>? = null
+                launcher = activity.activityResultRegistry.register(
                     key,
-                    activity,
                     ActivityResultContracts.OpenDocument(),
                 ) { uri ->
+                    launcher?.unregister()
                     if (continuation.isActive) {
                         continuation.resume(uri)
                     }
                 }
 
                 continuation.invokeOnCancellation {
-                    launcher.unregister()
+                    launcher?.unregister()
                 }
 
                 launcher.launch(arrayOf("application/json", "application/octet-stream", "*/*"))

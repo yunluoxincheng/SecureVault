@@ -34,6 +34,7 @@ data class VaultExportEnvelope(
     val type: String,
     val createdAt: Long,
     val entryCount: Int,
+    val keyBinding: String? = null,
     val encryptedKey: String? = null,
     val encryptedData: String? = null,
     val plainData: String? = null,

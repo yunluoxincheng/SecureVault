@@ -2,6 +2,7 @@ package com.securevault.viewmodel
 
 import com.securevault.data.ExportManager
 import com.securevault.data.ImportManager
+import com.securevault.data.UserDataTransferManager
 import com.securevault.data.VaultExportMode
 import com.securevault.data.VaultFileGateway
 import com.securevault.data.VaultImportConflictStrategy
@@ -19,6 +20,7 @@ data class ExportImportUiState(
     val importConflictStrategy: VaultImportConflictStrategy = VaultImportConflictStrategy.Skip,
     val isExporting: Boolean = false,
     val isImporting: Boolean = false,
+    val isExportingUserData: Boolean = false,
     val message: String? = null,
 )
 
@@ -26,6 +28,7 @@ class ExportImportViewModel(
     private val exportManager: ExportManager,
     private val importManager: ImportManager,
     private val vaultFileGateway: VaultFileGateway,
+    private val userDataTransferManager: UserDataTransferManager,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
 
@@ -86,6 +89,34 @@ class ExportImportViewModel(
                     isImporting = false,
                     message = result.getOrElse { error ->
                         "导入失败：${error.message ?: "未知错误"}"
+                    },
+                )
+            }
+        }
+    }
+
+    fun exportUserData(masterPassword: String) {
+        if (_uiState.value.isExportingUserData) return
+
+        scope.launch {
+            _uiState.update { it.copy(isExportingUserData = true, message = null) }
+
+            val result = runCatching {
+                val exported = userDataTransferManager
+                    .export(masterPassword.toCharArray())
+                    .getOrThrow()
+                val target = vaultFileGateway
+                    .pickExportTarget("securevault_user_data_${System.currentTimeMillis()}.svu")
+                    .getOrThrow()
+                vaultFileGateway.writeText(target, exported).getOrThrow()
+                "用户数据导出成功"
+            }
+
+            _uiState.update {
+                it.copy(
+                    isExportingUserData = false,
+                    message = result.getOrElse { error ->
+                        "用户数据导出失败：${error.message ?: "未知错误"}"
                     },
                 )
             }

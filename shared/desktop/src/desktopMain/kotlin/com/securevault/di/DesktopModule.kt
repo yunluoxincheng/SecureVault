@@ -8,6 +8,7 @@ import com.securevault.data.ExportManager
 import com.securevault.data.ImportManager
 import com.securevault.data.PasswordRepository
 import com.securevault.data.PasswordRepositoryImpl
+import com.securevault.data.UserDataTransferManager
 import com.securevault.data.VaultFileGateway
 import com.securevault.data.createSqlDriver
 import com.securevault.db.SecureVaultDatabase
@@ -32,8 +33,9 @@ val desktopModule = module {
     single { SecurityModeManager(get(), get()) }
     single<PasswordRepository> { PasswordRepositoryImpl(get(), get()) }
     single<VaultFileGateway> { DesktopVaultFileGateway() }
-    single { ExportManager(get(), get()) }
-    single { ImportManager(get(), get()) }
+    single { ExportManager(get(), get(), get()) }
+    single { ImportManager(get(), get(), get()) }
+    single { UserDataTransferManager(get(), get()) }
     single { Argon2Kdf() }
     single { SessionManager() }
     single { KeyManager(get(), get(), get(), get()) }

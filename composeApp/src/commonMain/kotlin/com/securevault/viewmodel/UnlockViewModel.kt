@@ -1,7 +1,9 @@
 package com.securevault.viewmodel
 
 import com.securevault.data.ConfigRepository
+import com.securevault.data.UserDataTransferManager
 import com.securevault.data.VaultConfigKeys
+import com.securevault.data.VaultFileGateway
 import com.securevault.security.BiometricAuth
 import com.securevault.security.BiometricResult
 import com.securevault.security.KeyManagerError
@@ -21,15 +23,19 @@ data class UnlockUiState(
     val isLoading: Boolean = false,
     val isUnlocked: Boolean = false,
     val errorMessage: String? = null,
-    val biometricAvailable: Boolean = false
+    val biometricAvailable: Boolean = false,
+    val showImportUserDataPasswordDialog: Boolean = false,
 )
 
 class UnlockViewModel(
     private val keyManager: KeyManager,
     private val biometricAuth: BiometricAuth,
-    private val configRepository: ConfigRepository
+    private val configRepository: ConfigRepository,
+    private val vaultFileGateway: VaultFileGateway,
+    private val userDataTransferManager: UserDataTransferManager,
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var pendingUserDataContent: String? = null
 
     private val _uiState = MutableStateFlow(UnlockUiState())
     val uiState: StateFlow<UnlockUiState> = _uiState.asStateFlow()
@@ -144,5 +150,88 @@ class UnlockViewModel(
 
     fun consumeUnlockEvent() {
         _uiState.update { it.copy(isUnlocked = false) }
+    }
+
+    fun startImportUserData() {
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val result = runCatching {
+                val source = vaultFileGateway.pickImportSource().getOrThrow()
+                vaultFileGateway.readText(source).getOrThrow()
+            }
+
+            _uiState.update {
+                if (result.isSuccess) {
+                    pendingUserDataContent = result.getOrNull()
+                    it.copy(
+                        isLoading = false,
+                        showImportUserDataPasswordDialog = true,
+                        errorMessage = null,
+                    )
+                } else {
+                    it.copy(
+                        isLoading = false,
+                        showImportUserDataPasswordDialog = false,
+                        errorMessage = "选择用户数据失败：${result.exceptionOrNull()?.message ?: "未知错误"}",
+                    )
+                }
+            }
+        }
+    }
+
+    fun confirmImportUserData(masterPassword: String) {
+        if (masterPassword.isBlank()) {
+            _uiState.update { it.copy(errorMessage = "请输入主密码") }
+            return
+        }
+
+        val content = pendingUserDataContent
+        if (content == null) {
+            _uiState.update {
+                it.copy(
+                    showImportUserDataPasswordDialog = false,
+                    errorMessage = "未找到待导入的用户数据，请重新选择文件",
+                )
+            }
+            return
+        }
+
+        scope.launch {
+            _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+
+            val result = runCatching {
+                userDataTransferManager.import(content, masterPassword.toCharArray()).getOrThrow()
+                when (keyManager.unlockWithPassword(masterPassword.toCharArray())) {
+                    is KeyManagerResult.Success -> Unit
+                    is KeyManagerResult.Error -> error("用户数据已导入，但主密码验证失败")
+                }
+                configRepository.set(VaultConfigKeys.VaultSetupCompleted, true.toString())
+            }
+
+            _uiState.update {
+                if (result.isSuccess) {
+                    pendingUserDataContent = null
+                    it.copy(
+                        isLoading = false,
+                        isUnlocked = true,
+                        isVaultSetup = true,
+                        showImportUserDataPasswordDialog = false,
+                        errorMessage = null,
+                    )
+                } else {
+                    it.copy(
+                        isLoading = false,
+                        showImportUserDataPasswordDialog = false,
+                        errorMessage = "导入用户数据失败：${result.exceptionOrNull()?.message ?: "未知错误"}",
+                    )
+                }
+            }
+        }
+    }
+
+    fun dismissImportUserDataDialog() {
+        pendingUserDataContent = null
+        _uiState.update { it.copy(showImportUserDataPasswordDialog = false) }
     }
 }
