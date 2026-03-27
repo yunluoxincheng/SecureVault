@@ -17,6 +17,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeoutOrNull
 
 data class UnlockUiState(
     val isVaultSetup: Boolean = false,
@@ -122,7 +123,11 @@ class UnlockViewModel(
                 return@launch
             }
 
-            when (val authResult = biometricAuth.authenticate("SecureVault", "验证身份以解锁")) {
+            val authResult = withTimeoutOrNull(BIOMETRIC_AUTH_TIMEOUT_MS) {
+                biometricAuth.authenticate("SecureVault", "验证身份以解锁")
+            } ?: BiometricResult.Cancelled
+
+            when (authResult) {
                 BiometricResult.Success -> {
                     when (val unlockResult = keyManager.unlockWithBiometric()) {
                         is KeyManagerResult.Success -> {
@@ -150,6 +155,23 @@ class UnlockViewModel(
 
     fun consumeUnlockEvent() {
         _uiState.update { it.copy(isUnlocked = false) }
+    }
+
+    fun resetToLoginState() {
+        pendingUserDataContent = null
+        _uiState.update {
+            it.copy(
+                isLoading = false,
+                isUnlocked = false,
+                errorMessage = null,
+                showImportUserDataPasswordDialog = false,
+            )
+        }
+    }
+
+    fun onLoginRouteEntered() {
+        resetToLoginState()
+        refreshState()
     }
 
     fun startImportUserData() {
@@ -237,5 +259,9 @@ class UnlockViewModel(
     fun dismissImportUserDataDialog() {
         pendingUserDataContent = null
         _uiState.update { it.copy(showImportUserDataPasswordDialog = false) }
+    }
+
+    companion object {
+        private const val BIOMETRIC_AUTH_TIMEOUT_MS = 20_000L
     }
 }

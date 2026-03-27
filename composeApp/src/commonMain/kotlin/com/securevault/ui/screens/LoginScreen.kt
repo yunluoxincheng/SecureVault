@@ -40,10 +40,13 @@ import com.securevault.ui.icons.LOGO_SCREEN_SCALE
 import com.securevault.ui.icons.SecureVaultLogoIcon
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
+import kotlinx.coroutines.delay
 
 @Composable
 fun LoginScreen(
     biometricAvailable: Boolean,
+    autoBiometricOnEnter: Boolean = true,
+    isAppForeground: Boolean = true,
     isLoading: Boolean,
     errorMessage: String?,
     onLogin: (String) -> Unit,
@@ -56,13 +59,19 @@ fun LoginScreen(
 ) {
     var password by remember { mutableStateOf("") }
     var importPassword by remember { mutableStateOf("") }
-    var biometricAutoTriggered by remember { mutableStateOf(false) }
+    var biometricAutoTriggered by remember(autoBiometricOnEnter) { mutableStateOf(!autoBiometricOnEnter) }
     var contentVisible by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) { contentVisible = true }
 
-    LaunchedEffect(biometricAvailable, isLoading) {
+    LaunchedEffect(biometricAvailable, isLoading, autoBiometricOnEnter, isAppForeground) {
+        if (!autoBiometricOnEnter) return@LaunchedEffect
+        if (!isAppForeground) return@LaunchedEffect
         if (biometricAvailable && !isLoading && !biometricAutoTriggered) {
+            // Delay auto biometric until Login screen is visually stable.
+            // Triggering too early during route/lifecycle transition can hang prompt flow.
+            delay(AUTO_BIOMETRIC_TRIGGER_DELAY_MS)
+            if (!isAppForeground || isLoading || !biometricAvailable || biometricAutoTriggered) return@LaunchedEffect
             biometricAutoTriggered = true
             onBiometricLogin()
         }
@@ -233,3 +242,5 @@ fun LoginScreen(
         }
     }
 }
+
+private const val AUTO_BIOMETRIC_TRIGGER_DELAY_MS = 450L

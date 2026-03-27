@@ -27,6 +27,7 @@ class MainActivity : FragmentActivity() {
     private val screenSecurity: ScreenSecurity by inject()
     private val keyManager: KeyManager by inject()
     private var pendingAutofillDraft by mutableStateOf<AutofillDraft?>(null)
+    private var isAppForeground by mutableStateOf(true)
     private val log = Logger.withTag("SvMain")
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +40,7 @@ class MainActivity : FragmentActivity() {
             ProvideAndroidThemeBindings {
                 SecureVaultApp(
                     initialAutofillDraft = pendingAutofillDraft,
+                    isAppForeground = isAppForeground,
                     onAutofillDraftConsumed = {
                         pendingAutofillDraft = null
                         AutofillPendingSaveStore.clear(applicationContext)
@@ -57,12 +59,14 @@ class MainActivity : FragmentActivity() {
 
     override fun onResume() {
         super.onResume()
+        isAppForeground = true
         AndroidActivityProvider.set(this)
         keyManager.onAppForeground()
         resolveAutofillDraftFromIntentAndStore(intent, "onResume")?.let { pendingAutofillDraft = it }
     }
 
     override fun onStop() {
+        isAppForeground = false
         keyManager.onAppBackground()
         super.onStop()
     }

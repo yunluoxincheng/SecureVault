@@ -73,6 +73,7 @@ private data class BottomTab(
 fun SecureVaultApp(
     initialAutofillDraft: AutofillDraft? = null,
     onAutofillDraftConsumed: () -> Unit = {},
+    isAppForeground: Boolean = true,
 ) {
     val authFlowViewModel: AuthFlowViewModel = koinInject()
     val keyManager: KeyManager = koinInject()
@@ -104,6 +105,16 @@ fun SecureVaultApp(
         themeMode = settingsState.themeMode,
         dynamicColorEnabled = settingsState.dynamicColorEnabled,
     ) {
+        if (authState.isLoading) {
+            Scaffold { paddingValues ->
+                SkeletonList(
+                    count = 7,
+                    modifier = Modifier.padding(paddingValues).padding(MaterialTheme.spacing.md),
+                )
+            }
+            return@AppTheme
+        }
+
         val startRoute = when (authState.startDestination) {
             AuthStartDestination.Onboarding -> OnboardingRoute
             AuthStartDestination.Register -> RegisterRoute
@@ -116,11 +127,7 @@ fun SecureVaultApp(
         val navigator = remember(navigationState) { Navigator(navigationState) }
         var vaultVisitNonce by remember { mutableIntStateOf(0) }
 
-        LaunchedEffect(initialAutofillDraft, keyManagerState, authState.isLoading) {
-            if (authState.isLoading) {
-                autofillNavLog.d { "draft: skip, authState still loading" }
-                return@LaunchedEffect
-            }
+        LaunchedEffect(initialAutofillDraft, keyManagerState) {
             val draft = initialAutofillDraft ?: return@LaunchedEffect
             if (keyManagerState !is KeyManagerState.Unlocked) {
                 autofillNavLog.d { "draft: skip session locked (state=$keyManagerState)" }
@@ -133,16 +140,6 @@ fun SecureVaultApp(
             navigator.resetToMainRoot(VaultRoute)
             navigator.navigate(AddEditRoute(null))
             onAutofillDraftConsumed()
-        }
-
-        if (authState.isLoading) {
-            Scaffold { paddingValues ->
-                SkeletonList(
-                    count = 7,
-                    modifier = Modifier.padding(paddingValues).padding(MaterialTheme.spacing.md),
-                )
-            }
-            return@AppTheme
         }
 
         val bottomTabs = remember {
@@ -180,10 +177,12 @@ fun SecureVaultApp(
             }
         }
 
-        LaunchedEffect(keyManagerState, navigationState.currentSurface) {
-            val shouldForceLogin = navigationState.currentSurface == NavigationSurface.Main &&
+        LaunchedEffect(keyManagerState, navigationState.currentSurface, isAppForeground) {
+            val shouldForceLogin = isAppForeground &&
+                navigationState.currentSurface == NavigationSurface.Main &&
                 keyManagerState is KeyManagerState.Locked
             if (shouldForceLogin) {
+                unlockViewModel.resetToLoginState()
                 navigator.resetToAuth(LoginRoute)
             }
         }
@@ -263,8 +262,13 @@ fun SecureVaultApp(
             }
 
             entry<LoginRoute> {
+                LaunchedEffect(Unit) {
+                    unlockViewModel.onLoginRouteEntered()
+                }
                 LoginScreen(
                     biometricAvailable = unlockState.biometricAvailable && settingsState.biometricEnabled,
+                    autoBiometricOnEnter = true,
+                    isAppForeground = isAppForeground,
                     isLoading = unlockState.isLoading,
                     errorMessage = unlockState.errorMessage,
                     onLogin = { password -> unlockViewModel.unlockWithPassword(password) },
