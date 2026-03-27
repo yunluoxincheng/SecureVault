@@ -42,6 +42,11 @@
             android:excludeFromRecents="true"
             android:theme="@style/Theme.SecureVault" />
         <activity
+            android:name="com.securevault.autofill.ui.AutofillCredentialPickerActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.SecureVault.AutofillOverlay" />
+        <activity
             android:name="com.securevault.autofill.ui.AutofillSaveActivity"
             android:exported="false"
             android:excludeFromRecents="true"

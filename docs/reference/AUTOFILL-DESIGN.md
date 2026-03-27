@@ -346,6 +346,22 @@ object AutofillBlocklist {
 }
 ```
 
+### 2.7 凭证 Hub 与外置选择页（Android）
+
+为避免下拉建议区过长并兼顾“查看更多凭证”能力，当前 Android 实现采用 **Hub + Picker** 两级：
+
+| 场景 | 行为 |
+|------|------|
+| 已解锁 | 下拉显示最多 3 条站点匹配凭证，外加 `SecureVault / 转到我的密码库` Hub；点 Hub 打开 `AutofillCredentialPickerActivity`（非主应用导航栈页面）。 |
+| 已锁定 | 仅显示 `SecureVault / 密码库已锁定` Hub；点 Hub 进入 `AutofillAuthActivity` 验证，成功后再跳 `AutofillCredentialPickerActivity`。 |
+
+实现约束：
+
+- Hub → Auth / Picker 的 `PendingIntent` **不添加** `FLAG_ACTIVITY_NEW_TASK`，避免部分 ROM 抢占到主应用任务栈。
+- Picker 列表项与系统下拉项统一使用 `autofill_dataset_item`（图标 `ic_launcher_foreground`，标题 `SecureVault`）。
+- Picker 选择后返回 `Dataset` 时，副标题使用 `账号 {maskUsername}`，保证外观与建议区一致。
+- Picker 页面使用 `Theme.SecureVault.AutofillOverlay` + 顶部 inset 偏移，避免与状态栏重叠。
+
 ---
 
 ## 三、iOS CredentialProvider 设计

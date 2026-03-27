@@ -10,11 +10,16 @@ import android.service.autofill.FillResponse
 import android.service.autofill.SaveInfo
 import android.widget.RemoteViews
 import com.securevault.autofill.ui.AutofillAuthActivity
+import com.securevault.autofill.ui.AutofillCredentialPickerActivity
 import com.securevault.autofill.ui.AutofillSaveActivity
+import co.touchlab.kermit.Logger
 
 class FillResponseBuilder(
     private val context: Context,
 ) {
+    private val maxInlineDatasets = 3
+    private val log = Logger.withTag("SvAutofillSvc")
+
     fun build(
         request: ParsedAutofillRequest,
         matches: List<MatchedCredential>,
@@ -22,12 +27,12 @@ class FillResponseBuilder(
     ): FillResponse {
         val builder = FillResponse.Builder()
         if (vaultLocked) {
-            builder.addDataset(createOpenVaultDataset(request))
+            builder.addDataset(createVaultHubDataset(request, matches, vaultLocked = true))
         } else {
-            matches.forEach { credential ->
+            matches.take(maxInlineDatasets).forEach { credential ->
                 builder.addDataset(createCredentialDataset(request, credential))
             }
-            builder.addDataset(createOpenVaultDataset(request))
+            builder.addDataset(createVaultHubDataset(request, matches, vaultLocked = false))
         }
 
         val saveInfo = createSaveInfo(request)
@@ -143,19 +148,75 @@ class FillResponseBuilder(
         }.build()
     }
 
-    private fun createOpenVaultDataset(request: ParsedAutofillRequest): Dataset {
-        val presentation = createDatasetPresentation(
-            title = "SafeVault",
-            subtitle = "转到我的密码库",
-            fallbackPrimary = "打开保险库",
-        )
-        val authIntent = Intent(context, AutofillAuthActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        val authPendingIntent = PendingIntent.getActivity(
-            context,
-            10086,
-            authIntent,
-            PendingIntent.FLAG_UPDATE_CURRENT or pendingIntentMutabilityFlag(),
-        )
+    private fun createVaultHubDataset(
+        request: ParsedAutofillRequest,
+        matches: List<MatchedCredential>,
+        vaultLocked: Boolean,
+    ): Dataset {
+        val presentation = if (vaultLocked) {
+            createDatasetPresentation(
+                title = "SecureVault",
+                subtitle = "密码库已锁定",
+                fallbackPrimary = "打开保险库",
+            )
+        } else {
+            createDatasetPresentation(
+                title = "SecureVault",
+                subtitle = "转到我的密码库",
+                fallbackPrimary = "转到我的密码库",
+            )
+        }
+        val authPendingIntent = if (vaultLocked) {
+            val authIntent = Intent(context, AutofillAuthActivity::class.java).apply {
+                putParcelableArrayListExtra(
+                    AutofillCredentialPickerActivity.EXTRA_USERNAME_IDS,
+                    ArrayList(request.usernameFields.map { it.id }),
+                )
+                putParcelableArrayListExtra(
+                    AutofillCredentialPickerActivity.EXTRA_PASSWORD_IDS,
+                    ArrayList(request.passwordFields.map { it.id }),
+                )
+                putExtra(EXTRA_PICKER_PACKAGE_NAME, request.packageName)
+                putExtra(EXTRA_PICKER_WEB_DOMAIN, request.webDomain)
+            }
+            log.i { "hub dataset -> AutofillAuthActivity (locked), no NEW_TASK" }
+            PendingIntent.getActivity(
+                context,
+                10086,
+                authIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or pendingIntentMutabilityFlag(),
+            )
+        } else {
+            val pickerIntent = Intent(context, AutofillCredentialPickerActivity::class.java).apply {
+                putParcelableArrayListExtra(
+                    AutofillCredentialPickerActivity.EXTRA_USERNAME_IDS,
+                    ArrayList(request.usernameFields.map { it.id }),
+                )
+                putParcelableArrayListExtra(
+                    AutofillCredentialPickerActivity.EXTRA_PASSWORD_IDS,
+                    ArrayList(request.passwordFields.map { it.id }),
+                )
+                putExtra(
+                    AutofillCredentialPickerActivity.EXTRA_TITLES,
+                    matches.map { it.title }.toTypedArray(),
+                )
+                putExtra(
+                    AutofillCredentialPickerActivity.EXTRA_USERNAMES,
+                    matches.map { it.username }.toTypedArray(),
+                )
+                putExtra(
+                    AutofillCredentialPickerActivity.EXTRA_PASSWORDS,
+                    matches.map { it.password }.toTypedArray(),
+                )
+            }
+            log.i { "hub dataset -> AutofillCredentialPickerActivity (unlocked), no NEW_TASK, matches=${matches.size}" }
+            PendingIntent.getActivity(
+                context,
+                10087,
+                pickerIntent,
+                PendingIntent.FLAG_UPDATE_CURRENT or pendingIntentMutabilityFlag(),
+            )
+        }
         return Dataset.Builder(presentation).apply {
             setAuthentication(authPendingIntent.intentSender)
             request.usernameFields.forEach { setValue(it.id, null) }
@@ -198,5 +259,10 @@ class FillResponseBuilder(
     private fun maskUsername(username: String): String {
         if (username.length <= 4) return "****"
         return "${username.take(2)}${"*".repeat(username.length - 4)}${username.takeLast(2)}"
+    }
+
+    companion object {
+        const val EXTRA_PICKER_PACKAGE_NAME = "picker_package_name"
+        const val EXTRA_PICKER_WEB_DOMAIN = "picker_web_domain"
     }
 }

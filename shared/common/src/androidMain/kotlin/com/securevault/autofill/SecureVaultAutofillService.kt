@@ -60,6 +60,10 @@ class SecureVaultAutofillService : AutofillService() {
                 matches = matches,
                 vaultLocked = isLocked,
             )
+            log.i {
+                "onFillRequest: pkg=$packageName locked=$isLocked userFields=${parsed.usernameFields.size} " +
+                    "passFields=${parsed.passwordFields.size} matches=${matches.size}"
+            }
             callback.onSuccess(response)
         }
     }

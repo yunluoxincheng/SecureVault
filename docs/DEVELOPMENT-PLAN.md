@@ -282,6 +282,9 @@
 - [x] **待保存草稿落盘**：`AutofillPendingSaveStore`（`commit` 同步写入）+ `MainActivity` 从 Intent 或存储恢复草稿；导航消费后清空。
 - [x] **保存解析**：`AutofillParser` 支持 `phone` / `tel` / `TYPE_CLASS_PHONE`、邮箱与常用中文 hint；取值优先 `autofillValue`、回退 `ViewNode.text`。
 - [x] **UI 集成**：`AutofillDraft` → `AddEditPasswordViewModel`；`loadEntry(null)` 避免重复清空已预填的新建条目。
+- [x] **凭证入口与外置选择页**：下拉建议区保留最多 3 条站点直填项，并追加 `SecureVault / 转到我的密码库` 入口；入口在已解锁时拉起 `AutofillCredentialPickerActivity`（外置浮层样式），锁定时先走 `AutofillAuthActivity` 验证后再进入选择页。
+- [x] **选择页样式与返回展示统一**：`AutofillCredentialPickerActivity` 行项与下拉建议统一复用 `autofill_dataset_item`，图标使用 `ic_launcher_foreground`，返回数据集标题统一 `SecureVault`，副标题格式为 `账号 xx****xx`。
+- [x] **ROM 兼容与可观测性**：移除 Autofill 流转中的 `NEW_TASK`，修复“跳主应用/背景错误”问题；新增 `SvAutofillSvc` / `SvAutofillAuth` / `SvAutofillPicker` 关键日志用于 Vivo/OriginOS 定位。
 
 ### 验收标准
 
