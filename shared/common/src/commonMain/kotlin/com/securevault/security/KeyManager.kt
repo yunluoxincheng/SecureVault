@@ -157,6 +157,10 @@ class KeyManager(
         sessionManager.setLockTimeout(timeoutMs)
     }
 
+    fun allowImmediateBackgroundLockBypass(durationMs: Long) {
+        sessionManager.allowImmediateBackgroundLockBypass(durationMs)
+    }
+
     fun onAppBackground() {
         val locked = sessionManager.onAppBackground()
         if (locked) {

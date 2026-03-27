@@ -56,6 +56,7 @@ class SessionManager {
     private var lastActivityTime = System.currentTimeMillis()
     private var backgroundEnteredAtMs: Long? = null
     private var lockTimeoutMs = CryptoConstants.Session.DEFAULT_LOCK_TIMEOUT_MS
+    private var skipImmediateBackgroundLockUntilMs: Long = 0L
 
     private val _sessionState = MutableStateFlow<SessionState>(SessionState.Locked)
     val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
@@ -98,10 +99,21 @@ class SessionManager {
         lockTimeoutMs = timeoutMs
     }
 
+    fun allowImmediateBackgroundLockBypass(durationMs: Long) {
+        if (durationMs <= 0L) return
+        skipImmediateBackgroundLockUntilMs = System.currentTimeMillis() + durationMs
+    }
+
     fun onAppBackground(): Boolean {
         if (!isUnlocked) return false
 
         if (lockTimeoutMs == CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS) {
+            val now = System.currentTimeMillis()
+            if (skipImmediateBackgroundLockUntilMs > now) {
+                skipImmediateBackgroundLockUntilMs = 0L
+                backgroundEnteredAtMs = now
+                return false
+            }
             lock()
             return true
         }
@@ -147,6 +159,7 @@ class SessionManager {
 
     fun clear() {
         lock()
+        skipImmediateBackgroundLockUntilMs = 0L
     }
 }
 

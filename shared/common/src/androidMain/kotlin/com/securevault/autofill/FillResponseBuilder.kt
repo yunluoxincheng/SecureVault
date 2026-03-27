@@ -27,9 +27,7 @@ class FillResponseBuilder(
             matches.forEach { credential ->
                 builder.addDataset(createCredentialDataset(request, credential))
             }
-            if (matches.isNotEmpty()) {
-                builder.addDataset(createOpenVaultDataset(request))
-            }
+            builder.addDataset(createOpenVaultDataset(request))
         }
 
         val saveInfo = createSaveInfo(request)
@@ -134,9 +132,11 @@ class FillResponseBuilder(
         request: ParsedAutofillRequest,
         credential: MatchedCredential,
     ): Dataset {
-        val presentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1).apply {
-            setTextViewText(android.R.id.text1, "${credential.title} · ${maskUsername(credential.username)}")
-        }
+        val presentation = createDatasetPresentation(
+            title = credential.title,
+            subtitle = "账号 ${maskUsername(credential.username)}",
+            fallbackPrimary = "${credential.title} · ${maskUsername(credential.username)}",
+        )
         return Dataset.Builder(presentation).apply {
             request.usernameFields.forEach { setValue(it.id, android.view.autofill.AutofillValue.forText(credential.username)) }
             request.passwordFields.forEach { setValue(it.id, android.view.autofill.AutofillValue.forText(credential.password)) }
@@ -144,9 +144,11 @@ class FillResponseBuilder(
     }
 
     private fun createOpenVaultDataset(request: ParsedAutofillRequest): Dataset {
-        val presentation = RemoteViews(context.packageName, android.R.layout.simple_list_item_1).apply {
-            setTextViewText(android.R.id.text1, "打开保险库")
-        }
+        val presentation = createDatasetPresentation(
+            title = "SafeVault",
+            subtitle = "转到我的密码库",
+            fallbackPrimary = "打开保险库",
+        )
         val authIntent = Intent(context, AutofillAuthActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         val authPendingIntent = PendingIntent.getActivity(
             context,
@@ -170,6 +172,27 @@ class FillResponseBuilder(
 
     private fun pendingIntentMutabilityFlag(): Int {
         return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) PendingIntent.FLAG_MUTABLE else 0
+    }
+
+    private fun createDatasetPresentation(
+        title: String,
+        subtitle: String,
+        fallbackPrimary: String,
+    ): RemoteViews {
+        val layoutId = context.resources.getIdentifier("autofill_dataset_item", "layout", context.packageName)
+        val titleId = context.resources.getIdentifier("autofill_item_title", "id", context.packageName)
+        val subtitleId = context.resources.getIdentifier("autofill_item_subtitle", "id", context.packageName)
+
+        if (layoutId != 0 && titleId != 0 && subtitleId != 0) {
+            return RemoteViews(context.packageName, layoutId).apply {
+                setTextViewText(titleId, title)
+                setTextViewText(subtitleId, subtitle)
+            }
+        }
+
+        return RemoteViews(context.packageName, android.R.layout.simple_list_item_1).apply {
+            setTextViewText(android.R.id.text1, fallbackPrimary)
+        }
     }
 
     private fun maskUsername(username: String): String {
