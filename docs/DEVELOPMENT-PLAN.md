@@ -292,6 +292,9 @@
 - [x] **凭证入口与外置选择页**：下拉建议区保留最多 3 条站点直填项，并追加 `SecureVault / 转到我的密码库` 入口；入口在已解锁时拉起 `AutofillCredentialPickerActivity`（外置浮层样式），锁定时先走 `AutofillAuthActivity` 验证后再进入选择页。
 - [x] **选择页样式与返回展示统一**：`AutofillCredentialPickerActivity` 行项与下拉建议统一复用 `autofill_dataset_item`，图标使用 `ic_launcher_foreground`，返回数据集标题统一 `SecureVault`，副标题格式为 `账号 xx****xx`。
 - [x] **ROM 兼容与可观测性**：移除 Autofill 流转中的 `NEW_TASK`，修复“跳主应用/背景错误”问题；新增 `SvAutofillSvc` / `SvAutofillAuth` / `SvAutofillPicker` 关键日志用于 Vivo/OriginOS 定位。
+- [x] **锁定态验证链路优化**：点击“密码库已锁定”后改为直接进入验证流程，优先生物识别，未完成时回退主密码；验证通过后直达 `autofill_credential_picker.xml`。
+- [x] **认证结果回传修复**：`AutofillAuthActivity` 改为启动选择页并中继 `EXTRA_AUTHENTICATION_RESULT`，修复“选择凭证后不回填”的问题。
+- [x] **验证弹窗样式统一**：锁定态主密码验证弹窗改为自定义容器与按钮，标题/输入框/操作区统一为应用内视觉风格。
 
 ### 验收标准
 

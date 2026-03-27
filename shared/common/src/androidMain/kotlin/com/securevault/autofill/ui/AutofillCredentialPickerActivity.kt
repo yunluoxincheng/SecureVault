@@ -16,6 +16,7 @@ import android.widget.ListView
 import android.widget.RemoteViews
 import android.widget.TextView
 import android.widget.Toast
+import com.securevault.autofill.FillResponseBuilder
 import com.securevault.security.KeyManager
 import co.touchlab.kermit.Logger
 import org.koin.core.context.GlobalContext
@@ -36,7 +37,26 @@ class AutofillCredentialPickerActivity : Activity() {
         if (keyManager.getDataKey() == null) {
             Toast.makeText(this, "密码库已锁定，请先解锁", Toast.LENGTH_SHORT).show()
             log.w { "picker opened but vault locked, reroute to auth (no NEW_TASK)" }
-            startActivity(Intent(this, AutofillAuthActivity::class.java))
+            startActivity(
+                Intent(this, AutofillAuthActivity::class.java).apply {
+                    putParcelableArrayListExtra(
+                        EXTRA_USERNAME_IDS,
+                        intent.getParcelableArrayListExtra(EXTRA_USERNAME_IDS),
+                    )
+                    putParcelableArrayListExtra(
+                        EXTRA_PASSWORD_IDS,
+                        intent.getParcelableArrayListExtra(EXTRA_PASSWORD_IDS),
+                    )
+                    putExtra(
+                        FillResponseBuilder.EXTRA_PICKER_PACKAGE_NAME,
+                        intent.getStringExtra(FillResponseBuilder.EXTRA_PICKER_PACKAGE_NAME),
+                    )
+                    putExtra(
+                        FillResponseBuilder.EXTRA_PICKER_WEB_DOMAIN,
+                        intent.getStringExtra(FillResponseBuilder.EXTRA_PICKER_WEB_DOMAIN),
+                    )
+                },
+            )
             finish()
             return
         }
