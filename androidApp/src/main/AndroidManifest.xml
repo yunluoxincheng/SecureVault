@@ -22,6 +22,30 @@
             </intent-filter>
         </activity>
 
+        <service
+            android:name="com.securevault.autofill.SecureVaultAutofillService"
+            android:exported="true"
+            android:label="@string/autofill_service_label"
+            android:permission="android.permission.BIND_AUTOFILL_SERVICE">
+            <intent-filter>
+                <action android:name="android.service.autofill.AutofillService" />
+            </intent-filter>
+            <meta-data
+                android:name="android.autofill"
+                android:resource="@xml/autofill_service_configuration" />
+        </service>
+
+        <activity
+            android:name="com.securevault.autofill.ui.AutofillAuthActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.SecureVault" />
+        <activity
+            android:name="com.securevault.autofill.ui.AutofillSaveActivity"
+            android:exported="false"
+            android:excludeFromRecents="true"
+            android:theme="@style/Theme.SecureVault" />
+
     </application>
 
 </manifest>

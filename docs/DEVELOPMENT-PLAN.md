@@ -256,34 +256,34 @@
 
 #### Week 10: AutofillService
 
-- [ ] 实现 `SecureVaultAutofillService` (onFillRequest, onSaveRequest)
+- [x] 实现 `SecureVaultAutofillService` (onFillRequest, onSaveRequest)
 
-- [ ] 实现 `AutofillParser` (ViewNode 遍历、字段类型识别)
-- [ ] 实现 `CredentialMatcher` (域名/包名匹配)
-- [ ] 实现 `FillResponseBuilder` (Dataset 构建、SaveInfo)
-- [ ] 实现 `AutofillBlocklist` (黑名单)
-- [ ] 配置 `AndroidManifest.xml` (AutofillService 声明)
-- [ ] 配置 `autofill_service_configuration.xml`
+- [x] 实现 `AutofillParser` (ViewNode 遍历、字段类型识别)
+- [x] 实现 `CredentialMatcher` (域名/包名匹配)
+- [x] 实现 `FillResponseBuilder` (Dataset 构建、SaveInfo)
+- [x] 实现 `AutofillBlocklist` (黑名单)
+- [x] 配置 `AndroidManifest.xml` (AutofillService 声明)
+- [x] 配置 `autofill_service_configuration.xml`
 
 #### Week 11: 保存 UI 与集成
 
-- [ ] 实现 `AutofillSaveScreen` (保存新凭证 UI)
-- [ ] 实现 `AutofillAuthScreen` (解锁后再保存)
-- [ ] 实现 `CredentialSelectorScreen` (多凭证选择)
+- [x] 实现 `AutofillSaveScreen` (保存新凭证 UI)
+- [x] 实现 `AutofillAuthScreen` (解锁后再保存)
+- [x] 实现 `CredentialSelectorScreen` (多凭证选择)
 
-- [ ] 实现 `SaveDetector` (新凭证/更新检测)
-- [ ] 锁定状态处理（显示"打开保险库"选项）
-- [ ] 安全模式凭证的自动填充支持
-- [ ] 在真实应用和浏览器中测试
+- [x] 实现 `SaveDetector` (新凭证/更新检测)
+- [x] 锁定状态处理（显示"打开保险库"选项）
+- [x] 安全模式凭证的自动填充支持
+- [x] 在真实应用和浏览器中测试
 
 ### 验收标准
 
-- [ ] Chrome/Firefox 中可以自动填充
-- [ ] 第三方 App 中可以自动填充
-- [ ] 检测到新密码时弹出保存提示
-- [ ] 检测到密码变更时弹出更新提示
-- [ ] 锁定状态下只显示"打开保险库"
-- [ ] 不在自身和其他密码管理器中触发
+- [x] Chrome/Firefox 中可以自动填充
+- [x] 第三方 App 中可以自动填充
+- [x] 检测到新密码时弹出保存提示
+- [x] 检测到密码变更时弹出更新提示
+- [x] 锁定状态下只显示"打开保险库"
+- [x] 不在自身和其他密码管理器中触发
 
 ---
 

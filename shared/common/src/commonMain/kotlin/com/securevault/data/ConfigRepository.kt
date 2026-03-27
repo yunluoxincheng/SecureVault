@@ -22,4 +22,6 @@ object VaultConfigKeys {
     const val OnboardingCompleted = "onboarding_completed"
     const val VaultSetupCompleted = "vault_setup_completed"
     const val SessionLockTimeoutMs = "session_lock_timeout_ms"
+    const val AutofillEnabled = "autofill_enabled"
+    const val AutofillAskToSaveOnLogin = "autofill_ask_to_save_on_login"
 }

@@ -47,6 +47,7 @@ import com.securevault.security.KeyManagerState
 import com.securevault.viewmodel.AddEditPasswordViewModel
 import com.securevault.viewmodel.AuthFlowViewModel
 import com.securevault.viewmodel.AuthStartDestination
+import com.securevault.viewmodel.AutofillSettingsViewModel
 import com.securevault.viewmodel.ExportImportViewModel
 import com.securevault.viewmodel.GeneratorViewModel
 import com.securevault.viewmodel.PasswordDetailViewModel
@@ -74,6 +75,7 @@ fun SecureVaultApp() {
     val detailViewModel: PasswordDetailViewModel = koinInject()
     val addEditViewModel: AddEditPasswordViewModel = koinInject()
     val settingsViewModel: SettingsViewModel = koinInject()
+    val autofillSettingsViewModel: AutofillSettingsViewModel = koinInject()
     val securityModeViewModel: SecurityModeViewModel = koinInject()
     val generatorViewModel: GeneratorViewModel = koinInject()
     val exportImportViewModel: ExportImportViewModel = koinInject()
@@ -84,6 +86,7 @@ fun SecureVaultApp() {
     val detailState by detailViewModel.uiState.collectAsState()
     val addEditState by addEditViewModel.uiState.collectAsState()
     val settingsState by settingsViewModel.uiState.collectAsState()
+    val autofillSettingsState by autofillSettingsViewModel.uiState.collectAsState()
     val securityModeState by securityModeViewModel.uiState.collectAsState()
     val generatorState by generatorViewModel.uiState.collectAsState()
     val exportImportState by exportImportViewModel.uiState.collectAsState()
@@ -191,6 +194,12 @@ fun SecureVaultApp() {
             settingsState.infoMessage?.let {
                 snackbarHostState.showSnackbar(it)
                 settingsViewModel.consumeInfoMessage()
+            }
+        }
+        LaunchedEffect(autofillSettingsState.infoMessage) {
+            autofillSettingsState.infoMessage?.let {
+                snackbarHostState.showSnackbar(it)
+                autofillSettingsViewModel.consumeInfoMessage()
             }
         }
 
@@ -303,7 +312,12 @@ fun SecureVaultApp() {
             }
 
             entry<AutofillSettingsRoute> {
+                LaunchedEffect(Unit) { autofillSettingsViewModel.refreshSystemStatus() }
                 AutofillSettingsScreen(
+                    uiState = autofillSettingsState,
+                    onAutofillEnabledChange = { autofillSettingsViewModel.updateAutofillEnabled(it) },
+                    onAskToSaveChange = { autofillSettingsViewModel.updateAskToSaveOnLogin(it) },
+                    onOpenSystemSettings = { autofillSettingsViewModel.openSystemSettings() },
                     onBack = { navigator.goBack() },
                 )
             }

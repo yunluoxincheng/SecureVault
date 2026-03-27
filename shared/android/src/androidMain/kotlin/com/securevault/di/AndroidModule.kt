@@ -14,6 +14,7 @@ import com.securevault.data.VaultFileGateway
 import com.securevault.data.createSqlDriver
 import com.securevault.db.SecureVaultDatabase
 import com.securevault.security.BiometricAuth
+import com.securevault.security.AutofillSystemBridge
 import com.securevault.security.ScreenSecurity
 import com.securevault.security.SecureClipboard
 import com.securevault.security.PlatformKeyStore
@@ -29,6 +30,7 @@ fun createAndroidModule(context: Context) = module {
 
     single { PlatformKeyStore() }
     single { BiometricAuth() }
+    single { AutofillSystemBridge() }
     single { ScreenSecurity() }
     single { SecureClipboard() }
     single { SecurityModeManager(get(), get()) }

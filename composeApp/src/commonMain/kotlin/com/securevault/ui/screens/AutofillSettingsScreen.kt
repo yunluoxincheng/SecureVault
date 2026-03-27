@@ -9,29 +9,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import com.securevault.ui.animation.animateItemEntrance
 import com.securevault.ui.components.MyAppCard
 import com.securevault.ui.components.MyAppCardVariant
+import com.securevault.ui.components.MyAppListItem
 import com.securevault.ui.components.MyAppTopBar
 import com.securevault.ui.components.SettingsSwitchRow
 import com.securevault.ui.theme.layout
 import com.securevault.ui.theme.spacing
+import com.securevault.viewmodel.AutofillSettingsUiState
 
 @Composable
 fun AutofillSettingsScreen(
+    uiState: AutofillSettingsUiState,
+    onAutofillEnabledChange: (Boolean) -> Unit,
+    onAskToSaveChange: (Boolean) -> Unit,
+    onOpenSystemSettings: () -> Unit,
     onBack: (() -> Unit)? = null,
 ) {
-    var autofillServiceEnabled by rememberSaveable { mutableStateOf(false) }
-    var askToAddMissingPasswordOnLogin by rememberSaveable { mutableStateOf(true) }
-
     Box(
         modifier = Modifier.fillMaxSize(),
         contentAlignment = androidx.compose.ui.Alignment.TopCenter,
@@ -59,9 +61,14 @@ fun AutofillSettingsScreen(
                     ) {
                         SettingsSwitchRow(
                             label = "启用自动填充服务",
-                            description = "当前为 UI 占位，暂未接入系统自动填充能力",
-                            checked = autofillServiceEnabled,
-                            onCheckedChange = { autofillServiceEnabled = it },
+                            description = if (uiState.serviceEnabledInSystem) {
+                                "已在系统中启用 SecureVault 自动填充服务"
+                            } else {
+                                "开启后会跳转系统设置，将 SecureVault 设为自动填充服务"
+                            },
+                            checked = uiState.servicePreferenceEnabled,
+                            onCheckedChange = onAutofillEnabledChange,
+                            enabled = uiState.serviceSupported,
                         )
                     }
                     MyAppCard(
@@ -71,8 +78,26 @@ fun AutofillSettingsScreen(
                         SettingsSwitchRow(
                             label = "登录时询问保存不存在的密码",
                             description = "当识别到新凭据时提示添加到密码库",
-                            checked = askToAddMissingPasswordOnLogin,
-                            onCheckedChange = { askToAddMissingPasswordOnLogin = it },
+                            checked = uiState.askToSaveOnLogin,
+                            onCheckedChange = onAskToSaveChange,
+                            enabled = uiState.servicePreferenceEnabled,
+                        )
+                    }
+                    MyAppCard(
+                        modifier = Modifier.fillMaxWidth().animateItemEntrance(index = 2),
+                        variant = MyAppCardVariant.Filled,
+                    ) {
+                        MyAppListItem(
+                            headline = "打开系统自动填充设置",
+                            supportingText = "用于启用/停用 SecureVault 的系统自动填充权限",
+                            onClick = onOpenSystemSettings,
+                            trailing = {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                    contentDescription = "打开系统自动填充设置",
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                )
+                            },
                         )
                     }
                 }
@@ -80,12 +105,12 @@ fun AutofillSettingsScreen(
 
             item {
                 Text(
-                    text = "说明：本页仅实现界面，功能将在后续版本接入。",
+                    text = uiState.infoMessage ?: "提示：系统开关关闭时，输入框仍不会出现填充建议。",
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier
                         .padding(horizontal = MaterialTheme.spacing.xs)
-                        .animateItemEntrance(index = 2),
+                        .animateItemEntrance(index = 3),
                 )
             }
         }
