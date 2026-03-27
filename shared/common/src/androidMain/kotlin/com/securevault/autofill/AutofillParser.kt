@@ -12,24 +12,10 @@ class AutofillParser {
         packageName: String,
     ): ParsedAutofillRequest {
         val latest = contexts.latestOrNull()
-        val allFields = mutableListOf<ParsedField>()
-        var webDomain: String? = null
-
-        latest?.structure?.let { structure ->
-            for (i in 0 until structure.windowNodeCount) {
-                val root = structure.getWindowNodeAt(i).rootViewNode
-                if (webDomain == null) {
-                    webDomain = extractFirstWebDomain(root)
-                }
-                collectFields(root, allFields)
-            }
-        }
-
-        return ParsedAutofillRequest(
+        val sourceContexts = if (latest != null) listOf(latest) else emptyList()
+        return parseFieldsFromContexts(
+            contexts = sourceContexts,
             packageName = packageName,
-            webDomain = webDomain,
-            usernameFields = allFields.filter { it.type == AutofillFieldType.Username },
-            passwordFields = allFields.filter { it.type == AutofillFieldType.Password },
         )
     }
 
@@ -37,19 +23,53 @@ class AutofillParser {
         contexts: List<FillContext>,
         packageName: String,
     ): SaveCandidate? {
-        val parsed = parseFillContexts(contexts = contexts, packageName = packageName)
+        val parsed = parseFieldsFromContexts(
+            contexts = contexts.asReversed(),
+            packageName = packageName,
+        )
         val username = parsed.usernameFields.firstNotNullOfOrNull { it.value?.takeIf(String::isNotBlank) } ?: ""
         val password = parsed.passwordFields.firstNotNullOfOrNull { it.value?.takeIf(String::isNotBlank) } ?: ""
         if (password.isBlank()) return null
         return SaveCandidate(
             username = username,
             password = password,
-            packageName = packageName,
+            packageName = parsed.packageName,
             webDomain = parsed.webDomain,
         )
     }
 
-    private fun collectFields(node: AssistStructure.ViewNode, output: MutableList<ParsedField>) {
+    private fun parseFieldsFromContexts(
+        contexts: List<FillContext>,
+        packageName: String,
+    ): ParsedAutofillRequest {
+        val normalizedPackage = AutofillAppIdentity.normalizePackageName(packageName)
+        val allFields = mutableListOf<ParsedField>()
+        val submitIds = LinkedHashSet<AutofillId>()
+        var webDomain: String? = null
+
+        contexts.forEach { fillContext ->
+            val structure = fillContext.structure
+            for (i in 0 until structure.windowNodeCount) {
+                val root = structure.getWindowNodeAt(i).rootViewNode
+                if (webDomain == null) webDomain = extractFirstWebDomain(root)
+                collectFields(root, allFields, submitIds)
+            }
+        }
+
+        return ParsedAutofillRequest(
+            packageName = normalizedPackage,
+            webDomain = webDomain,
+            usernameFields = allFields.filter { it.type == AutofillFieldType.Username },
+            passwordFields = allFields.filter { it.type == AutofillFieldType.Password },
+            submitIds = submitIds.toList(),
+        )
+    }
+
+    private fun collectFields(
+        node: AssistStructure.ViewNode,
+        output: MutableList<ParsedField>,
+        submitIds: MutableSet<AutofillId>,
+    ) {
         val autofillId: AutofillId = node.autofillId ?: return
         val type = identifyType(node)
         if (type != AutofillFieldType.Unknown) {
@@ -59,9 +79,12 @@ class AutofillParser {
                 value = extractFieldText(node),
             )
         }
+        if (looksLikeSubmitTrigger(node)) {
+            submitIds += autofillId
+        }
 
         for (i in 0 until node.childCount) {
-            collectFields(node.getChildAt(i), output)
+            collectFields(node.getChildAt(i), output, submitIds)
         }
     }
 
@@ -100,9 +123,11 @@ class AutofillParser {
         }
 
         val textSignals = buildString {
-            append(node.hint?.toString().orEmpty())
+            append(node.hint ?: "")
             append(' ')
             append(node.idEntry.orEmpty())
+            append(' ')
+            append(node.contentDescription ?: "")
             append(' ')
             append(node.webDomain.orEmpty())
         }.lowercase()
@@ -126,7 +151,11 @@ class AutofillParser {
             textSignals.contains("手机") ||
             textSignals.contains("电话") ||
             textSignals.contains("手机号") ||
-            textSignals.contains("邮箱")
+            textSignals.contains("邮箱") ||
+            textSignals.contains("账号名") ||
+            textSignals.contains("用户id") ||
+            textSignals.contains("userid") ||
+            textSignals.contains("账号id")
         ) {
             return AutofillFieldType.Username
         }
@@ -144,6 +173,32 @@ class AutofillParser {
             hint.contains("login") ||
             hint == "tel" ||
             hint == "mobile" ||
-            hint == "phonenumber"
+            hint == "phonenumber" ||
+            hint == "userid" ||
+            hint.endsWith("user_id")
+    }
+
+    private fun looksLikeSubmitTrigger(node: AssistStructure.ViewNode): Boolean {
+        val signal = buildString {
+            append(node.hint ?: "")
+            append(' ')
+            append(node.idEntry.orEmpty())
+            append(' ')
+            append(node.contentDescription ?: "")
+            append(' ')
+            append(node.text ?: "")
+            append(' ')
+            append(node.className ?: "")
+        }.lowercase()
+        return signal.contains("login") ||
+            signal.contains("sign in") ||
+            signal.contains("signin") ||
+            signal.contains("submit") ||
+            signal.contains("continue") ||
+            signal.contains("next") ||
+            signal.contains("登录") ||
+            signal.contains("立即登录") ||
+            signal.contains("确认") ||
+            signal.contains("下一步")
     }
 }

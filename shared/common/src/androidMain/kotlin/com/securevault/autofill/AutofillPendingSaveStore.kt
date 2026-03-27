@@ -48,12 +48,19 @@ object AutofillPendingSaveStore {
     }
 
     fun persistFromCandidate(context: Context, candidate: SaveCandidate) {
-        val webDomain = candidate.webDomain
-        val title = when {
-            !webDomain.isNullOrBlank() -> webDomain
-            else -> candidate.packageName
+        val webDomain = candidate.webDomain?.trim()?.ifBlank { null }
+        val normalizedPackage = AutofillAppIdentity.normalizePackageName(candidate.packageName)
+        val title = if (webDomain != null) {
+            webDomain
+        } else {
+            resolveAppLabel(context, normalizedPackage)
+                ?: AutofillAppIdentity.inferTitle(webDomain = null, packageName = normalizedPackage)
         }.ifBlank { "未命名站点" }
-        val url = webDomain?.let { "https://$it" }
+        val url = if (webDomain != null) {
+            "https://$webDomain"
+        } else {
+            AutofillAppIdentity.appUrlForPackage(normalizedPackage)
+        }
         persistPayload(
             context,
             Payload(
@@ -63,6 +70,13 @@ object AutofillPendingSaveStore {
                 url = url,
             ),
         )
+    }
+
+    private fun resolveAppLabel(context: Context, packageName: String): String? {
+        return runCatching {
+            val appInfo = context.packageManager.getApplicationInfo(packageName, 0)
+            context.packageManager.getApplicationLabel(appInfo).toString().trim()
+        }.getOrNull()?.ifBlank { null }
     }
 
     private fun persistPayload(context: Context, payload: Payload) {

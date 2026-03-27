@@ -295,6 +295,10 @@
 - [x] **锁定态验证链路优化**：点击“密码库已锁定”后改为直接进入验证流程，优先生物识别，未完成时回退主密码；验证通过后直达 `autofill_credential_picker.xml`。
 - [x] **认证结果回传修复**：`AutofillAuthActivity` 改为启动选择页并中继 `EXTRA_AUTHENTICATION_RESULT`，修复“选择凭证后不回填”的问题。
 - [x] **验证弹窗样式统一**：锁定态主密码验证弹窗改为自定义容器与按钮，标题/输入框/操作区统一为应用内视觉风格。
+- [x] **App 场景保存识别强化**：新增 `AutofillAppIdentity`，统一包名规范化与 `androidapp://<package>` 标识；`AutofillPendingSaveStore` 在无域名场景下保存 app URL 并优先展示应用名，提升第三方 App 新增/更新命中率。
+- [x] **保存触发兼容增强**：`SaveInfo` 改为“1 个主密码字段 required + 其余字段 optional”，并启用 `FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE`，避免多密码控件（确认密码/镜像字段）导致 `onSaveRequest` 不触发。
+- [x] **提交按钮触发链路**：`AutofillParser` 识别登录/提交类控件并回传 `submitIds`，`FillResponseBuilder` 通过 `SaveInfo.setTriggerId(...)` 绑定提交动作，提升复杂登录页触发保存的稳定性。
+- [x] **解析与入口兜底优化**：填充请求仅解析最新上下文，保存请求逆序回溯上下文；`matches=0` 时 Hub 入口改为直接回主应用，避免空 Picker 循环。
 
 ### 验收标准
 

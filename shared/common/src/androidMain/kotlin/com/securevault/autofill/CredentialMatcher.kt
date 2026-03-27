@@ -12,6 +12,7 @@ class CredentialMatcher(
     ): List<MatchedCredential> {
         val entries = repository.getAll(dataKey)
         val normalizedDomain = normalizeDomain(domain)
+        val normalizedPackage = AutofillAppIdentity.normalizePackageName(packageName)
 
         return entries
             .filter { entry ->
@@ -23,8 +24,10 @@ class CredentialMatcher(
                     }
 
                     else -> {
-                        entryUrl.contains(packageName, ignoreCase = true) ||
-                            entry.title.contains(packageName, ignoreCase = true)
+                        val fromAppUrl = AutofillAppIdentity.extractPackageFromUrl(entryUrl)
+                        fromAppUrl == normalizedPackage ||
+                            entryUrl.contains(normalizedPackage, ignoreCase = true) ||
+                            entry.title.contains(normalizedPackage, ignoreCase = true)
                     }
                 }
             }

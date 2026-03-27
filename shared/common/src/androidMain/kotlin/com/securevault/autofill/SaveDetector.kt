@@ -22,12 +22,17 @@ class SaveDetector(
         if (candidate.password.isBlank()) return null
         val entries = repository.getAll(dataKey)
         val normalizedDomain = normalizeDomain(candidate.webDomain)
+        val normalizedPackage = AutofillAppIdentity.normalizePackageName(candidate.packageName)
         val existing = entries.firstOrNull { entry ->
             val usernameMatches = entry.username.equals(candidate.username, ignoreCase = true)
             if (!usernameMatches) return@firstOrNull false
 
             if (normalizedDomain == null) {
-                entry.url.orEmpty().contains(candidate.packageName, ignoreCase = true)
+                val entryUrl = entry.url.orEmpty()
+                val fromAppUrl = AutofillAppIdentity.extractPackageFromUrl(entryUrl)
+                fromAppUrl == normalizedPackage ||
+                    entryUrl.contains(normalizedPackage, ignoreCase = true) ||
+                    entry.title.contains(normalizedPackage, ignoreCase = true)
             } else {
                 val entryDomain = normalizeDomain(entry.url)
                 entryDomain != null && rootDomain(entryDomain) == rootDomain(normalizedDomain)

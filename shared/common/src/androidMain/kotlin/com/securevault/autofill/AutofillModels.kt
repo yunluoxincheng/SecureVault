@@ -20,6 +20,7 @@ data class ParsedAutofillRequest(
     val webDomain: String?,
     val usernameFields: List<ParsedField>,
     val passwordFields: List<ParsedField>,
+    val submitIds: List<AutofillId>,
 )
 
 data class MatchedCredential(

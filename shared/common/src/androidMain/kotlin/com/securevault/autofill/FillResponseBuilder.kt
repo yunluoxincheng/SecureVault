@@ -38,6 +38,13 @@ class FillResponseBuilder(
         val saveInfo = createSaveInfo(request)
         if (saveInfo != null) {
             builder.setSaveInfo(saveInfo)
+            log.i {
+                "saveInfo configured: userFields=${request.usernameFields.size} passFields=${request.passwordFields.size}"
+            }
+        } else {
+            log.i {
+                "saveInfo skipped: no password fields parsed"
+            }
         }
         return builder.build()
     }
@@ -187,29 +194,47 @@ class FillResponseBuilder(
                 PendingIntent.FLAG_UPDATE_CURRENT or pendingIntentMutabilityFlag(),
             )
         } else {
-            val pickerIntent = Intent(context, AutofillCredentialPickerActivity::class.java).apply {
-                putParcelableArrayListExtra(
-                    AutofillCredentialPickerActivity.EXTRA_USERNAME_IDS,
-                    ArrayList(request.usernameFields.map { it.id }),
-                )
-                putParcelableArrayListExtra(
-                    AutofillCredentialPickerActivity.EXTRA_PASSWORD_IDS,
-                    ArrayList(request.passwordFields.map { it.id }),
-                )
-                putExtra(
-                    AutofillCredentialPickerActivity.EXTRA_TITLES,
-                    matches.map { it.title }.toTypedArray(),
-                )
-                putExtra(
-                    AutofillCredentialPickerActivity.EXTRA_USERNAMES,
-                    matches.map { it.username }.toTypedArray(),
-                )
-                putExtra(
-                    AutofillCredentialPickerActivity.EXTRA_PASSWORDS,
-                    matches.map { it.password }.toTypedArray(),
-                )
+            val pickerIntent = if (matches.isEmpty()) {
+                Intent(Intent.ACTION_MAIN).apply {
+                    addCategory(Intent.CATEGORY_LAUNCHER)
+                    component = ComponentName(context.packageName, "com.securevault.MainActivity")
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT,
+                    )
+                }
+            } else {
+                Intent(context, AutofillCredentialPickerActivity::class.java).apply {
+                    putParcelableArrayListExtra(
+                        AutofillCredentialPickerActivity.EXTRA_USERNAME_IDS,
+                        ArrayList(request.usernameFields.map { it.id }),
+                    )
+                    putParcelableArrayListExtra(
+                        AutofillCredentialPickerActivity.EXTRA_PASSWORD_IDS,
+                        ArrayList(request.passwordFields.map { it.id }),
+                    )
+                    putExtra(
+                        AutofillCredentialPickerActivity.EXTRA_TITLES,
+                        matches.map { it.title }.toTypedArray(),
+                    )
+                    putExtra(
+                        AutofillCredentialPickerActivity.EXTRA_USERNAMES,
+                        matches.map { it.username }.toTypedArray(),
+                    )
+                    putExtra(
+                        AutofillCredentialPickerActivity.EXTRA_PASSWORDS,
+                        matches.map { it.password }.toTypedArray(),
+                    )
+                }
             }
-            log.i { "hub dataset -> AutofillCredentialPickerActivity (unlocked), no NEW_TASK, matches=${matches.size}" }
+            log.i {
+                if (matches.isEmpty()) {
+                    "hub dataset -> MainActivity (unlocked, no matches), no NEW_TASK"
+                } else {
+                    "hub dataset -> AutofillCredentialPickerActivity (unlocked), no NEW_TASK, matches=${matches.size}"
+                }
+            }
             PendingIntent.getActivity(
                 context,
                 10087,
@@ -225,10 +250,23 @@ class FillResponseBuilder(
     }
 
     private fun createSaveInfo(request: ParsedAutofillRequest): SaveInfo? {
-        val ids = (request.usernameFields + request.passwordFields).map { it.id }.toTypedArray()
-        if (ids.isEmpty()) return null
-        val saveType = SaveInfo.SAVE_DATA_TYPE_USERNAME or SaveInfo.SAVE_DATA_TYPE_PASSWORD
-        return SaveInfo.Builder(saveType, ids).build()
+        val passwordIds = request.passwordFields.map { it.id }
+        if (passwordIds.isEmpty()) return null
+        // Some apps expose both password + confirm/hidden mirrors. Requiring all password fields
+        // prevents onSaveRequest from firing. Keep only one required password field.
+        val requiredIds = arrayOf(passwordIds.first())
+        val optionalIds = buildList {
+            addAll(request.usernameFields.map { it.id })
+            addAll(passwordIds.drop(1))
+        }.toTypedArray()
+        val saveType = SaveInfo.SAVE_DATA_TYPE_PASSWORD or SaveInfo.SAVE_DATA_TYPE_USERNAME
+        val saveInfoBuilder = SaveInfo.Builder(saveType, requiredIds)
+            .setOptionalIds(optionalIds)
+            .setFlags(SaveInfo.FLAG_SAVE_ON_ALL_VIEWS_INVISIBLE)
+        request.submitIds.firstOrNull()?.let { triggerId ->
+            saveInfoBuilder.setTriggerId(triggerId)
+        }
+        return saveInfoBuilder.build()
     }
 
     private fun pendingIntentMutabilityFlag(): Int {

@@ -90,7 +90,12 @@ class SecureVaultAutofillService : AutofillService() {
 
                 val candidate = parser.parseSaveCandidate(request.fillContexts, packageName)
                 if (candidate == null) {
-                    log.d { "onSaveRequest: no parseable username/password" }
+                    val parsed = parser.parseFillContexts(request.fillContexts, packageName)
+                    log.d {
+                        "onSaveRequest: no parseable username/password " +
+                            "contexts=${request.fillContexts.size} userFields=${parsed.usernameFields.size} " +
+                            "passFields=${parsed.passwordFields.size} domain=${parsed.webDomain}"
+                    }
                     callback.onSuccess()
                     return@launch
                 }
