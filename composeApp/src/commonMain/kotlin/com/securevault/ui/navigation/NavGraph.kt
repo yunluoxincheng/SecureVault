@@ -55,10 +55,13 @@ import com.securevault.viewmodel.SettingsViewModel
 import com.securevault.viewmodel.SecurityModeViewModel
 import com.securevault.viewmodel.UnlockViewModel
 import com.securevault.viewmodel.VaultViewModel
+import co.touchlab.kermit.Logger
 import org.koin.compose.koinInject
 
 private val mainTabRoutes = setOf(VaultRoute, GeneratorRoute, SettingsRoute)
 private const val APP_VERSION = "1.0.0"
+
+private val autofillNavLog = Logger.withTag("SvAutofillNav")
 
 private data class BottomTab(
     val route: MainTabRoute,
@@ -67,7 +70,10 @@ private data class BottomTab(
 )
 
 @Composable
-fun SecureVaultApp() {
+fun SecureVaultApp(
+    initialAutofillDraft: AutofillDraft? = null,
+    onAutofillDraftConsumed: () -> Unit = {},
+) {
     val authFlowViewModel: AuthFlowViewModel = koinInject()
     val keyManager: KeyManager = koinInject()
     val unlockViewModel: UnlockViewModel = koinInject()
@@ -98,16 +104,6 @@ fun SecureVaultApp() {
         themeMode = settingsState.themeMode,
         dynamicColorEnabled = settingsState.dynamicColorEnabled,
     ) {
-        if (authState.isLoading) {
-            Scaffold { paddingValues ->
-                SkeletonList(
-                    count = 7,
-                    modifier = Modifier.padding(paddingValues).padding(MaterialTheme.spacing.md),
-                )
-            }
-            return@AppTheme
-        }
-
         val startRoute = when (authState.startDestination) {
             AuthStartDestination.Onboarding -> OnboardingRoute
             AuthStartDestination.Register -> RegisterRoute
@@ -119,6 +115,35 @@ fun SecureVaultApp() {
         )
         val navigator = remember(navigationState) { Navigator(navigationState) }
         var vaultVisitNonce by remember { mutableIntStateOf(0) }
+
+        LaunchedEffect(initialAutofillDraft, keyManagerState, authState.isLoading) {
+            if (authState.isLoading) {
+                autofillNavLog.d { "draft: skip, authState still loading" }
+                return@LaunchedEffect
+            }
+            val draft = initialAutofillDraft ?: return@LaunchedEffect
+            if (keyManagerState !is KeyManagerState.Unlocked) {
+                autofillNavLog.d { "draft: skip session locked (state=$keyManagerState)" }
+                return@LaunchedEffect
+            }
+            autofillNavLog.i {
+                "draft: navigating to AddEdit (titleLen=${draft.title.length}, userLen=${draft.username.length}, url=${draft.url != null})"
+            }
+            addEditViewModel.applyAutofillDraft(draft)
+            navigator.resetToMainRoot(VaultRoute)
+            navigator.navigate(AddEditRoute(null))
+            onAutofillDraftConsumed()
+        }
+
+        if (authState.isLoading) {
+            Scaffold { paddingValues ->
+                SkeletonList(
+                    count = 7,
+                    modifier = Modifier.padding(paddingValues).padding(MaterialTheme.spacing.md),
+                )
+            }
+            return@AppTheme
+        }
 
         val bottomTabs = remember {
             listOf(
@@ -315,7 +340,6 @@ fun SecureVaultApp() {
                 LaunchedEffect(Unit) { autofillSettingsViewModel.refreshSystemStatus() }
                 AutofillSettingsScreen(
                     uiState = autofillSettingsState,
-                    onAutofillEnabledChange = { autofillSettingsViewModel.updateAutofillEnabled(it) },
                     onAskToSaveChange = { autofillSettingsViewModel.updateAskToSaveOnLogin(it) },
                     onOpenSystemSettings = { autofillSettingsViewModel.openSystemSettings() },
                     onBack = { navigator.goBack() },

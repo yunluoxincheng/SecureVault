@@ -300,6 +300,22 @@ class SaveDetector(
 }
 ```
 
+### 2.5.1 保存后跳转主应用（实现约束，API 28+）
+
+用户确认系统「保存」后，若需要打开密码管理器主界面完成入库，**必须使用**：
+
+[`SaveCallback.onSuccess(IntentSender)`](https://developer.android.com/reference/android/service/autofill/SaveCallback#onSuccess(android.content.IntentSender))
+
+系统文档说明：Intent **从当前正在被自动填充的客户端 Activity 的上下文启动**，进入正确的返回栈，并避免将「从 `AutofillService` 用 `ApplicationContext.startActivity` 起页」误判为后台启动（BAL）而导致界面不前台、进程结束或 extras 丢失。
+
+SecureVault 实现要点：
+
+| 项目 | 说明 |
+|------|------|
+| 主路径 | `PendingIntent.getActivity` 指向 `MainActivity`，携带 `AutofillIntentKeys` 定义的草稿 extras；`FLAG_IMMUTABLE`（Android 12+）用于仅交由系统 `startIntentSender` 的 PendingIntent。 |
+| 兜底 | `AutofillPendingSaveStore` 在 `onSaveRequest` 内同步持久化草稿，防止极端机型上仅依赖 Intent 时数据丢失；`MainActivity` 合并 Intent 与存储并在成功导航后 `clear`。 |
+| 解析 | 手机号/邮箱等账号标识须参与 `SaveCandidate.username` 解析（见 `AutofillParser`）。 |
+
 ### 2.6 黑名单
 
 从 SafeVault 提取的需要屏蔽的应用列表：

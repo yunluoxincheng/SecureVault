@@ -2,6 +2,7 @@ package com.securevault.viewmodel
 
 import com.securevault.data.PasswordEntry
 import com.securevault.data.PasswordRepository
+import com.securevault.ui.navigation.AutofillDraft
 import com.securevault.security.KeyManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -24,13 +25,36 @@ class AddEditPasswordViewModel(
     private val keyManager: KeyManager
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private var pendingAutofillDraft: AutofillDraft? = null
 
     private val _uiState = MutableStateFlow(AddEditPasswordUiState())
     val uiState: StateFlow<AddEditPasswordUiState> = _uiState.asStateFlow()
 
     fun loadEntry(id: Long?) {
         if (id == null) {
-            _uiState.update { AddEditPasswordUiState(entry = null) }
+            val draft = pendingAutofillDraft
+            pendingAutofillDraft = null
+            if (draft == null) {
+                val keep = _uiState.value.entry
+                if (keep != null && keep.id == null) {
+                    return
+                }
+                _uiState.update { AddEditPasswordUiState(entry = null) }
+            } else {
+                val now = System.currentTimeMillis()
+                _uiState.update {
+                    AddEditPasswordUiState(
+                        entry = PasswordEntry(
+                            title = draft.title,
+                            username = draft.username,
+                            password = draft.password,
+                            url = draft.url,
+                            createdAt = now,
+                            updatedAt = now,
+                        )
+                    )
+                }
+            }
             return
         }
 
@@ -51,6 +75,10 @@ class AddEditPasswordViewModel(
                 _uiState.update { it.copy(errorMessage = throwable.message ?: "加载失败") }
             }
         }
+    }
+
+    fun applyAutofillDraft(draft: AutofillDraft) {
+        pendingAutofillDraft = draft
     }
 
     fun save(entry: PasswordEntry) {

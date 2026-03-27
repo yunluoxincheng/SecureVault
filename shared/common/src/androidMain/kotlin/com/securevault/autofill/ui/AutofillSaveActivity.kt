@@ -2,109 +2,147 @@ package com.securevault.autofill.ui
 
 import android.app.Activity
 import android.app.AlertDialog
+import android.content.ComponentName
+import android.content.Intent
 import android.os.Bundle
-import com.securevault.autofill.SaveDetector
-import com.securevault.data.PasswordEntry
-import com.securevault.data.PasswordRepository
+import co.touchlab.kermit.Logger
+import com.securevault.autofill.AutofillPendingSaveStore
+import com.securevault.autofill.EXTRA_AUTOFILL_PASSWORD
+import com.securevault.autofill.EXTRA_AUTOFILL_TITLE
+import com.securevault.autofill.EXTRA_AUTOFILL_URL
+import com.securevault.autofill.EXTRA_AUTOFILL_USERNAME
+import com.securevault.autofill.EXTRA_AUTOFILL_WAS_LOCKED
+import com.securevault.autofill.EXTRA_FROM_AUTOFILL_SAVE
 import com.securevault.security.KeyManager
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.cancel
-import kotlinx.coroutines.launch
 import org.koin.core.context.GlobalContext
 
 class AutofillSaveActivity : Activity() {
-    private val repository: PasswordRepository by lazy { GlobalContext.get().get() }
     private val keyManager: KeyManager by lazy { GlobalContext.get().get() }
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
+    private val log = Logger.withTag("SvAutofillSave")
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
         val username = intent.getStringExtra(EXTRA_USERNAME).orEmpty()
         val password = intent.getStringExtra(EXTRA_PASSWORD).orEmpty()
-        val packageName = intent.getStringExtra(EXTRA_PACKAGE_NAME).orEmpty()
+        val clientPackage = intent.getStringExtra(EXTRA_PACKAGE_NAME).orEmpty()
         val webDomain = intent.getStringExtra(EXTRA_WEB_DOMAIN)
-        val actionType = intent.getStringExtra(EXTRA_ACTION_TYPE)
-        val existingEntryId = intent.getLongExtra(EXTRA_EXISTING_ENTRY_ID, -1L).takeIf { it > 0L }
-
         val title = when {
             !webDomain.isNullOrBlank() -> webDomain
-            else -> packageName
+            else -> clientPackage
         }
-        val actionLabel = if (actionType == SaveDetector.ActionType.UpdateExisting.name) "更新密码" else "保存密码"
-        val actionMessage = if (actionType == SaveDetector.ActionType.UpdateExisting.name) {
+        val actionType = intent.getStringExtra(EXTRA_ACTION_TYPE)
+        val actionLabel = if (actionType == "UpdateExisting") "更新密码" else "保存密码"
+        val actionMessage = if (actionType == "UpdateExisting") {
             "检测到该站点密码可能已变化，是否更新这条凭证？"
         } else {
             "检测到新登录凭证，是否保存到保险库？"
         }
 
+        log.i {
+            "dialog shown clientPkg=$clientPackage web=$webDomain titleLen=${title.length} pwdLen=${password.length} action=$actionType"
+        }
+
         AlertDialog.Builder(this)
             .setTitle(actionLabel)
             .setMessage("$actionMessage\n\n站点：$title\n账号：${username.ifBlank { "(未识别)" }}")
-            .setNegativeButton("取消") { _, _ -> finish() }
+            .setNegativeButton("取消") { _, _ ->
+                log.d { "user dismissed save dialog" }
+                finish()
+            }
             .setPositiveButton(actionLabel) { _, _ ->
-                persistCredential(
+                log.i { "user confirmed save, launching main" }
+                openAppForDraft(
                     username = username,
                     password = password,
                     title = title,
                     webDomain = webDomain,
-                    actionType = actionType,
-                    existingEntryId = existingEntryId,
                 )
             }
-            .setOnCancelListener { finish() }
+            .setOnCancelListener {
+                log.d { "dialog cancelled" }
+                finish()
+            }
             .show()
     }
 
-    private fun persistCredential(
+    private fun openAppForDraft(
         username: String,
         password: String,
         title: String,
         webDomain: String?,
-        actionType: String?,
-        existingEntryId: Long?,
     ) {
-        scope.launch {
-            val dataKey = keyManager.getDataKey()
-            if (dataKey == null) {
-                runOnUiThread { finish() }
-                return@launch
-            }
-            val now = System.currentTimeMillis()
-            if (actionType == SaveDetector.ActionType.UpdateExisting.name && existingEntryId != null) {
-                val existing = repository.getById(existingEntryId, dataKey)
-                if (existing != null) {
-                    repository.update(
-                        existing.copy(
-                            username = username.ifBlank { existing.username },
-                            password = password,
-                            updatedAt = now,
-                        ),
-                        dataKey,
+        AutofillPendingSaveStore.persistForLauncher(
+            this,
+            title = title.ifBlank { "未命名站点" },
+            username = username,
+            password = password,
+            webDomain = webDomain,
+        )
+        val isLocked = keyManager.getDataKey() == null
+        val appPkg = applicationContext.packageName
+        val mainComponent = ComponentName(appPkg, "com.securevault.MainActivity")
+
+        fun buildMainIntent(): Intent = Intent(Intent.ACTION_MAIN).apply {
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            component = mainComponent
+            addFlags(
+                Intent.FLAG_ACTIVITY_NEW_TASK or
+                    Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                    Intent.FLAG_ACTIVITY_REORDER_TO_FRONT,
+            )
+            putExtra(EXTRA_AUTOFILL_TITLE, title.ifBlank { "未命名站点" })
+            putExtra(EXTRA_AUTOFILL_USERNAME, username)
+            putExtra(EXTRA_AUTOFILL_PASSWORD, password)
+            putExtra(EXTRA_AUTOFILL_URL, webDomain?.let { "https://$it" })
+            putExtra(EXTRA_FROM_AUTOFILL_SAVE, true)
+            putExtra(EXTRA_AUTOFILL_WAS_LOCKED, isLocked)
+        }
+
+        val ctx = applicationContext
+        var launched = false
+        runCatching {
+            ctx.startActivity(buildMainIntent())
+            launched = true
+            log.i { "startActivity(MAIN/LAUNCHER explicit) ok pkg=$appPkg locked=$isLocked" }
+        }.onFailure { e ->
+            log.e(e) { "startActivity explicit MAIN failed, trying getLaunchIntent" }
+        }
+
+        if (!launched) {
+            val launcher = packageManager.getLaunchIntentForPackage(appPkg)
+            if (launcher != null) {
+                launcher.apply {
+                    addFlags(
+                        Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP or
+                            Intent.FLAG_ACTIVITY_REORDER_TO_FRONT,
                     )
+                    component = mainComponent
+                    putExtra(EXTRA_AUTOFILL_TITLE, title.ifBlank { "未命名站点" })
+                    putExtra(EXTRA_AUTOFILL_USERNAME, username)
+                    putExtra(EXTRA_AUTOFILL_PASSWORD, password)
+                    putExtra(EXTRA_AUTOFILL_URL, webDomain?.let { "https://$it" })
+                    putExtra(EXTRA_FROM_AUTOFILL_SAVE, true)
+                    putExtra(EXTRA_AUTOFILL_WAS_LOCKED, isLocked)
+                }
+                runCatching {
+                    ctx.startActivity(launcher)
+                    launched = true
+                    log.i { "startActivity(launcher+component) ok" }
+                }.onFailure { e ->
+                    log.e(e) { "startActivity launcher fallback failed" }
                 }
             } else {
-                repository.create(
-                    PasswordEntry(
-                        title = title.ifBlank { "未命名站点" },
-                        username = username,
-                        password = password,
-                        url = webDomain?.let { "https://$it" },
-                        createdAt = now,
-                        updatedAt = now,
-                    ),
-                    dataKey,
-                )
+                log.e { "getLaunchIntentForPackage returned null for $appPkg" }
             }
-            runOnUiThread { finish() }
         }
-    }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        scope.cancel()
+        if (!launched) {
+            log.e { "all start attempts failed — check OriginOS 后台弹出/自启动权限" }
+        }
+
+        finish()
     }
 
     companion object {
