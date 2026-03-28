@@ -226,6 +226,7 @@ class UnlockViewModel(
 
             val result = runCatching {
                 userDataTransferManager.import(content, masterPassword.toCharArray()).getOrThrow()
+                keyManager.clearVaultConfigCache()
                 when (keyManager.unlockWithPassword(masterPassword.toCharArray())) {
                     is KeyManagerResult.Success -> Unit
                     is KeyManagerResult.Error -> error("用户数据已导入，但主密码验证失败")

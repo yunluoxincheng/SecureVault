@@ -45,6 +45,24 @@ class UserDataTransferManagerTest {
     }
 
     @Test
+    fun importUserData_withUtf8BomAndTrailingWhitespace_succeeds() {
+        runBlocking {
+            val password = "Master#Pass2026"
+            assertIs<KeyManagerResult.Success<Unit>>(keyManager.setupVault(password.toCharArray()))
+
+            val exported = userDataTransferManager.export(password.toCharArray()).getOrThrow()
+
+            keyManager.clear()
+
+            val withBomAndPadding = "\uFEFF$exported\n  "
+            userDataTransferManager.import(withBomAndPadding, password.toCharArray()).getOrThrow()
+
+            val unlockResult = keyManager.unlockWithPassword(password.toCharArray())
+            assertIs<KeyManagerResult.Success<Unit>>(unlockResult)
+        }
+    }
+
+    @Test
     fun importUserData_withWrongPassword_fails() {
         runBlocking {
             val password = "Master#Pass2026"

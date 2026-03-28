@@ -242,6 +242,12 @@
 - [x] 已在导出文件协议中增加 `keyBinding` 同源绑定校验；当用户数据与加密密码文件不匹配时，优先返回可读错误，避免直接暴露底层 MAC 校验失败。
 - [x] 已补充并通过相关验证：`UserDataTransferManagerTest`、`UserDataVaultImportIntegrationTest`，并完成 `:composeApp:compileKotlinDesktop` 与 `:androidApp:compileDebugKotlin` 编译通过。
 
+### 增量更新（2026-03-28）
+
+- [x] 修复 Android **release** 下「导入用户数据」失败：根因为 R8 与 **JNA**（`com.sun.jna.Pointer` 等）及 **kotlinx.serialization** 运行时冲突；已在 `androidApp/proguard-rules.pro` 补充官方常用保留规则。
+- [x] 用户数据导入：JSON **去 BOM + trim**；导入成功后 **清空 `KeyManager` 保险库配置缓存** 再解锁；`ImportExportErrorMapper` 对序列化异常与未知错误给出更可诊断的文案。
+- [x] 桌面测试补充：`UserDataTransferManagerTest` 覆盖带 BOM/空白后缀的导入往返。
+
 ### 验收标准
 
 - [x] 安全模式密码在 UI 中始终显示为 "••••••••"

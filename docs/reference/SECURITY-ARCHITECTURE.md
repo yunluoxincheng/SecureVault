@@ -570,3 +570,10 @@ class SecurityModeManager(
 - 不能仅凭“主密码相同”互相导入。
 - 原因：每个保险库初始化时的盐值和密钥材料不同，派生与解封结果不同。
 - 当前实现增加了 `keyBinding` 同源校验，不同源的用户数据与加密导出文件会被拒绝导入，并返回可读错误。
+
+### 7.4 Android release 与用户数据导入（2026-03-28）
+
+- **debug 可导入、release 失败不一定是主密码错误。** Release 开启 R8 收缩后，若未保留 JNA 与序列化运行时所需结构，会在解密/Argon2 路径抛出异常；UI 曾统一映射为“请确认备份与主密码”，易误判。
+- **JNA / libsodium 绑定：** `multiplatform-crypto-libsodium-bindings` 在 Android JVM 上通过 **JNA** 访问 native。R8 不得剥离 `com.sun.jna.**`（含 `Pointer.peer` 等），否则典型错误为：`can't obtain peer field ID for class com.sun.jna.Pointer`。对应规则维护在 `androidApp/proguard-rules.pro`。
+- **kotlinx.serialization：** 用户数据与 `EncryptedData` 存储格式依赖 JSON 反序列化；release 需保留序列化器/descriptor 相关规则（同文件中的 kotlinx.serialization 段）。
+- **导入实现要点：** `UserDataTransferManager.import` 对 JSON 做 **UTF-8 BOM 去除与 trim**，避免部分编辑器保存的文件无法解析；登录流程在写入配置后调用 **`KeyManager.clearVaultConfigCache()`** 再解锁，避免内存中仍缓存旧保险库元数据。

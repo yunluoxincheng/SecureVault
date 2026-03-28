@@ -1,8 +1,18 @@
 package com.securevault.viewmodel
 
 import kotlinx.coroutines.CancellationException
+import kotlinx.serialization.SerializationException
 
 internal object ImportExportErrorMapper {
+
+    private fun formatUserVisibleCause(error: Throwable): String {
+        val messages = generateSequence(error) { it.cause }
+            .mapNotNull { it.message?.trim()?.takeIf { m -> m.isNotEmpty() } }
+            .distinct()
+            .take(2)
+            .joinToString(" · ")
+        return messages.ifEmpty { error::class.simpleName ?: "未知原因" }
+    }
 
     fun passwordExport(error: Throwable): String {
         if (error is CancellationException) {
@@ -69,6 +79,9 @@ internal object ImportExportErrorMapper {
         if (error is CancellationException) {
             return "导入已取消"
         }
+        if (error is SerializationException) {
+            return "导入失败：备份文件不是有效的用户数据 JSON，或文件已损坏（${formatUserVisibleCause(error)}）"
+        }
         val message = error.message.orEmpty()
         return when {
             message.contains("不支持的用户数据版本") || message.contains("不支持的用户数据类型") ->
@@ -79,7 +92,10 @@ internal object ImportExportErrorMapper {
                 "用户数据已导入，但当前主密码校验失败，请重新输入主密码解锁"
             message.contains("无法读取导入文件") -> "导入失败：无法读取用户数据文件，请检查文件权限"
             message.contains("当前没有可用的 Android Activity") -> "导入失败：当前页面不可用，请返回后重试"
-            else -> "导入用户数据失败，请确认备份文件和主密码后重试"
+            message.contains("Memory must be at least") || message.contains("Iterations must be at least") ||
+                message.contains("Parallelism must be at least") ->
+                "导入失败：备份中的 Argon2 参数无效，文件可能损坏（${formatUserVisibleCause(error)}）"
+            else -> "导入用户数据失败，请确认备份文件和主密码后重试（${formatUserVisibleCause(error)}）"
         }
     }
 }

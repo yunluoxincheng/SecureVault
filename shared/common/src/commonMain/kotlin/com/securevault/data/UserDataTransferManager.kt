@@ -12,6 +12,11 @@ import kotlinx.serialization.json.Json
 private const val USER_DATA_EXPORT_VERSION = 1
 private const val USER_DATA_EXPORT_TYPE = "user_data_export"
 
+internal fun normalizeUserDataTransferJson(raw: String): String {
+    val withoutBom = if (raw.startsWith('\uFEFF')) raw.substring(1) else raw
+    return withoutBom.trim()
+}
+
 @Serializable
 data class UserDataArgon2Snapshot(
     val memoryKB: Int,
@@ -100,7 +105,8 @@ class UserDataTransferManager(
 
     suspend fun import(envelopeJson: String, masterPassword: CharArray): Result<Unit> {
         return runCatching {
-            val envelope = json.decodeFromString<UserDataTransferEnvelope>(envelopeJson)
+            val normalizedJson = normalizeUserDataTransferJson(envelopeJson)
+            val envelope = json.decodeFromString<UserDataTransferEnvelope>(normalizedJson)
             require(envelope.version == USER_DATA_EXPORT_VERSION) {
                 "不支持的用户数据版本：${envelope.version}"
             }

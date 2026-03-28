@@ -225,6 +225,14 @@ class KeyManager(
         _state.value = KeyManagerState.NotSetup
     }
 
+    /**
+     * Drops cached vault metadata so the next unlock/load reads fresh values from [ConfigRepository].
+     * Call after restoring user data from backup so unlock uses the imported salt and wrapped key.
+     */
+    fun clearVaultConfigCache() {
+        vaultConfig = null
+    }
+
     private suspend fun loadVaultConfigIfNeeded(): Boolean {
         if (vaultConfig != null) return true
         val repository = configRepository ?: return false
