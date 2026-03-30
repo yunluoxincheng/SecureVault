@@ -61,10 +61,10 @@ class UnlockViewModel(
         }
     }
 
-    fun setupVault(password: String) {
+    fun setupVault(password: CharArray) {
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (keyManager.setupVault(password.toCharArray())) {
+            when (keyManager.setupVault(password)) {
                 is KeyManagerResult.Success -> {
                     configRepository.set(VaultConfigKeys.VaultSetupCompleted, true.toString())
                     _uiState.update {
@@ -86,10 +86,10 @@ class UnlockViewModel(
         }
     }
 
-    fun unlockWithPassword(password: String) {
+    fun unlockWithPassword(password: CharArray) {
         scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            when (val result = keyManager.unlockWithPassword(password.toCharArray())) {
+            when (val result = keyManager.unlockWithPassword(password)) {
                 is KeyManagerResult.Success -> _uiState.update { it.copy(isLoading = false, isUnlocked = true) }
                 is KeyManagerResult.Error -> {
                     when (result.error) {
@@ -138,6 +138,10 @@ class UnlockViewModel(
                             val message = when (unlockResult.error) {
                                 KeyManagerError.VaultNotSetup -> "未检测到保险库，请先注册"
                                 KeyManagerError.BiometricNotEnrolled -> "尚未准备生物识别解锁，请先用主密码登录一次"
+                                KeyManagerError.DeviceKeyDecryptFailed ->
+                                    "设备密钥无法解密，请使用主密码解锁"
+                                KeyManagerError.DeviceKeyKeystoreFailure ->
+                                    "设备密钥不可用，请使用主密码解锁"
                                 else -> "生物识别解锁失败，请先使用主密码"
                             }
                             _uiState.update { it.copy(isLoading = false, errorMessage = message) }
@@ -204,8 +208,8 @@ class UnlockViewModel(
         }
     }
 
-    fun confirmImportUserData(masterPassword: String) {
-        if (masterPassword.isBlank()) {
+    fun confirmImportUserData(masterPassword: CharArray) {
+        if (masterPassword.isEmpty() || masterPassword.all { it.isWhitespace() }) {
             _uiState.update { it.copy(errorMessage = "请输入主密码") }
             return
         }
@@ -225,9 +229,9 @@ class UnlockViewModel(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
 
             val result = runCatching {
-                userDataTransferManager.import(content, masterPassword.toCharArray()).getOrThrow()
+                userDataTransferManager.import(content, masterPassword).getOrThrow()
                 keyManager.clearVaultConfigCache()
-                when (keyManager.unlockWithPassword(masterPassword.toCharArray())) {
+                when (keyManager.unlockWithPassword(masterPassword)) {
                     is KeyManagerResult.Success -> Unit
                     is KeyManagerResult.Error -> error("用户数据已导入，但主密码验证失败")
                 }

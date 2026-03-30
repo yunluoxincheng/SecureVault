@@ -14,11 +14,17 @@ actual class PlatformKeyStore {
         prefs.put(encryptedKeyKey, CryptoUtils.encodeBase64(encryptedKey))
     }
 
-    actual fun getDeviceKey(): ByteArray? {
-        val encryptedKeyB64 = prefs.get(encryptedKeyKey, null) ?: return null
-        val masterKey = getOrCreateMasterKey()
-        val encryptedKey = CryptoUtils.decodeBase64(encryptedKeyB64)
-        return xorWithKey(encryptedKey, masterKey)
+    actual fun getDeviceKey(): DeviceKeyLoadResult {
+        val encryptedKeyB64 = prefs.get(encryptedKeyKey, null) ?: return DeviceKeyLoadResult.NotPresent
+        return try {
+            val masterKey = getOrCreateMasterKey()
+            val encryptedKey = CryptoUtils.decodeBase64(encryptedKeyB64)
+            DeviceKeyLoadResult.Success(xorWithKey(encryptedKey, masterKey))
+        } catch (_: IllegalArgumentException) {
+            DeviceKeyLoadResult.UnwrapFailed
+        } catch (_: Exception) {
+            DeviceKeyLoadResult.KeystoreError("desktop_storage")
+        }
     }
 
     actual fun deleteDeviceKey() {

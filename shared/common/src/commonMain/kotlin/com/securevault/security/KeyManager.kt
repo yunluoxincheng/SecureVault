@@ -19,6 +19,8 @@ sealed class KeyManagerError {
     object VaultAlreadySetup : KeyManagerError()
     object SessionLocked : KeyManagerError()
     object BiometricNotEnrolled : KeyManagerError()
+    object DeviceKeyDecryptFailed : KeyManagerError()
+    object DeviceKeyKeystoreFailure : KeyManagerError()
     data class CryptoError(val message: String) : KeyManagerError()
     data class StorageError(val message: String) : KeyManagerError()
     data class Unknown(val throwable: Throwable) : KeyManagerError()
@@ -197,8 +199,16 @@ class KeyManager(
             return KeyManagerResult.Error(KeyManagerError.VaultNotSetup)
         }
 
-        val dataKey = platformKeyStore.getDeviceKey()
-            ?: return KeyManagerResult.Error(KeyManagerError.BiometricNotEnrolled)
+        val deviceKeyResult = platformKeyStore.getDeviceKey()
+        val dataKey = when (deviceKeyResult) {
+            is DeviceKeyLoadResult.Success -> deviceKeyResult.key
+            DeviceKeyLoadResult.NotPresent ->
+                return KeyManagerResult.Error(KeyManagerError.BiometricNotEnrolled)
+            DeviceKeyLoadResult.UnwrapFailed ->
+                return KeyManagerResult.Error(KeyManagerError.DeviceKeyDecryptFailed)
+            is DeviceKeyLoadResult.KeystoreError ->
+                return KeyManagerResult.Error(KeyManagerError.DeviceKeyKeystoreFailure)
+        }
 
         return try {
             sessionManager.unlock(dataKey)

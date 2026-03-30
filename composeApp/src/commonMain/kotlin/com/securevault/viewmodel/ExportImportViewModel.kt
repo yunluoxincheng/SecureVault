@@ -95,7 +95,7 @@ class ExportImportViewModel(
         }
     }
 
-    fun exportUserData(masterPassword: String) {
+    fun exportUserData(masterPassword: CharArray) {
         if (_uiState.value.isExportingUserData) return
 
         scope.launch {
@@ -103,7 +103,7 @@ class ExportImportViewModel(
 
             val result = runCatching {
                 val exported = userDataTransferManager
-                    .export(masterPassword.toCharArray())
+                    .export(masterPassword)
                     .getOrThrow()
                 val target = vaultFileGateway
                     .pickExportTarget("securevault_user_data_${System.currentTimeMillis()}.svu")

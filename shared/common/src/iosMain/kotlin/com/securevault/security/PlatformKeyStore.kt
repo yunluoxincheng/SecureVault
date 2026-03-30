@@ -14,11 +14,16 @@ actual class PlatformKeyStore {
         NSUserDefaults.standardUserDefaults.setObject(CryptoUtils.encodeBase64(encryptedKey), forKey = deviceKeyTag)
     }
 
-    actual fun getDeviceKey(): ByteArray? {
-        val encryptedKeyB64 = NSUserDefaults.standardUserDefaults.stringForKey(deviceKeyTag) ?: return null
-        val masterKey = getOrCreateMasterKey()
-        val encryptedKey = CryptoUtils.decodeBase64(encryptedKeyB64)
-        return xorWithKey(encryptedKey, masterKey)
+    actual fun getDeviceKey(): DeviceKeyLoadResult {
+        val encryptedKeyB64 = NSUserDefaults.standardUserDefaults.stringForKey(deviceKeyTag)
+            ?: return DeviceKeyLoadResult.NotPresent
+        return try {
+            val masterKey = getOrCreateMasterKey()
+            val encryptedKey = CryptoUtils.decodeBase64(encryptedKeyB64)
+            DeviceKeyLoadResult.Success(xorWithKey(encryptedKey, masterKey))
+        } catch (_: Exception) {
+            DeviceKeyLoadResult.UnwrapFailed
+        }
     }
 
     actual fun deleteDeviceKey() {

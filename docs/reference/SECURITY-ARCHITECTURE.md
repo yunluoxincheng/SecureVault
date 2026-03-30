@@ -603,3 +603,8 @@ class SecurityModeManager(
 - **会话解密缓存：** `PasswordRepositoryImpl` 可按 `(id, updated_at)` 复用已解密的条目展示数据；`create` / `update` / `delete` / `clear`、批量导入结束、`KeyManager.lock` / `clear` / `clearVaultConfigCache` 会清空或按 id 剔除缓存。
 - **主线程与 I/O：** 保险库相关 ViewModel 协程作用域使用 `Dispatchers.IO`，将阻塞型仓库与文件网关操作抬离 UI 线程（与 [AGENTS.md](../../AGENTS.md) 约定一致）。
 - **Argon2 存量参数：** `changeMasterPassword` **不**将已存用户的 Argon2 代价位重写为「当前产品默认档」；仅 `setupVault` 与显式迁移/校准类流程（若将来提供）可改写落盘的 Argon2 元数据。规范：`openspec/specs/vault-config/spec.md`。
+
+### 7.7 KDF 与 Android 设备密钥（2026-03-30）
+
+- **主密码与 KDF（#7）：** 解锁相关 UI 在导航边界将输入转为 `CharArray` 传入 ViewModel；`Argon2Kdf`（Android/Desktop JVM）对密码做 UTF-8 字节编码并可在使用后擦除，再构造短时 `String` 调用 `PasswordHash.pwhash`，**不改变**与历史一致的 KDF 输入语义与已存保险库兼容性。规范：`openspec/specs/kdf-password-handling/spec.md`。
+- **Android 设备密钥（#15）：** `PlatformKeyStore.getDeviceKey()` 返回 `DeviceKeyLoadResult`，区分无存储密文、解密/认证失败与其余 Keystore/环境错误；`KeyManager` 映射为 `DeviceKeyDecryptFailed` / `DeviceKeyKeystoreFailure` 等，用户文案不暴露密钥或密文。诊断日志使用标签 **`SvDeviceKey`**，仅含分类与异常类型名，不含密钥材料。规范：`openspec/specs/android-device-key/spec.md`。

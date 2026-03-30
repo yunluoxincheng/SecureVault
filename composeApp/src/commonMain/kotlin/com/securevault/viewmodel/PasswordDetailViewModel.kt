@@ -135,8 +135,8 @@ class PasswordDetailViewModel(
         }
     }
 
-    fun verifySensitiveActionWithPassword(password: String) {
-        if (password.isBlank()) {
+    fun verifySensitiveActionWithPassword(password: CharArray) {
+        if (password.isEmpty() || password.all { it.isWhitespace() }) {
             _uiState.update { it.copy(message = "请输入主密码") }
             return
         }
@@ -144,7 +144,7 @@ class PasswordDetailViewModel(
         val action = _uiState.value.pendingVerificationAction ?: return
         scope.launch {
             _uiState.update { it.copy(isLoading = true, message = null) }
-            when (val result = keyManager.unlockWithPassword(password.toCharArray())) {
+            when (val result = keyManager.unlockWithPassword(password)) {
                 is KeyManagerResult.Success -> {
                     _uiState.update {
                         it.copy(

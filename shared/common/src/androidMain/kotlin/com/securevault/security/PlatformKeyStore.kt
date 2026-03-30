@@ -5,15 +5,18 @@ import android.content.Context
 import android.security.keystore.KeyGenParameterSpec
 import android.security.keystore.KeyInfo
 import android.security.keystore.KeyProperties
+import co.touchlab.kermit.Logger
 import com.securevault.crypto.CryptoUtils
 import java.security.KeyStore
 import java.security.KeyFactory
+import javax.crypto.AEADBadTagException
 import javax.crypto.Cipher
 import javax.crypto.KeyGenerator
 import javax.crypto.SecretKey
 import javax.crypto.spec.GCMParameterSpec
 
 actual class PlatformKeyStore {
+    private val log = Logger.withTag("SvDeviceKey")
     private val keyStore = KeyStore.getInstance(ANDROID_KEYSTORE).apply { load(null) }
 
     actual fun storeDeviceKey(key: ByteArray) {
@@ -31,11 +34,17 @@ actual class PlatformKeyStore {
             .apply()
     }
 
-    actual fun getDeviceKey(): ByteArray? {
-        val context = getApplicationContext() ?: return null
+    actual fun getDeviceKey(): DeviceKeyLoadResult {
+        val context = getApplicationContext() ?: run {
+            log.w { "getDeviceKey: application context unavailable" }
+            return DeviceKeyLoadResult.KeystoreError("no_application_context")
+        }
         val prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
-        val encryptedB64 = prefs.getString(DEVICE_KEY_CIPHER_B64, null) ?: return null
-        val ivB64 = prefs.getString(DEVICE_KEY_IV_B64, null) ?: return null
+        val encryptedB64 = prefs.getString(DEVICE_KEY_CIPHER_B64, null)
+        val ivB64 = prefs.getString(DEVICE_KEY_IV_B64, null)
+        if (encryptedB64 == null || ivB64 == null) {
+            return DeviceKeyLoadResult.NotPresent
+        }
 
         return try {
             val encrypted = CryptoUtils.decodeBase64(encryptedB64)
@@ -43,9 +52,23 @@ actual class PlatformKeyStore {
             val cipher = Cipher.getInstance(TRANSFORMATION)
             val gcmSpec = GCMParameterSpec(TAG_SIZE_BITS, iv)
             cipher.init(Cipher.DECRYPT_MODE, getOrCreateWrappingKey(), gcmSpec)
-            cipher.doFinal(encrypted)
-        } catch (_: Throwable) {
-            null
+            val plain = cipher.doFinal(encrypted)
+            DeviceKeyLoadResult.Success(plain)
+        } catch (e: AEADBadTagException) {
+            log.w { "getDeviceKey: authentication/decrypt failed (AEAD)" }
+            DeviceKeyLoadResult.UnwrapFailed
+        } catch (e: javax.crypto.BadPaddingException) {
+            log.w { "getDeviceKey: decrypt failed (bad padding)" }
+            DeviceKeyLoadResult.UnwrapFailed
+        } catch (e: IllegalArgumentException) {
+            log.w { "getDeviceKey: invalid stored encoding" }
+            DeviceKeyLoadResult.UnwrapFailed
+        } catch (e: java.security.GeneralSecurityException) {
+            log.w { "getDeviceKey: crypto operation failed: ${e::class.simpleName}" }
+            DeviceKeyLoadResult.UnwrapFailed
+        } catch (e: Throwable) {
+            log.e(e) { "getDeviceKey: unexpected error" }
+            DeviceKeyLoadResult.KeystoreError("unexpected:${e::class.simpleName}")
         }
     }
 

@@ -249,12 +249,12 @@ fun SecureVaultApp(
                 RegisterScreen(
                     isLoading = unlockState.isLoading,
                     errorMessage = unlockState.errorMessage,
-                    onRegister = { password -> unlockViewModel.setupVault(password) },
+                    onRegister = { password -> unlockViewModel.setupVault(password.toCharArray()) },
                     onGoLogin = { navigator.resetToAuth(LoginRoute) },
                     onImportUserData = { unlockViewModel.startImportUserData() },
                     showImportUserDataPasswordDialog = unlockState.showImportUserDataPasswordDialog,
                     onConfirmImportUserDataPassword = { password ->
-                        unlockViewModel.confirmImportUserData(password)
+                        unlockViewModel.confirmImportUserData(password.toCharArray())
                     },
                     onDismissImportUserDataPasswordDialog = {
                         unlockViewModel.dismissImportUserDataDialog()
@@ -272,13 +272,13 @@ fun SecureVaultApp(
                     isAppForeground = isAppForeground,
                     isLoading = unlockState.isLoading,
                     errorMessage = unlockState.errorMessage,
-                    onLogin = { password -> unlockViewModel.unlockWithPassword(password) },
+                    onLogin = { password -> unlockViewModel.unlockWithPassword(password.toCharArray()) },
                     onBiometricLogin = { unlockViewModel.unlockWithBiometric() },
                     onGoRegister = { navigator.navigate(RegisterRoute) },
                     onImportUserData = { unlockViewModel.startImportUserData() },
                     showImportUserDataPasswordDialog = unlockState.showImportUserDataPasswordDialog,
                     onConfirmImportUserDataPassword = { password ->
-                        unlockViewModel.confirmImportUserData(password)
+                        unlockViewModel.confirmImportUserData(password.toCharArray())
                     },
                     onDismissImportUserDataPasswordDialog = {
                         unlockViewModel.dismissImportUserDataDialog()
@@ -369,7 +369,7 @@ fun SecureVaultApp(
                     },
                     onExportClick = { exportImportViewModel.exportVault() },
                     onImportClick = { exportImportViewModel.importVault() },
-                    onExportUserDataClick = { exportImportViewModel.exportUserData(it) },
+                    onExportUserDataClick = { exportImportViewModel.exportUserData(it.toCharArray()) },
                     onBack = { navigator.goBack() },
                 )
             }
@@ -406,7 +406,7 @@ fun SecureVaultApp(
                     showPasswordVerificationDialog = securityModeState.showPasswordVerificationDialog,
                     message = securityModeState.message,
                     onEnabledChange = { securityModeViewModel.updateEnabled(it) },
-                    onConfirmDisableWithPassword = { securityModeViewModel.confirmDisableWithPassword(it) },
+                    onConfirmDisableWithPassword = { securityModeViewModel.confirmDisableWithPassword(it.toCharArray()) },
                     onDismissPasswordDialog = { securityModeViewModel.dismissPasswordVerificationDialog() },
                     onBack = { navigator.goBack() },
                 )
@@ -430,7 +430,7 @@ fun SecureVaultApp(
                             detailViewModel.requestSensitiveActionVerification(it)
                         },
                         onVerifySensitiveActionWithPassword = {
-                            detailViewModel.verifySensitiveActionWithPassword(it)
+                            detailViewModel.verifySensitiveActionWithPassword(it.toCharArray())
                         },
                         onDismissSensitiveActionVerification = {
                             detailViewModel.dismissSensitiveActionVerification()
