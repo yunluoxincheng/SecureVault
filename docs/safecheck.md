@@ -26,13 +26,13 @@
 
 ---
 
-### 3. Autofill 临时草稿明文写入 SharedPreferences（安全）— **成立**
+### 3. Autofill 临时草稿明文写入 SharedPreferences（安全）— **成立（已修复）**
 
-**代码**：`shared/common/src/androidMain/kotlin/com/securevault/autofill/AutofillPendingSaveStore.kt`（`persistPayload` 将 `KEY_PASSWORD` 等写入默认 `SharedPreferences`）。
+**原问题**：`AutofillPendingSaveStore` 曾将 `KEY_PASSWORD` 等写入默认明文 `SharedPreferences`（`sv_autofill_pending_save`）。
 
-**结论**：与设备 root/备份面相关；属明确的敏感数据落盘风险。
+**当前实现**：同一文件 — 敏感字段经 **AndroidX `EncryptedSharedPreferences`**（`sv_autofill_pending_save_enc`）持久化；对旧明文文件 **双读、写回加密、迁移后删除**；TTL 与 `MainActivity` 双路径优先级不变。规范：`openspec/specs/android-autofill/spec.md`；归档变更：`openspec/changes/archive/2026-03-30-harden-autofill-draft-storage`。
 
-**修复可行性**：**可行**。`EncryptedSharedPreferences`（AndroidX Security）或 **仅内存**（进程存活即可，与第 2 点协同）均为常见方案；需处理多进程/冷启动与超时清理（文件内已有 `MAX_AGE_MS` 思路）。
+**结论**：持久化草稿不再以明文 `SharedPreferences` 形式常驻；备份/根权限面上的该项风险已按设计收敛。
 
 ---
 

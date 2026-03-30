@@ -63,6 +63,8 @@
 | **风险** | 中高；**#2 与 #3 应同链路评审、同批次或连续批次发布**。 |
 | **依赖** | 阶段 A 不阻塞本阶段；若使用需随机数的密钥封装，建议 A 已合入。 |
 
+**状态（2026-03-30）**：#3（`AutofillPendingSaveStore` 明文落盘）已修复 — `EncryptedSharedPreferences`（`sv_autofill_pending_save_enc`）、旧文件 `sv_autofill_pending_save` 双读迁移与删除；Intent 明文 extras（#2）仍为可选后续。OpenSpec 归档：`openspec/changes/archive/2026-03-30-harden-autofill-draft-storage`；能力规范：`openspec/specs/android-autofill/spec.md`。实现与运行手册见 `docs/reference/SECURITY-ARCHITECTURE.md` §7.5。
+
 ---
 
 ### 阶段 C — 会话、初始化与协程生命周期（#4、#6、#10）
@@ -123,7 +125,7 @@
 | 顺序 | 里程碑 | 包含项 | 备注 |
 |------|--------|--------|------|
 | M1 | 密码学基础 | #1（已完成） | 独立 PR + 全量测试；见阶段 A 状态 |
-| M2 | Autofill 敏感数据 | #2、#3 | 同链路评审；迁移与双路径必测 |
+| M2 | Autofill 敏感数据 | #2、#3 | #3 已合入（加密 store + 迁移）；#2（Intent 面）可选后续；双路径必测 |
 | M3 | 运行时与 UI 并发 | #4、#6、#10 | 关注主线程与 loading 状态 |
 | M4 | 性能与导入语义 | #5、#11、#12、#13、#14 | #13/#14 先文档后代码 |
 | M5 | 深度安全加固 | #7、#15、#8 | #8 最后、单独发布候选 |

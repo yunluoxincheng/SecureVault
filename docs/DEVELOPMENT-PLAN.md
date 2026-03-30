@@ -292,7 +292,7 @@
 ### 增量（2026-03-27）
 
 - [x] **保存后打开应用**：`onSaveRequest` 使用官方 API [`SaveCallback.onSuccess(IntentSender)`](https://developer.android.com/reference/android/service/autofill/SaveCallback#onSuccess(android.content.IntentSender))（API 28+），由系统在「被填充客户端 Activity」上下文中启动 `MainActivity`，**禁止**依赖 `applicationContext.startActivity`（易触发后台起 Activity / 进程被杀、Intent 丢失，与 Bitwarden 等实现一致）。
-- [x] **待保存草稿落盘**：`AutofillPendingSaveStore`（`commit` 同步写入）+ `MainActivity` 从 Intent 或存储恢复草稿；导航消费后清空。
+- [x] **待保存草稿落盘**：`AutofillPendingSaveStore`（`commit` 同步写入，**加密 prefs** + 旧明文迁移）+ `MainActivity` 从 Intent 或存储恢复草稿；导航消费后清空。（规范 `openspec/specs/android-autofill/spec.md`。）
 - [x] **保存解析**：`AutofillParser` 支持 `phone` / `tel` / `TYPE_CLASS_PHONE`、邮箱与常用中文 hint；取值优先 `autofillValue`、回退 `ViewNode.text`。
 - [x] **UI 集成**：`AutofillDraft` → `AddEditPasswordViewModel`；`loadEntry(null)` 避免重复清空已预填的新建条目。
 - [x] **凭证入口与外置选择页**：下拉建议区保留最多 3 条站点直填项，并追加 `SecureVault / 转到我的密码库` 入口；入口在已解锁时拉起 `AutofillCredentialPickerActivity`（外置浮层样式），锁定时先走 `AutofillAuthActivity` 验证后再进入选择页。

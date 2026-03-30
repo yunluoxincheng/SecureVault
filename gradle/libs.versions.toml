@@ -13,6 +13,7 @@ kermit = "2.0.5"
 detekt = "1.23.8"
 biometric = "1.1.0"
 preference = "1.2.1"
+security-crypto = "1.1.0-alpha06"
 navigation3 = "1.0.0-alpha05"
 
 [libraries]
@@ -39,6 +40,7 @@ kermit-core = { module = "co.touchlab:kermit-core", version.ref = "kermit" }
 
 biometric = { module = "androidx.biometric:biometric", version.ref = "biometric" }
 preference = { module = "androidx.preference:preference-ktx", version.ref = "preference" }
+security-crypto = { module = "androidx.security:security-crypto", version.ref = "security-crypto" }
 navigation3-ui = { module = "org.jetbrains.androidx.navigation3:navigation3-ui", version.ref = "navigation3" }
 
 [plugins]

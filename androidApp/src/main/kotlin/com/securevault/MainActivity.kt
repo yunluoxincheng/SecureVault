@@ -76,6 +76,18 @@ class MainActivity : FragmentActivity() {
         super.onDestroy()
     }
 
+    /**
+     * Resolves an autofill "save draft" for the add-entry flow.
+     *
+     * **Order (do not reorder without updating docs/tests):**
+     * 1. Valid autofill extras on [intent] ([EXTRA_FROM_AUTOFILL_SAVE], [EXTRA_AUTOFILL_TITLE], …) — if
+     *    present, the store is cleared so Intent remains authoritative when both paths were written.
+     * 2. Else a non-expired payload from [AutofillPendingSaveStore] (encrypted prefs + legacy migration).
+     *
+     * Intent extras are still populated by [com.securevault.autofill.ui.AutofillSaveActivity] so single-task
+     * launches see credentials immediately; the store covers cold start / OEM-dropped extras. An optional
+     * in-memory-only handoff was not adopted here to avoid breaking OEM retention behavior.
+     */
     private fun resolveAutofillDraftFromIntentAndStore(
         intent: android.content.Intent,
         source: String,

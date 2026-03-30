@@ -24,6 +24,9 @@
     <fields>;
 }
 
+# Tink (transitive via androidx.security:security-crypto / EncryptedSharedPreferences)
+-dontwarn com.google.errorprone.annotations.**
+
 -dontwarn javax.annotation.**
 -dontwarn kotlin.Unit
 -dontwarn retrofit2.Platform$Java8

@@ -62,6 +62,7 @@ kotlin {
                 api(libs.sqldelight.coroutines)
                 api(libs.argon2kt)
                 api(libs.biometric)
+                api(libs.security.crypto)
                 api("androidx.fragment:fragment-ktx:1.8.9")
             }
         }

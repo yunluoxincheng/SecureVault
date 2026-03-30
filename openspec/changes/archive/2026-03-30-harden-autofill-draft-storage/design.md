@@ -19,4 +19,4 @@ Android Autofill save drafts are staged between the Autofill UI and `MainActivit
 
 ## Open Questions
 
-- Exact AndroidX Security Crypto / EncryptedSharedPreferences version and minSdk implications (confirm in apply stage).
+- Resolved in apply: `androidx.security:security-crypto` **1.1.0-alpha06** (`MasterKey` + `EncryptedSharedPreferences.create(Context, …)`); `minSdk` 29 unchanged.

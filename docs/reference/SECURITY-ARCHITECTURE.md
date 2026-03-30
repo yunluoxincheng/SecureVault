@@ -577,3 +577,9 @@ class SecurityModeManager(
 - **JNA / libsodium 绑定：** `multiplatform-crypto-libsodium-bindings` 在 Android JVM 上通过 **JNA** 访问 native。R8 不得剥离 `com.sun.jna.**`（含 `Pointer.peer` 等），否则典型错误为：`can't obtain peer field ID for class com.sun.jna.Pointer`。对应规则维护在 `androidApp/proguard-rules.pro`。
 - **kotlinx.serialization：** 用户数据与 `EncryptedData` 存储格式依赖 JSON 反序列化；release 需保留序列化器/descriptor 相关规则（同文件中的 kotlinx.serialization 段）。
 - **导入实现要点：** `UserDataTransferManager.import` 对 JSON 做 **UTF-8 BOM 去除与 trim**，避免部分编辑器保存的文件无法解析；登录流程在写入配置后调用 **`KeyManager.clearVaultConfigCache()`** 再解锁，避免内存中仍缓存旧保险库元数据。
+
+### 7.5 Android Autofill 待保存草稿（双路径与存储）
+
+- **Intent 传递：** `AutofillSaveActivity` 在启动 `MainActivity` 时设置 `EXTRA_FROM_AUTOFILL_SAVE` 及 `AutofillIntentKeys` 中的标题/账号/密码/URL 等（见 `MainActivity.toAutofillDraftOrNull()`）。消费草稿后由 `clearAutofillSaveExtrasFromIntent()` 从 Activity intent 上移除。
+- **持久化兜底：** `AutofillPendingSaveStore` 在进程可能被系统回收或 OEM 丢弃 extras 时保留同一份草稿；实现为 **EncryptedSharedPreferences**（`sv_autofill_pending_save_enc`），并对旧版明文 `sv_autofill_pending_save` 做一次性读回、加密写回与删除。
+- **合并优先级：** `MainActivity.resolveAutofillDraftFromIntentAndStore` — **先 Intent，后 store**；Intent 有效时会 `AutofillPendingSaveStore.clear`，避免两份来源长期并存。
