@@ -608,3 +608,13 @@ class SecurityModeManager(
 
 - **主密码与 KDF（#7）：** 解锁相关 UI 在导航边界将输入转为 `CharArray` 传入 ViewModel；`Argon2Kdf`（Android/Desktop JVM）对密码做 UTF-8 字节编码并可在使用后擦除，再构造短时 `String` 调用 `PasswordHash.pwhash`，**不改变**与历史一致的 KDF 输入语义与已存保险库兼容性。规范：`openspec/specs/kdf-password-handling/spec.md`。
 - **Android 设备密钥（#15）：** `PlatformKeyStore.getDeviceKey()` 返回 `DeviceKeyLoadResult`，区分无存储密文、解密/认证失败与其余 Keystore/环境错误；`KeyManager` 映射为 `DeviceKeyDecryptFailed` / `DeviceKeyKeystoreFailure` 等，用户文案不暴露密钥或密文。诊断日志使用标签 **`SvDeviceKey`**，仅含分类与异常类型名，不含密钥材料。规范：`openspec/specs/android-device-key/spec.md`。
+
+### 7.8 Desktop 凭据存储迁移（2026-03-30）
+
+- **目标（#8 当前范围）：** Windows Desktop 将 `PlatformKeyStore` 从 legacy XOR + `Preferences` 迁移到 **DPAPI(CurrentUser)** 保护路径；Android 保持 Keystore；iOS Keychain 方案保留在 iOS 恢复到活跃发布矩阵后单独验收。
+- **一次性迁移：** 新版本优先读取 `device_key_dpapi_b64`。若不存在，则尝试读取旧 `encrypted_device_key` + `master_key`，解包后写入 DPAPI，再回读校验；校验通过才清理旧键。迁移失败返回可诊断错误，不做静默降级写入。
+- **特性开关与回滚演练：**  
+  - `securevault.keystore.desktop.dpapi.enabled` / `SV_DESKTOP_DPAPI_ENABLED`（默认 `true`）  
+  - `securevault.keystore.desktop.legacy_read_enabled` / `SV_DESKTOP_LEGACY_READ_ENABLED`（默认 `false`）  
+  仅在受控回滚演练中启用 legacy 读取。
+- **用户迁移提示（发行说明）：** 升级到该版本前建议完成常规备份；首次启动可能触发一次设备密钥迁移。若需要进行应急回滚演练，必须在测试环境先验证开关与恢复流程。

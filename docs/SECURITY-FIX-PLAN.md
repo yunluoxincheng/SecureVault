@@ -16,7 +16,7 @@
 ### 1.2 非目标（本计划不强制排期）
 
 - 大规模 UI 改版（P3）——可另立「体验优化」里程碑。
-- 无迁移方案的跨平台密钥存储重写（#8）在未准备好分平台测试与回滚前，不进入实现阶段。
+- 跨平台密钥存储重写（#8）需分平台推进：Desktop 已落地后，iOS 仍需在恢复活跃发布矩阵并具备回滚预演后再进入实现阶段。
 
 ---
 
@@ -107,7 +107,7 @@
 | **#8** | iOS Keychain / Desktop 凭据存储 + **一次性迁移**旧 XOR 数据；特性开关与回滚。 | **高**；单独里程碑，分平台测试。 |
 | **#15** | Android `getDeviceKey` 区分「无密钥」与「解密失败」，日志可诊断，不泄露密钥。 | 低～中；注意勿向用户暴露敏感细节。 |
 
-**状态（2026-03-30）**：#7、#15 已落实 — JVM `Argon2Kdf` 在 UTF-8 字节缓冲与 `CharArray` 上可擦除、仍以 `PasswordHash.pwhash` 语义调用 libsodium；解锁相关 ViewModel 以 `CharArray` 为边界；Android `getDeviceKey` 返回 `DeviceKeyLoadResult`（`NotPresent` / `UnwrapFailed` / `KeystoreError`），Kermit 标签 `SvDeviceKey` 支持排障。OpenSpec 归档：`openspec/changes/archive/2026-03-30-reduce-kdf-exposure-and-device-key-diagnostics`；能力规范：`openspec/specs/kdf-password-handling/spec.md`、`openspec/specs/android-device-key/spec.md`。实现摘要见 `docs/reference/SECURITY-ARCHITECTURE.md` §7.7。
+**状态（2026-03-30）**：#7、#15 已落实，#8（Desktop 范围）已落实 — JVM `Argon2Kdf` 在 UTF-8 字节缓冲与 `CharArray` 上可擦除、仍以 `PasswordHash.pwhash` 语义调用 libsodium；解锁相关 ViewModel 以 `CharArray` 为边界；Android `getDeviceKey` 返回 `DeviceKeyLoadResult`（`NotPresent` / `UnwrapFailed` / `KeystoreError`），Kermit 标签 `SvDeviceKey` 支持排障。Desktop `PlatformKeyStore` 已迁移至 DPAPI（含一次性 XOR 迁移、校验与回滚演练开关）。OpenSpec 归档：`openspec/changes/archive/2026-03-30-reduce-kdf-exposure-and-device-key-diagnostics`、`openspec/changes/archive/2026-03-30-migrate-platform-credential-storage`；能力规范：`openspec/specs/kdf-password-handling/spec.md`、`openspec/specs/android-device-key/spec.md`、`openspec/specs/platform-credential-storage/spec.md`。实现摘要见 `docs/reference/SECURITY-ARCHITECTURE.md` §7.7、§7.8。iOS Keychain 方案保留在 iOS 恢复活跃发布矩阵后单独验收。
 
 ---
 
@@ -134,7 +134,7 @@
 | M2 | Autofill 敏感数据 | #2、#3 | #3 已合入（加密 store + 迁移）；#2（Intent 面）可选后续；双路径必测 |
 | M3 | 运行时与 UI 并发 | #4、#6、#10 | 关注主线程与 loading 状态 |
 | M4 | 性能与导入语义 | #5、#11、#12、#13、#14（已完成） | 见阶段 D 状态；导入语义：单批原子回滚 |
-| M5 | 深度安全加固 | #7、#15（已完成） / #8（未交付） | #8 最后、单独发布候选 |
+| M5 | 深度安全加固 | #7、#15（已完成） / #8（Desktop 已完成，iOS 待验收） | #8 维持分平台单独发布与回滚预演 |
 
 ---
 
