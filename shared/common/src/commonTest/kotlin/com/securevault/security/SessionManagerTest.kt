@@ -1,5 +1,10 @@
 package com.securevault.security
 
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.runBlocking
 import kotlin.test.Test
 import kotlin.test.assertEquals
 import kotlin.test.assertTrue
@@ -119,6 +124,22 @@ class SessionManagerTest {
         manager.setLockTimeout(com.securevault.crypto.CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS)
 
         assertTrue(manager.onAppBackground())
+        assertFalse(manager.isUnlocked())
+    }
+
+    @Test
+    fun concurrent_unlock_and_lock_leaves_consistent_state() = runBlocking {
+        val manager = SessionManager()
+        val key = ByteArray(32) { it.toByte() }
+        coroutineScope {
+            repeat(100) {
+                launch(Dispatchers.Default) {
+                    manager.unlock(key.copyOf())
+                    delay(0)
+                    manager.lock()
+                }
+            }
+        }
         assertFalse(manager.isUnlocked())
     }
 }

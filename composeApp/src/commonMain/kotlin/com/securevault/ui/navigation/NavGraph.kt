@@ -9,6 +9,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -287,6 +288,11 @@ fun SecureVaultApp(
 
             entry<VaultRoute> {
                 LaunchedEffect(Unit) { vaultViewModel.loadEntries() }
+                DisposableEffect(Unit) {
+                    onDispose {
+                        vaultViewModel.onLeaveVaultList()
+                    }
+                }
                 VaultScreen(
                     entries = vaultState.entries,
                     categories = vaultState.categories,

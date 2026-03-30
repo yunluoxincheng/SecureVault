@@ -109,6 +109,7 @@ SecureVault/
 | [需求追踪矩阵（RTM）](docs/RTM.md) | 需求到测试用例的可追踪关系与覆盖汇总 |
 | [系统测试生命周期（STLC）](docs/STLC.md) | 测试策略、阶段活动、风险与退出准则 |
 | [系统级测试用例（SLTC）](docs/SLTC.md) | 165 条系统级测试用例与覆盖明细 |
+| [OpenSpec 能力规范（specs）](openspec/specs/) | 已归档需求的现行规范（如 `cryptography`、`android-autofill`、`session-runtime`、`vault-ui`） |
 
 ## 前身项目
 

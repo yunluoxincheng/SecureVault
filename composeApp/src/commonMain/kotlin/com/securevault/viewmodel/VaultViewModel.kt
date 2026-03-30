@@ -51,7 +51,7 @@ class VaultViewModel(
         val requestId = ++loadRequestId
         loadEntriesJob = scope.launch {
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
-            runCatching {
+            try {
                 val allEntries = passwordRepository.search("", PasswordFilter(), dataKey)
                 val categoryOptions = allEntries.map { it.category }.distinct().sorted()
                 val selectedCategory = targetState.selectedCategory
@@ -66,24 +66,41 @@ class VaultViewModel(
                     dataKey
                 )
 
-                Triple(filteredEntries, categoryOptions, selectedCategory)
-            }.onSuccess { (entries, categories, selectedCategory) ->
-                if (requestId != loadRequestId) return@onSuccess
+                if (requestId != loadRequestId) return@launch
                 _uiState.update {
                     it.copy(
-                        entries = entries,
-                        categories = categories,
+                        entries = filteredEntries,
+                        categories = categoryOptions,
                         selectedCategory = selectedCategory,
                         favoritesOnly = targetState.favoritesOnly,
                         query = targetState.query,
-                        isLoading = false,
                         hasLoadedAtLeastOnce = true,
                     )
                 }
-            }.onFailure { throwable ->
-                if (throwable is CancellationException || requestId != loadRequestId) return@onFailure
-                _uiState.update { it.copy(isLoading = false, errorMessage = throwable.message ?: "加载失败") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: Exception) {
+                if (requestId != loadRequestId) return@launch
+                _uiState.update { it.copy(errorMessage = e.message ?: "加载失败") }
+            } finally {
+                if (requestId == loadRequestId) {
+                    _uiState.update { it.copy(isLoading = false) }
+                }
             }
+        }
+    }
+
+    /**
+     * Called when the vault list route leaves composition (tab switch, push, etc.).
+     * Cancels in-flight list loads and debounced queries so [VaultUiState.isLoading] cannot stick.
+     */
+    fun onLeaveVaultList() {
+        queryDebounceJob?.cancel()
+        queryDebounceJob = null
+        loadEntriesJob?.cancel()
+        loadEntriesJob = null
+        _uiState.update { state ->
+            if (state.isLoading) state.copy(isLoading = false) else state
         }
     }
 

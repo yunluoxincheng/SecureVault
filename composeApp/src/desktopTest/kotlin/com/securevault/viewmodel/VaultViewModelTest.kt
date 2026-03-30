@@ -90,6 +90,19 @@ class VaultViewModelTest {
         assertFalse(state.isLoading)
         assertEquals(listOf("Finance Favorite"), state.entries.map { it.title })
     }
+
+    @Test
+    fun onLeaveVaultList_cancelsSlowLoad_andClearsLoading() = runBlocking {
+        val repository = DelayedPasswordRepository()
+        val viewModel = VaultViewModel(repository, unlockedKeyManager())
+
+        viewModel.updateFilters(category = "work", favoritesOnly = true)
+        delay(10)
+        viewModel.onLeaveVaultList()
+
+        delay(250)
+        assertFalse(viewModel.uiState.value.isLoading)
+    }
 }
 
 private suspend fun waitForSearchCount(repository: CountingPasswordRepository, expectedCount: Int) {

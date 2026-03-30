@@ -78,6 +78,8 @@
 | **风险** | #10 为中等（过早 cancel 导致状态异常）；**需与现有 `requestId` 逻辑一起 Code Review**。 |
 | **依赖** | 可与阶段 D 并行，但建议在重负载 UI 变更前完成 #6。 |
 
+**状态（2026-03-30）**：#4、#6、#10 已落实 — `SessionManager` 实例级 `synchronized` 序列化；`LibsodiumManager` 异步/离主线程初始化路径 + Android `Application` 预热与 Desktop 启动前 `initialize`；`VaultViewModel` 按 `loadRequestId` 的 `finally` 清理 `isLoading`，`VaultRoute` `DisposableEffect` 调用 `onLeaveVaultList()`。OpenSpec 归档：`openspec/changes/archive/2026-03-30-fix-session-init-and-viewmodel-scope`；能力规范：`openspec/specs/session-runtime/spec.md`、`openspec/specs/vault-ui/spec.md`。实现细节见 `docs/reference/SECURITY-ARCHITECTURE.md` §2.4。
+
 ---
 
 ### 阶段 D — 性能与安全折中（#5、#11、#12、#13、#14）

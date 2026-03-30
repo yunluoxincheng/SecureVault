@@ -84,6 +84,8 @@ SecureVault 使用简化的三层密钥架构（移除了 SafeVault 的非对称
 
 ### 2.2 实现设计
 
+> **注**：下列片段为结构示意。具体 API（如 `unlock`/`lock`、`CryptoConstants.Session` 超时、是否注入 `ConfigRepository`）以仓库源码 `shared/common/.../SessionManager.kt` 为准。跨线程行为见 **2.4**。
+
 ```kotlin
 class SessionManager(
     private val configRepository: ConfigRepository
@@ -162,6 +164,16 @@ class SessionLockedException : Exception("Vault session is locked")
 | 永不自动锁定 | `Long.MAX_VALUE` | 不推荐 |
 
 > 兼容说明：历史配置中的 `1000 ms`（旧“立即”近似值）在当前实现中会按“严格立即”语义处理。
+
+### 2.4 并发与 Libsodium 初始化（实现）
+
+| 主题 | 实现要点 |
+|------|----------|
+| **SessionManager 线程模型** | 所有公开**实例**方法在 `synchronized(this)` 下访问 `dataKey`、`isUnlocked`、后台计时与 `StateFlow` 更新，避免 UI、`KeyManager` 协程与 Autofill 并发交错破坏「已解锁 / 密钥已清除」的一致性。 |
+| **Libsodium** | `LibsodiumManager.initialize()` 内使用 `Mutex` 做一次性初始化；Android 在 `SecureVaultApp.onCreate` 中于 `Dispatchers.Default` 协程预热；Desktop 在 `desktopApp` 入口 `runBlocking(Dispatchers.Default)` 中完成初始化后再进入 Compose 窗口。同步入口 `ensureInitialized()` 使用 `runBlocking(Dispatchers.Default)`，将重活调度到默认线程池。 |
+| **保险库列表异步** | `VaultViewModel.loadEntries` 使用 `loadRequestId` 丢弃过期结果，并在 `finally` 中仅在 `requestId == loadRequestId` 时落下 `isLoading = false`，避免取消后永远加载中。`NavGraph` 中 `VaultRoute` 使用 `DisposableEffect`，在离开该路由组合时调用 `onLeaveVaultList()` 取消进行中的列表加载与防抖任务。 |
+
+OpenSpec 能力规范：`openspec/specs/session-runtime/spec.md`、`openspec/specs/vault-ui/spec.md`。
 
 ---
 

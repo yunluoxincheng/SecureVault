@@ -50,6 +50,12 @@ class SensitiveData<T : Any> private constructor(
     }
 }
 
+/**
+ * Owns unlocked vault key material and session timing. All public instance methods use the same
+ * intrinsic lock (`synchronized(this)`), so cross-thread callers (UI lifecycle, [KeyManager] suspend
+ * paths, Autofill) serialize mutations and reads of session fields without a global lock ordering
+ * beyond this object.
+ */
 class SessionManager {
     private var dataKey: SensitiveData<ByteArray>? = null
     private var isUnlocked = false
@@ -62,104 +68,133 @@ class SessionManager {
     val sessionState: StateFlow<SessionState> = _sessionState.asStateFlow()
 
     fun unlock(dataKey: ByteArray) {
-        this.dataKey?.close()
-        this.dataKey = SensitiveData.ofByteArray(dataKey)
-        this.isUnlocked = true
-        this.lastActivityTime = System.currentTimeMillis()
-        this.backgroundEnteredAtMs = null
-        _sessionState.value = SessionState.Unlocked
+        synchronized(this) {
+            this.dataKey?.close()
+            this.dataKey = SensitiveData.ofByteArray(dataKey)
+            this.isUnlocked = true
+            this.lastActivityTime = System.currentTimeMillis()
+            this.backgroundEnteredAtMs = null
+            _sessionState.value = SessionState.Unlocked
+        }
     }
 
     fun lock() {
-        dataKey?.close()
-        dataKey = null
-        isUnlocked = false
-        backgroundEnteredAtMs = null
-        _sessionState.value = SessionState.Locked
+        synchronized(this) {
+            dataKey?.close()
+            dataKey = null
+            isUnlocked = false
+            backgroundEnteredAtMs = null
+            _sessionState.value = SessionState.Locked
+        }
     }
 
     fun getDataKey(): ByteArray {
-        requireUnlocked()
-        lastActivityTime = System.currentTimeMillis()
-        return dataKey?.get()?.copyOf() ?: throw IllegalStateException("DataKey is null")
+        synchronized(this) {
+            checkUnlocked()
+            lastActivityTime = System.currentTimeMillis()
+            return dataKey?.get()?.copyOf() ?: throw IllegalStateException("DataKey is null")
+        }
     }
 
+    /**
+     * Public guard for callers that do not already hold this instance's monitor.
+     */
     fun requireUnlocked() {
+        synchronized(this) {
+            checkUnlocked()
+        }
+    }
+
+    private fun checkUnlocked() {
         check(isUnlocked) { "Session is locked" }
     }
 
-    fun isUnlocked(): Boolean = isUnlocked
+    fun isUnlocked(): Boolean = synchronized(this) { isUnlocked }
 
     fun extendSession() {
-        requireUnlocked()
-        lastActivityTime = System.currentTimeMillis()
+        synchronized(this) {
+            checkUnlocked()
+            lastActivityTime = System.currentTimeMillis()
+        }
     }
 
     fun setLockTimeout(timeoutMs: Long) {
-        lockTimeoutMs = timeoutMs
+        synchronized(this) {
+            lockTimeoutMs = timeoutMs
+        }
     }
 
     fun allowImmediateBackgroundLockBypass(durationMs: Long) {
-        if (durationMs <= 0L) return
-        skipImmediateBackgroundLockUntilMs = System.currentTimeMillis() + durationMs
+        synchronized(this) {
+            if (durationMs <= 0L) return
+            skipImmediateBackgroundLockUntilMs = System.currentTimeMillis() + durationMs
+        }
     }
 
     fun onAppBackground(): Boolean {
-        if (!isUnlocked) return false
+        synchronized(this) {
+            if (!isUnlocked) return false
 
-        if (lockTimeoutMs == CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS) {
-            val now = System.currentTimeMillis()
-            if (skipImmediateBackgroundLockUntilMs > now) {
-                skipImmediateBackgroundLockUntilMs = 0L
-                backgroundEnteredAtMs = now
-                return false
+            if (lockTimeoutMs == CryptoConstants.Session.IMMEDIATE_BACKGROUND_LOCK_TIMEOUT_MS) {
+                val now = System.currentTimeMillis()
+                if (skipImmediateBackgroundLockUntilMs > now) {
+                    skipImmediateBackgroundLockUntilMs = 0L
+                    backgroundEnteredAtMs = now
+                    return false
+                }
+                lock()
+                return true
             }
-            lock()
-            return true
-        }
 
-        backgroundEnteredAtMs = System.currentTimeMillis()
-        return false
+            backgroundEnteredAtMs = System.currentTimeMillis()
+            return false
+        }
     }
 
     fun onAppForeground(): Boolean {
-        if (!isUnlocked) {
+        synchronized(this) {
+            if (!isUnlocked) {
+                backgroundEnteredAtMs = null
+                return false
+            }
+
+            val enteredAt = backgroundEnteredAtMs ?: return false
             backgroundEnteredAtMs = null
-            return false
-        }
 
-        val enteredAt = backgroundEnteredAtMs ?: return false
-        backgroundEnteredAtMs = null
+            if (lockTimeoutMs <= 0) {
+                lastActivityTime = System.currentTimeMillis()
+                return false
+            }
 
-        if (lockTimeoutMs <= 0) {
+            val elapsedInBackground = System.currentTimeMillis() - enteredAt
+            if (elapsedInBackground >= lockTimeoutMs) {
+                lock()
+                return true
+            }
+
             lastActivityTime = System.currentTimeMillis()
             return false
         }
-
-        val elapsedInBackground = System.currentTimeMillis() - enteredAt
-        if (elapsedInBackground >= lockTimeoutMs) {
-            lock()
-            return true
-        }
-
-        lastActivityTime = System.currentTimeMillis()
-        return false
     }
 
     fun checkAutoLock(): Boolean {
-        if (!isUnlocked || lockTimeoutMs <= 0) return false
+        synchronized(this) {
+            if (!isUnlocked || lockTimeoutMs <= 0) return false
 
-        val elapsed = System.currentTimeMillis() - lastActivityTime
-        if (elapsed >= lockTimeoutMs) {
-            lock()
-            return true
+            val elapsed = System.currentTimeMillis() - lastActivityTime
+            if (elapsed >= lockTimeoutMs) {
+                lock()
+                return true
+            }
+            return false
         }
-        return false
     }
 
     fun clear() {
-        lock()
-        skipImmediateBackgroundLockUntilMs = 0L
+        synchronized(this) {
+            lock()
+            skipImmediateBackgroundLockUntilMs = 0L
+        }
     }
 }
 
