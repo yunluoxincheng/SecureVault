@@ -48,6 +48,8 @@
 | **风险** | 低（附录已评估）；回滚为恢复 `generateSecureRandom` 实现。 |
 | **依赖** | 无；**建议作为首个合并的安全 PR**。 |
 
+**状态（2026-03-30）**：#1 已修复 — `CryptoUtils.generateSecureRandom` 使用 libsodium `randombytes`（`LibsodiumRandom`，调用前 `LibsodiumManager.ensureInitialized()`）。OpenSpec 归档：`openspec/changes/archive/2026-03-30-fix-csprng-secure-random`；能力规范：`openspec/specs/cryptography/spec.md`。
+
 ---
 
 ### 阶段 B — 自动填充敏感面（#2、#3）
@@ -120,7 +122,7 @@
 
 | 顺序 | 里程碑 | 包含项 | 备注 |
 |------|--------|--------|------|
-| M1 | 密码学基础 | #1 | 独立 PR + 全量测试 |
+| M1 | 密码学基础 | #1（已完成） | 独立 PR + 全量测试；见阶段 A 状态 |
 | M2 | Autofill 敏感数据 | #2、#3 | 同链路评审；迁移与双路径必测 |
 | M3 | 运行时与 UI 并发 | #4、#6、#10 | 关注主线程与 loading 状态 |
 | M4 | 性能与导入语义 | #5、#11、#12、#13、#14 | #13/#14 先文档后代码 |

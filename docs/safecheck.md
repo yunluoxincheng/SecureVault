@@ -6,16 +6,13 @@
 
 ## P0 — 严重 / 高优先级
 
-### 1. 随机数生成器非密码学安全（安全）— **成立**
+### 1. 随机数生成器非密码学安全（安全）— **成立（已修复）**
 
-**代码**：`shared/common/src/commonMain/kotlin/com/securevault/crypto/CryptoUtils.kt`（`generateSecureRandom` 使用 `kotlin.random.Random.Default.nextBytes`）。
+**原问题**：`generateSecureRandom` 曾使用 `kotlin.random.Random.Default.nextBytes`（非 CSPRNG）。
 
-**结论**：`Random.Default` 为一般 PRNG，**不**应用于 nonce、salt、密钥材料等。项目中 `AesGcmCipher`、盐生成、`PlatformKeyStore`（非 Android）等均间接依赖此处。
+**当前实现**：`shared/common/src/commonMain/kotlin/com/securevault/crypto/CryptoUtils.kt` — `LibsodiumManager.ensureInitialized()` 后使用 libsodium `randombytes`（`LibsodiumRandom.buf` → `ByteArray`），与现有加密栈一致。
 
-**修复可行性**：**可行**。推荐二选一或组合：
-
-- `expect/actual`：Android 使用 `SecureRandom`，JVM/Desktop 使用 `SecureRandom`，iOS 使用 `SecRandomCopyBytes` 等；
-- 在 `LibsodiumManager` 已初始化后，使用 libsodium 的 `randombytes`（若绑定可用），与现有加密栈一致。
+**结论**：nonce、salt、密钥材料等路径现从 CSPRNG 取随机字节。规范与变更记录：`openspec/specs/cryptography/spec.md`，归档变更 `openspec/changes/archive/2026-03-30-fix-csprng-secure-random`。
 
 ---
 

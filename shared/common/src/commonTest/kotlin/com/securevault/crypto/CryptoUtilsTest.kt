@@ -2,7 +2,6 @@ package com.securevault.crypto
 
 import kotlin.test.Test
 import kotlin.test.assertEquals
-import kotlin.test.assertNotEquals
 import kotlin.test.assertTrue
 import kotlin.test.assertContentEquals
 
@@ -20,6 +19,13 @@ class CryptoUtilsTest {
         val result1 = CryptoUtils.generateSecureRandom(32)
         val result2 = CryptoUtils.generateSecureRandom(32)
         assertTrue(!CryptoUtils.constantTimeEquals(result1, result2))
+    }
+
+    @Test
+    fun generateSecureRandom_ensuresLibsodiumInitialized() {
+        val result = CryptoUtils.generateSecureRandom(16)
+        assertEquals(16, result.size)
+        assertTrue(LibsodiumManager.isReady())
     }
 
     @Test

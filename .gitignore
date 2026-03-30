@@ -97,9 +97,8 @@ Thumbs.db
 # Local AI customization (keep .github tracked for shared instructions)
 .claude/
 .cursor/
-CLAUDE.md
-AGENTS.md
-openspec/
+/CLAUDE.md
+/AGENTS.md
 
 # Windows: accidental `nul` file from cmd redirection quirks
 nul

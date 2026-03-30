@@ -1,7 +1,8 @@
-@file:OptIn(ExperimentalEncodingApi::class)
+@file:OptIn(ExperimentalEncodingApi::class, kotlin.ExperimentalUnsignedTypes::class)
 
 package com.securevault.crypto
 
+import com.ionspin.kotlin.crypto.util.LibsodiumRandom
 import kotlin.experimental.and
 import kotlin.experimental.xor
 import kotlin.io.encoding.ExperimentalEncodingApi
@@ -11,9 +12,8 @@ object CryptoUtils {
 
     fun generateSecureRandom(size: Int): ByteArray {
         require(size > 0) { "Size must be positive" }
-        val bytes = ByteArray(size)
-        kotlin.random.Random.Default.nextBytes(bytes)
-        return bytes
+        LibsodiumManager.ensureInitialized()
+        return LibsodiumRandom.buf(size).toByteArray()
     }
 
     fun constantTimeEquals(a: ByteArray, b: ByteArray): Boolean {
