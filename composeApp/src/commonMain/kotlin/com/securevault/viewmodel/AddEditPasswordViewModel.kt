@@ -24,7 +24,7 @@ class AddEditPasswordViewModel(
     private val passwordRepository: PasswordRepository,
     private val keyManager: KeyManager
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var pendingAutofillDraft: AutofillDraft? = null
 
     private val _uiState = MutableStateFlow(AddEditPasswordUiState())

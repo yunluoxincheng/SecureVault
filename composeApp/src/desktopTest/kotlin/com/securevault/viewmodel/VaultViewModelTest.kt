@@ -161,6 +161,10 @@ private class CountingPasswordRepository(
     var searchCallCount: Int = 0
         private set
 
+    override fun invalidateDecryptCache() = Unit
+
+    override suspend fun <T> runInTransaction(block: suspend PasswordRepository.() -> T): T = block(this)
+
     override suspend fun create(entry: PasswordEntry, dataKey: ByteArray): Long = error("Not needed in test")
 
     override suspend fun update(entry: PasswordEntry, dataKey: ByteArray): Boolean = error("Not needed in test")
@@ -189,6 +193,10 @@ private class CountingPasswordRepository(
 }
 
 private class DelayedPasswordRepository : PasswordRepository {
+    override fun invalidateDecryptCache() = Unit
+
+    override suspend fun <T> runInTransaction(block: suspend PasswordRepository.() -> T): T = block(this)
+
     private val entries = listOf(
         PasswordEntry(
             id = 1L,

@@ -31,7 +31,7 @@ class VaultViewModel(
     private val passwordRepository: PasswordRepository,
     private val keyManager: KeyManager
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var queryDebounceJob: Job? = null
     private var loadEntriesJob: Job? = null
     private var loadRequestId: Long = 0L

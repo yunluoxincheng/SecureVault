@@ -8,5 +8,7 @@ import com.securevault.security.AppContextHolder
 
 actual fun createSqlDriver(): SqlDriver {
     val context = AppContextHolder.get() ?: error("Android context 不可用，无法创建数据库驱动")
-    return AndroidSqliteDriver(SecureVaultDatabase.Schema.synchronous(), context, "securevault.db")
+    val driver = AndroidSqliteDriver(SecureVaultDatabase.Schema.synchronous(), context, "securevault.db")
+    runCatching { driver.execute(null, "PRAGMA journal_mode=WAL;", 0) }
+    return driver
 }

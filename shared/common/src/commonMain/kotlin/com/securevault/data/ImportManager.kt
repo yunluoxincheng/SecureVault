@@ -29,30 +29,32 @@ class ImportManager(
                 var skippedCount = 0
                 var overwrittenCount = 0
 
-                for (entry in importedEntries) {
-                    val fingerprint = entry.fingerprint()
-                    val existing = indexByFingerprint[fingerprint]
+                passwordRepository.runInTransaction {
+                    for (entry in importedEntries) {
+                        val fingerprint = entry.fingerprint()
+                        val existing = indexByFingerprint[fingerprint]
 
-                    if (existing == null) {
-                        passwordRepository.create(entry.toPasswordEntry(), dataKey)
-                        importedCount += 1
-                        continue
-                    }
-
-                    when (conflictStrategy) {
-                        VaultImportConflictStrategy.Skip -> {
-                            skippedCount += 1
+                        if (existing == null) {
+                            create(entry.toPasswordEntry(), dataKey)
+                            importedCount += 1
+                            continue
                         }
 
-                        VaultImportConflictStrategy.Overwrite -> {
-                            val now = System.currentTimeMillis()
-                            val updated = entry.toPasswordEntry(
-                                id = existing.id,
-                                createdAt = existing.createdAt,
-                                updatedAt = now,
-                            )
-                            passwordRepository.update(updated, dataKey)
-                            overwrittenCount += 1
+                        when (conflictStrategy) {
+                            VaultImportConflictStrategy.Skip -> {
+                                skippedCount += 1
+                            }
+
+                            VaultImportConflictStrategy.Overwrite -> {
+                                val now = System.currentTimeMillis()
+                                val updated = entry.toPasswordEntry(
+                                    id = existing.id,
+                                    createdAt = existing.createdAt,
+                                    updatedAt = now,
+                                )
+                                update(updated, dataKey)
+                                overwrittenCount += 1
+                            }
                         }
                     }
                 }
@@ -64,6 +66,7 @@ class ImportManager(
                     overwritten = overwrittenCount,
                 )
             } finally {
+                passwordRepository.invalidateDecryptCache()
                 MemorySanitizer.wipe(dataKey)
             }
         }

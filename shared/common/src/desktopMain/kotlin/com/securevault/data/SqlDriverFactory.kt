@@ -10,6 +10,9 @@ actual fun createSqlDriver(): SqlDriver {
     val driver = JdbcSqliteDriver("jdbc:sqlite:securevault.db")
     runBlocking {
         SecureVaultDatabase.Schema.create(driver).await()
+        runCatching {
+            driver.execute(null, "PRAGMA journal_mode=WAL;", 0).await()
+        }
     }
     return driver
 }

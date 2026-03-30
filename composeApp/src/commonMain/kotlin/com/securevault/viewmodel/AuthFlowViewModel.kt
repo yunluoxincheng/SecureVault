@@ -25,7 +25,7 @@ data class AuthFlowUiState(
 class AuthFlowViewModel(
     private val configRepository: ConfigRepository
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _uiState = MutableStateFlow(AuthFlowUiState())
     val uiState: StateFlow<AuthFlowUiState> = _uiState.asStateFlow()

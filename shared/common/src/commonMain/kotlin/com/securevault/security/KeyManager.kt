@@ -2,6 +2,7 @@ package com.securevault.security
 
 import com.securevault.crypto.*
 import com.securevault.data.ConfigRepository
+import com.securevault.data.PasswordRepository
 import com.securevault.data.VaultConfigKeys
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -27,7 +28,8 @@ class KeyManager(
     private val argon2Kdf: Argon2Kdf,
     private val platformKeyStore: PlatformKeyStore,
     private val sessionManager: SessionManager,
-    private val configRepository: ConfigRepository? = null
+    private val configRepository: ConfigRepository? = null,
+    private val passwordRepository: PasswordRepository? = null,
 ) {
     private var vaultConfig: VaultConfig? = null
 
@@ -120,15 +122,13 @@ class KeyManager(
             val dataKey = AesGcmCipher.decrypt(config.encryptedDataKey, currentPasswordKey)
 
             val newSalt = argon2Kdf.generateSalt()
-            val newConfig = AdaptiveArgon2Config.getStandardConfig()
-            val newPasswordKey = argon2Kdf.deriveKey(newPassword, newSalt, newConfig)
+            val newPasswordKey = argon2Kdf.deriveKey(newPassword, newSalt, config.argon2Config)
             val newEncryptedDataKey = AesGcmCipher.encrypt(dataKey, newPasswordKey)
             platformKeyStore.storeDeviceKey(dataKey)
 
             vaultConfig = config.copy(
                 salt = newSalt,
                 encryptedDataKey = newEncryptedDataKey,
-                argon2Config = newConfig
             )
             saveVaultConfig(vaultConfig!!)
 
@@ -150,6 +150,7 @@ class KeyManager(
 
     fun lock() {
         sessionManager.lock()
+        passwordRepository?.invalidateDecryptCache()
         _state.value = KeyManagerState.Locked
     }
 
@@ -222,6 +223,7 @@ class KeyManager(
         vaultConfig = null
         sessionManager.clear()
         platformKeyStore.deleteDeviceKey()
+        passwordRepository?.invalidateDecryptCache()
         _state.value = KeyManagerState.NotSetup
     }
 
@@ -231,6 +233,7 @@ class KeyManager(
      */
     fun clearVaultConfigCache() {
         vaultConfig = null
+        passwordRepository?.invalidateDecryptCache()
     }
 
     private suspend fun loadVaultConfigIfNeeded(): Boolean {

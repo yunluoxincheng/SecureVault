@@ -1,6 +1,13 @@
 package com.securevault.data
 
 interface PasswordRepository {
+    /**
+     * Clears session plaintext decrypt cache; call on lock, vault reset, and after bulk import.
+     */
+    fun invalidateDecryptCache()
+
+    suspend fun <T> runInTransaction(block: suspend PasswordRepository.() -> T): T
+
     suspend fun create(entry: PasswordEntry, dataKey: ByteArray): Long
 
     suspend fun update(entry: PasswordEntry, dataKey: ByteArray): Boolean

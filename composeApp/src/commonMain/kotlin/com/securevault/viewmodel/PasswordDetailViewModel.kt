@@ -43,7 +43,7 @@ class PasswordDetailViewModel(
     private val configRepository: ConfigRepository,
     private val biometricAuth: BiometricAuth,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _uiState = MutableStateFlow(PasswordDetailUiState())
     val uiState: StateFlow<PasswordDetailUiState> = _uiState.asStateFlow()

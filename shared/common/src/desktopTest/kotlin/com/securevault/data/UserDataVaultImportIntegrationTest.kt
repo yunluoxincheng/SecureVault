@@ -117,7 +117,7 @@ class UserDataVaultImportIntegrationTest {
         val configRepository = ConfigRepositoryImpl(database)
         val securityModeManager = SecurityModeManager(configRepository, SecureClipboard())
         val passwordRepository = PasswordRepositoryImpl(database, securityModeManager)
-        val keyManager = KeyManager(Argon2Kdf(), PlatformKeyStore(), SessionManager(), configRepository)
+        val keyManager = KeyManager(Argon2Kdf(), PlatformKeyStore(), SessionManager(), configRepository, passwordRepository)
         val exportManager = ExportManager(passwordRepository, keyManager, configRepository)
         val importManager = ImportManager(passwordRepository, keyManager, configRepository)
         val userDataTransferManager = UserDataTransferManager(configRepository, Argon2Kdf())

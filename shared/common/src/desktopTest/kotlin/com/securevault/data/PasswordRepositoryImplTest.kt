@@ -217,6 +217,33 @@ class PasswordRepositoryImplTest {
     }
 
     @Test
+    fun getById_afterUpdate_reflectsNewPasswordNotStaleDecryptCache() = runBlocking {
+        val id = repository.create(
+            PasswordEntry(
+                title = "Site",
+                username = "u",
+                password = "first",
+                createdAt = 10L,
+                updatedAt = 10L,
+            ),
+            dataKey,
+        )
+        assertEquals("first", repository.getById(id, dataKey)!!.password)
+        repository.update(
+            PasswordEntry(
+                id = id,
+                title = "Site",
+                username = "u",
+                password = "second",
+                createdAt = 10L,
+                updatedAt = 20L,
+            ),
+            dataKey,
+        )
+        assertEquals("second", repository.getById(id, dataKey)!!.password)
+    }
+
+    @Test
     fun configRepository_setGetDelete() = runBlocking {
         val configRepository = ConfigRepositoryImpl(database)
 

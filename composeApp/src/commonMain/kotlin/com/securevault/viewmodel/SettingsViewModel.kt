@@ -40,7 +40,7 @@ class SettingsViewModel(
     private val screenSecurity: ScreenSecurity,
     private val biometricAuth: BiometricAuth
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _uiState = MutableStateFlow(SettingsUiState())
     val uiState: StateFlow<SettingsUiState> = _uiState.asStateFlow()

@@ -93,7 +93,9 @@
 | **#14** | **禁止**直接改写已存用户的 `VaultConfig.argon2Config`；仅新注册或显式「性能校准」向导可调参。 | 与产品确认；避免存量无法解锁。 |
 
 | **验证** | `./gradlew shared:common:desktopTest`、`ExportImportManagerTest`；大库手工抽查。 |
-| **依赖** | #13、#14 需产品/文档签字后再动代码。 |
+| **依赖** | （已交付）#13 整批回滚语义与 #14 Argon2 不变更存量已写入 `design` / §7.6；若未来增加「性能校准」向导再单独立项。 |
+
+**状态（2026-03-30）**：#5、#11、#12、#13、#14 已落实 — 会话内 `PasswordRepositoryImpl` 解密缓存（写路径与锁定失效）；主路径 ViewModel 使用 `Dispatchers.IO`；连接后 `PRAGMA journal_mode=WAL`（`runCatching` 降级）；`ImportManager` 单批 SQL 事务、失败整批回滚（见 `ExportImportManagerTest.import_midBatchFailure_rollBacksEntireBatch`）；修改主密码时**保留**已存 Argon2 代价参数、仅轮换 salt 与重包 `encrypted_data_key`。OpenSpec 归档：`openspec/changes/archive/2026-03-30-improve-vault-perf-db-import-config`；能力规范：`openspec/specs/vault-data-layer/spec.md`、`openspec/specs/local-database/spec.md`、`openspec/specs/vault-config/spec.md`。行为摘要见 `docs/reference/SECURITY-ARCHITECTURE.md` §7.6。
 
 ---
 
@@ -129,7 +131,7 @@
 | M1 | 密码学基础 | #1（已完成） | 独立 PR + 全量测试；见阶段 A 状态 |
 | M2 | Autofill 敏感数据 | #2、#3 | #3 已合入（加密 store + 迁移）；#2（Intent 面）可选后续；双路径必测 |
 | M3 | 运行时与 UI 并发 | #4、#6、#10 | 关注主线程与 loading 状态 |
-| M4 | 性能与导入语义 | #5、#11、#12、#13、#14 | #13/#14 先文档后代码 |
+| M4 | 性能与导入语义 | #5、#11、#12、#13、#14（已完成） | 见阶段 D 状态；导入语义：单批原子回滚 |
 | M5 | 深度安全加固 | #7、#15、#8 | #8 最后、单独发布候选 |
 
 ---

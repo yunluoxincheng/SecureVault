@@ -30,7 +30,7 @@ class ExportImportViewModel(
     private val vaultFileGateway: VaultFileGateway,
     private val userDataTransferManager: UserDataTransferManager,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _uiState = MutableStateFlow(ExportImportUiState())
     val uiState: StateFlow<ExportImportUiState> = _uiState.asStateFlow()

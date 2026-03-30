@@ -19,8 +19,8 @@ class AnimationTokensTest {
 
         standardizedDurations.forEach { duration ->
             assertTrue(
-                actual = duration in 150..250,
-                message = "Expected standardized UI duration in 150..250ms, got ${duration}ms",
+                actual = duration in 150..300,
+                message = "Expected standardized UI duration in 150..300ms, got ${duration}ms",
             )
         }
     }

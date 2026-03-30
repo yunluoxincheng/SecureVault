@@ -9,7 +9,7 @@ M4 bundles performance and durability improvements. Items #13 and #14 require ex
 
 ## Decisions
 
-- **#13 Import semantics:** Document in this design (and user-facing docs if visible) whether a failed mid-import rolls back the entire batch or leaves partial data — **must be chosen before implementation**. If rollback to “partial import allowed” is required by product, add configuration or versioned behavior per `SECURITY-FIX-PLAN` §7.
+- **#13 Import semantics (approved):** Password-vault **batch import** runs inside a **single SQLite transaction**. If any applied write in that batch fails (including simulated/assertion failures), **the whole batch rolls back**—no rows from that import attempt remain committed. Fingerprint resolution (skip/overwrite vs new insert) is computed **before** the transactional write phase using the snapshot of existing entries taken at import start.
 - **#5 Cache:** Centralize invalidation hooks on create/update/delete/rekey paths; add tests for list freshness after mutation.
 - **#12 WAL:** Apply after connection open; verify Android + Desktop drivers; handle platforms where WAL is unsupported gracefully.
 
@@ -21,3 +21,9 @@ M4 bundles performance and durability improvements. Items #13 and #14 require ex
 ## Migration Plan
 
 - **#14:** No migration of KDF parameters for existing users from this change alone; new users follow current registration defaults.
+
+## Product notes (#14 — Argon2 tuning UX)
+
+- **New vaults:** `setupVault` continues to apply current product-default Argon2 parameters at creation time.
+- **Existing vaults:** KDF cost parameters are **not** changed as a side effect of **change master password** or other unrelated flows.
+- **Future:** A dedicated optional flow (e.g. “performance calibration”) may change Argon2 for an existing vault only with explicit user consent; that flow is not part of this change.

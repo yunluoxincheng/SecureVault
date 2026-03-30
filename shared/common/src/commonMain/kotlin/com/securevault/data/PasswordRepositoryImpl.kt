@@ -6,6 +6,9 @@ import com.securevault.crypto.EncryptedData
 import com.securevault.db.Password_entries
 import com.securevault.db.SecureVaultDatabase
 import com.securevault.security.SecurityModeManager
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Mutex
+import kotlinx.coroutines.sync.withLock
 import kotlinx.serialization.encodeToString
 import kotlinx.serialization.json.Json
 
@@ -15,6 +18,26 @@ class PasswordRepositoryImpl(
 ) : PasswordRepository {
 
     private val json = Json { ignoreUnknownKeys = true }
+
+    private val decryptCacheMutex = Mutex()
+    private val decryptCache = mutableMapOf<DecryptCacheKey, PasswordEntry>()
+
+    override fun invalidateDecryptCache() {
+        runBlocking {
+            decryptCacheMutex.withLock {
+                decryptCache.clear()
+            }
+        }
+    }
+
+    override suspend fun <T> runInTransaction(block: suspend PasswordRepository.() -> T): T {
+        var result: T? = null
+        database.transaction {
+            result = block(this@PasswordRepositoryImpl)
+        }
+        @Suppress("UNCHECKED_CAST")
+        return result as T
+    }
 
     override suspend fun create(entry: PasswordEntry, dataKey: ByteArray): Long {
         val encryptedTitle = encryptField(entry.title, dataKey)
@@ -55,6 +78,8 @@ class PasswordRepositoryImpl(
         val encryptedTags = encryptField(json.encodeToString(entry.tags), dataKey)
         val iv = extractIvBase64(encryptedTitle)
 
+        invalidateDecryptCacheForId(id)
+
         database.secureVaultQueries.updateEntry(
             encrypted_title = encryptedTitle,
             encrypted_username = encryptedUsername,
@@ -74,10 +99,14 @@ class PasswordRepositoryImpl(
     }
 
     override suspend fun deleteById(id: Long) {
+        invalidateDecryptCacheForId(id)
         database.secureVaultQueries.deleteEntry(id)
     }
 
     override suspend fun clear() {
+        decryptCacheMutex.withLock {
+            decryptCache.clear()
+        }
         database.secureVaultQueries.deleteAllEntries()
     }
 
@@ -146,7 +175,17 @@ class PasswordRepositoryImpl(
         return result
     }
 
+    private suspend fun invalidateDecryptCacheForId(id: Long) {
+        decryptCacheMutex.withLock {
+            decryptCache.keys.removeAll { it.id == id }
+        }
+    }
+
     private suspend fun Password_entries.toDomain(dataKey: ByteArray): PasswordEntry {
+        val cacheKey = DecryptCacheKey(id, updated_at)
+        decryptCacheMutex.withLock {
+            decryptCache[cacheKey]?.let { return it }
+        }
         return PasswordEntry(
             id = id,
             title = decryptField(encrypted_title, dataKey),
@@ -160,7 +199,11 @@ class PasswordRepositoryImpl(
             securityMode = security_mode == 1L,
             createdAt = created_at,
             updatedAt = updated_at
-        )
+        ).also { built ->
+            decryptCacheMutex.withLock {
+                decryptCache[cacheKey] = built
+            }
+        }
     }
 
     private suspend fun encryptField(value: String, dataKey: ByteArray): String {
@@ -219,5 +262,7 @@ class PasswordRepositoryImpl(
         return CryptoUtils.encodeBase64(EncryptedData.fromStorageFormat(storageFormat).iv)
     }
 }
+
+private data class DecryptCacheKey(val id: Long, val updatedAt: Long)
 
 private fun Boolean.toDbBoolean(): Long = if (this) 1L else 0L

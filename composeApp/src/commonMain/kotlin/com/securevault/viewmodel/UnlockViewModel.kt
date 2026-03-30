@@ -35,7 +35,7 @@ class UnlockViewModel(
     private val vaultFileGateway: VaultFileGateway,
     private val userDataTransferManager: UserDataTransferManager,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var pendingUserDataContent: String? = null
 
     private val _uiState = MutableStateFlow(UnlockUiState())

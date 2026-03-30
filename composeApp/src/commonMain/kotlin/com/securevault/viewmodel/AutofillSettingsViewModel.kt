@@ -24,7 +24,7 @@ class AutofillSettingsViewModel(
     private val configRepository: ConfigRepository,
     private val autofillSystemBridge: AutofillSystemBridge,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private val _uiState = MutableStateFlow(AutofillSettingsUiState())
     val uiState: StateFlow<AutofillSettingsUiState> = _uiState.asStateFlow()
 

@@ -41,5 +41,5 @@ fun createAndroidModule(context: Context) = module {
     single { UserDataTransferManager(get(), get()) }
     single { Argon2Kdf() }
     single { SessionManager() }
-    single { KeyManager(get(), get(), get(), get()) }
+    single { KeyManager(get(), get(), get(), get(), get<PasswordRepository>()) }
 }

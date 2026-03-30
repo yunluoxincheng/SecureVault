@@ -595,3 +595,11 @@ class SecurityModeManager(
 - **Intent 传递：** `AutofillSaveActivity` 在启动 `MainActivity` 时设置 `EXTRA_FROM_AUTOFILL_SAVE` 及 `AutofillIntentKeys` 中的标题/账号/密码/URL 等（见 `MainActivity.toAutofillDraftOrNull()`）。消费草稿后由 `clearAutofillSaveExtrasFromIntent()` 从 Activity intent 上移除。
 - **持久化兜底：** `AutofillPendingSaveStore` 在进程可能被系统回收或 OEM 丢弃 extras 时保留同一份草稿；实现为 **EncryptedSharedPreferences**（`sv_autofill_pending_save_enc`），并对旧版明文 `sv_autofill_pending_save` 做一次性读回、加密写回与删除。
 - **合并优先级：** `MainActivity.resolveAutofillDraftFromIntentAndStore` — **先 Intent，后 store**；Intent 有效时会 `AutofillPendingSaveStore.clear`，避免两份来源长期并存。
+
+### 7.6 本地库性能与导入原子性（2026-03-30）
+
+- **SQLite WAL：** Android、Desktop、iOS 驱动在库打开后尝试 `PRAGMA journal_mode=WAL`；若驱动或环境拒绝，实现以 `runCatching` 忽略失败，不单独阻断开库。
+- **密码库批量导入：** `ImportManager` 在一次 SQL 事务中应用本批解析后的写入；任一写入抛错则**整批回滚**，不会在失败批中留下部分新行。导入结束或失败后均调用 `PasswordRepository.invalidateDecryptCache()`，避免会话缓存与磁盘不一致。
+- **会话解密缓存：** `PasswordRepositoryImpl` 可按 `(id, updated_at)` 复用已解密的条目展示数据；`create` / `update` / `delete` / `clear`、批量导入结束、`KeyManager.lock` / `clear` / `clearVaultConfigCache` 会清空或按 id 剔除缓存。
+- **主线程与 I/O：** 保险库相关 ViewModel 协程作用域使用 `Dispatchers.IO`，将阻塞型仓库与文件网关操作抬离 UI 线程（与 [AGENTS.md](../../AGENTS.md) 约定一致）。
+- **Argon2 存量参数：** `changeMasterPassword` **不**将已存用户的 Argon2 代价位重写为「当前产品默认档」；仅 `setupVault` 与显式迁移/校准类流程（若将来提供）可改写落盘的 Argon2 元数据。规范：`openspec/specs/vault-config/spec.md`。

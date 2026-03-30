@@ -30,7 +30,7 @@ class SecurityModeViewModel(
     private val biometricAuth: BiometricAuth,
     private val keyManager: KeyManager,
 ) {
-    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Default)
+    private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
 
     private val _uiState = MutableStateFlow(SecurityModeUiState())
     val uiState: StateFlow<SecurityModeUiState> = _uiState.asStateFlow()
