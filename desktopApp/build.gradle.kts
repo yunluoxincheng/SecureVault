@@ -47,13 +47,22 @@ compose.desktop {
             packageVersion = "1.0.0"
 
             windows {
-                iconFile.set(project.file("icon.ico"))
+                val windowsIcon = project.file("icon.ico")
+                if (windowsIcon.exists()) {
+                    iconFile.set(windowsIcon)
+                }
             }
             macOS {
-                iconFile.set(project.file("icon.icns"))
+                val macosIcon = project.file("icon.icns")
+                if (macosIcon.exists()) {
+                    iconFile.set(macosIcon)
+                }
             }
             linux {
-                iconFile.set(project.file("icon.png"))
+                val linuxIcon = project.file("icon.png")
+                if (linuxIcon.exists()) {
+                    iconFile.set(linuxIcon)
+                }
             }
         }
     }
