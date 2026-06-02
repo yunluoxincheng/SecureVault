@@ -95,6 +95,7 @@ Thumbs.db
 .env.local
 
 # Local AI customization (keep .github tracked for shared instructions)
+.agents/
 .claude/
 .cursor/
 /CLAUDE.md
